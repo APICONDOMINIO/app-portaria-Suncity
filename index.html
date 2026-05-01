@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 Condomínio App</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --success: #25D366;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            margin: 0; padding: 15px; color: #333;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        h2 { text-align: center; color: var(--primary); }
+        .card {
+            background: var(--card); padding: 20px; border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+        input, select, button {
+            width: 100%; padding: 12px; margin: 8px 0;
+            border-radius: 6px; border: 1px solid #ccc;
+            box-sizing: border-box; font-size: 16px;
+        }
+        .row { display: flex; gap: 10px; }
+        button.btn-primary {
+            background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;
+        }
+        button:disabled { background-color: #999; cursor: not-allowed; }
+        .encomenda-item {
+            border-left: 5px solid var(--primary); padding: 15px;
+            background: #fafafa; margin-bottom: 10px; border-radius: 4px;
+        }
+        .btn-whats { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+        .btn-baixa { background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
+        #loading { text-align: center; font-weight: bold; color: var(--primary); display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📦 Logística Portaria</h2>
+
+    <!-- Formulário de Registro -->
+    <div class="card">
+        <h3>Registrar Chegada</h3>
+        <div class="row">
+            <select id="blocoSelect" onchange="atualizarAptos()">
+                <option value="">Bloco...</option>
+                <!-- Preenchido via JS -->
+            </select>
+            <select id="aptoSelect">
+                <option value="">Apto...</option>
+                <!-- Preenchido via JS -->
+            </select>
+        </div>
+        <input type="text" id="descInput" placeholder="Descrição (Ex: Caixa Amazon)">
+        <button id="btnSalvar" class="btn-primary" onclick="registrarEncomenda()">Salvar na Nuvem</button>
+    </div>
+
+    <!-- Lista da Nuvem -->
+    <div class="card">
+        <h3>A Entregar (<span id="contador">0</span>)</h3>
+        <p id="loading">Sincronizando com a nuvem... ⏳</p>
+        <div id="listaPendentes"></div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 🔴 COLE A SUA URL DO GOOGLE AQUI ABAIXO 🔴
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycby2Ztzn4T6QrNYNiNHBmnHWvMuFLBfmRj4EPds6L3ieOnBIhlguqORKhCh1NVSgBYzC9A/exec";
+
+    // Banco de Moradores (Estruturado por Bloco)
+    // Depois você pode adicionar os 500 moradores aqui
+    const moradores = {
+        "A": {
+            "101": { nome: "Marcos Miranda", telefone: "5571999999999" },
+            "102": { nome: "João Silva", telefone: "5511988888888" }
+        },
+        "B": {
+            "101": { nome: "Maria Souza", telefone: "5571977777777" }
+        }
+    };
+
+    // Preencher Dropdown de Blocos ao abrir
+    window.onload = () => {
+        const blocoSelect = document.getElementById("blocoSelect");
+        for (let bloco in moradores) {
+            blocoSelect.add(new Option(`Bloco ${bloco}`, bloco));
+        }
+        buscarNaNuvem(); // Já puxa os dados do Google Drive
+    };
+
+    // Atualizar Aptos quando escolher o Bloco
+    function atualizarAptos() {
+        const bloco = document.getElementById("blocoSelect").value;
+        const aptoSelect = document.getElementById("aptoSelect");
+        aptoSelect.innerHTML = '<option value="">Apto...</option>'; // Limpa
+        
+        if(bloco && moradores[bloco]) {
+            for (let apto in moradores[bloco]) {
+                aptoSelect.add(new Option(`${apto} - ${moradores[bloco][apto].nome}`, apto));
+            }
+        }
+    }
+
+    // 1. REGISTRAR NOVA ENCOMENDA (POST)
+    async function registrarEncomenda() {
+        const bloco = document.getElementById("blocoSelect").value;
+        const apto = document.getElementById("aptoSelect").value;
+        const desc = document.getElementById("descInput").value;
+
+        if (!bloco || !apto || !desc) { alert("Preencha todos os campos!"); return; }
+
+        const morador = moradores[bloco][apto];
+        const dados = {
+            id: Date.now().toString(),
+            bloco: bloco,
+            apto: apto,
+            nome: morador.nome,
+            telefone: morador.telefone,
+            descricao: desc,
+            dataHora: new Date().toLocaleString('pt-BR')
+        };
+
+        const btn = document.getElementById("btnSalvar");
+        btn.innerText = "Salvando..."; btn.disabled = true;
+
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(dados)
+            });
+            
+            // Limpa o formulário e busca a lista atualizada
+            document.getElementById("descInput").value = "";
+            buscarNaNuvem(); 
+        } catch (error) {
+            alert("Erro ao salvar. Verifique a internet.");
+        } finally {
+            btn.innerText = "Salvar na Nuvem"; btn.disabled = false;
+        }
+    }
+
+    // 2. BUSCAR DADOS DA NUVEM (GET)
+    async function buscarNaNuvem() {
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("listaPendentes").innerHTML = "";
+
+        try {
+            const response = await fetch(API_URL);
+            const pendentes = await response.json();
+            renderizarLista(pendentes);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            document.getElementById("loading").style.display = "none";
+        }
+    }
+
+    // 3. DAR BAIXA / ENTREGAR (POST COM AÇÃO)
+    async function darBaixa(id) {
+        if(!confirm("Confirmar entrega desta encomenda?")) return;
+
+        document.getElementById("loading").style.display = "block";
+        
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ acao: "baixar", id: id.toString() })
+            });
+            buscarNaNuvem(); // Atualiza a lista após baixar
+        } catch (error) {
+            alert("Erro ao dar baixa.");
+        }
+    }
+
+    // Função auxiliar do WhatsApp
+    function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
+        const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria.`;
+        const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+        window.open(url, '_blank');
+    }
+
+    // Função para desenhar a lista na tela
+    function renderizarLista(encomendas) {
+        const lista = document.getElementById("listaPendentes");
+        document.getElementById("contador").innerText = encomendas.length;
+
+        encomendas.forEach(enc => {
+            const div = document.createElement("div");
+            div.className = "encomenda-item";
+            div.innerHTML = `
+                <strong>${enc.bloco}-${enc.apto}</strong> (${enc.nome})<br>
+                <strong>Pacote:</strong> ${enc.descricao} <br>
+                <small>Chegou em: ${enc.dataHora}</small>
+                
+                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">
+                    💬 Avisar no WhatsApp
+                </button>
+                <button class="btn-baixa" onclick="darBaixa('${enc.id}')">
+                    ✅ Marcar como Entregue
+                </button>
+            `;
+            lista.appendChild(div);
+        });
+    }
+</script>
+
+</body>
+</html>
