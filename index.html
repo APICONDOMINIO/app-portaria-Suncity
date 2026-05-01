@@ -3,145 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📦 Condomínio App</title>
+    <title>Encomenda Express Suncity</title>
     <style>
-        :root {
-            --primary: #0056b3;
-            --success: #25D366;
-            --bg: #f4f7f6;
-            --card: #ffffff;
-        }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 15px; color: #333;
-        }
+        :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
         .container { max-width: 500px; margin: 0 auto; }
-        h2 { text-align: center; color: var(--primary); }
-        .card {
-            background: var(--card); padding: 20px; border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px;
-        }
-        input, select, button {
-            width: 100%; padding: 12px; margin: 8px 0;
-            border-radius: 6px; border: 1px solid #ccc;
-            box-sizing: border-box; font-size: 16px;
-        }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; font-family: inherit; }
         .row { display: flex; gap: 10px; }
-        button.btn-primary {
-            background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;
-        }
-        button:disabled { background-color: #999; cursor: not-allowed; }
-        .encomenda-item {
-            border-left: 5px solid var(--primary); padding: 15px;
-            background: #fafafa; margin-bottom: 10px; border-radius: 4px;
-        }
-        .btn-whats { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        .btn-baixa { background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
+        button.btn-primary { background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+        button.btn-secondary { background-color: #457b9d; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .encomenda-item { border-left: 5px solid var(--primary); padding: 15px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; }
+        .btn-whats { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-baixa { background-color: #e63946; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
         #loading { text-align: center; font-weight: bold; color: var(--primary); display: none; }
+        
+        /* Estilo das abas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-buttons { display: flex; gap: 5px; margin-bottom: 15px; }
+        .nav-buttons button { margin: 0; padding: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 Logística Portaria</h2>
+    <h2>📦 Encomenda Express Suncity</h2>
+    
+    <div class="nav-buttons">
+        <button class="btn-primary" onclick="mudarAba('tabReceber')">📥 Receber</button>
+        <button class="btn-primary" onclick="mudarAba('tabPendentes')">📋 Pendentes</button>
+        <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Atualizar Cadastro</button>
+    </div>
 
-    <!-- Formulário de Registro -->
-    <div class="card">
-        <h3>Registrar Chegada</h3>
+    <p id="loading">Sincronizando com a nuvem... ⏳</p>
+
+    <!-- ABA 1: Registrar Chegada -->
+    <div id="tabReceber" class="card tab-content active">
+        <h3>Registrar Encomenda</h3>
         <div class="row">
             <select id="blocoSelect" onchange="atualizarAptos()">
                 <option value="">Bloco...</option>
-                <!-- Preenchido via JS -->
             </select>
             <select id="aptoSelect">
                 <option value="">Apto...</option>
-                <!-- Preenchido via JS -->
             </select>
         </div>
         <input type="text" id="descInput" placeholder="Descrição (Ex: Caixa Amazon)">
+        
         <button id="btnSalvar" class="btn-primary" onclick="registrarEncomenda()">Salvar na Nuvem</button>
     </div>
 
-    <!-- Lista da Nuvem -->
-    <div class="card">
+    <!-- ABA 2: Lista de Pendentes -->
+    <div id="tabPendentes" class="card tab-content">
         <h3>A Entregar (<span id="contador">0</span>)</h3>
-        <p id="loading">Sincronizando com a nuvem... ⏳</p>
+        <p style="font-size:13px; color:#666; margin-top:0;">Dica: Ao clicar em Avisar, tire a foto do pacote direto pelo WhatsApp.</p>
         <div id="listaPendentes"></div>
+    </div>
+
+    <!-- ABA 3: Chamado para Atualização (Direto pro Marcos) -->
+    <div id="tabChamado" class="card tab-content">
+        <h3>Solicitar Atualização</h3>
+        <p style="font-size:13px; color:#666; margin-top:0;">Preencha os dados que precisam ser corrigidos. A administração fará a alteração no banco de dados.</p>
+        
+        <div class="row">
+            <input type="number" id="chamadoBloco" placeholder="Bloco (Ex: 01)">
+            <input type="text" id="chamadoApto" placeholder="Apto (Ex: 101)">
+        </div>
+        <input type="text" id="chamadoNome" placeholder="Nome Correto (Opcional)">
+        <input type="tel" id="chamadoTel" placeholder="Novo WhatsApp (Opcional)">
+        <textarea id="chamadoJustificativa" placeholder="Justificativa: (Ex: Morador novo se mudou hoje / Telefone antigo não existe mais...)" rows="3"></textarea>
+        
+        <button class="btn-whats" onclick="enviarChamado()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+            </svg>
+            Enviar Chamado para Administração
+        </button>
     </div>
 </div>
 
 <script>
     // ==========================================
-    // 🔴 COLE A SUA URL DO GOOGLE AQUI ABAIXO 🔴
+    // COLE SUA URL AQUI DENTRO DAS ASPAS
     // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycby2Ztzn4T6QrNYNiNHBmnHWvMuFLBfmRj4EPds6L3ieOnBIhlguqORKhCh1NVSgBYzC9A/exec";
+    const SEU_NUMERO_WHATSAPP = "5571982282769"; // Número da administração
 
-    // Banco de Moradores (Estruturado por Bloco)
-    // Depois você pode adicionar os 500 moradores aqui
-    const moradores = {
-        "A": {
-            "101": { nome: "Marcos Miranda", telefone: "5571999999999" },
-            "102": { nome: "João Silva", telefone: "5511988888888" }
-        },
-        "B": {
-            "101": { nome: "Maria Souza", telefone: "5571977777777" }
-        }
+    let moradoresDB = []; 
+
+    // Inicialização
+    window.onload = async () => {
+        await carregarMoradores();
+        await buscarPendentes();
     };
 
-    // Preencher Dropdown de Blocos ao abrir
-    window.onload = () => {
-        const blocoSelect = document.getElementById("blocoSelect");
-        for (let bloco in moradores) {
-            blocoSelect.add(new Option(`Bloco ${bloco}`, bloco));
-        }
-        buscarNaNuvem(); // Já puxa os dados do Google Drive
-    };
+    // Navegação entre as abas
+    function mudarAba(abaId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(abaId).classList.add('active');
+    }
 
-    // Atualizar Aptos quando escolher o Bloco
-    function atualizarAptos() {
-        const bloco = document.getElementById("blocoSelect").value;
-        const aptoSelect = document.getElementById("aptoSelect");
-        aptoSelect.innerHTML = '<option value="">Apto...</option>'; // Limpa
-        
-        if(bloco && moradores[bloco]) {
-            for (let apto in moradores[bloco]) {
-                aptoSelect.add(new Option(`${apto} - ${moradores[bloco][apto].nome}`, apto));
-            }
+    // 1. CARREGAR MORADORES DA NUVEM
+    async function carregarMoradores() {
+        try {
+            const response = await fetch(API_URL + "?acao=getMoradores");
+            moradoresDB = await response.json();
+            
+            const blocosUnicos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+            const blocoSelect = document.getElementById("blocoSelect");
+            blocoSelect.innerHTML = '<option value="">Bloco...</option>';
+            blocosUnicos.forEach(b => blocoSelect.add(new Option(`Bloco ${b}`, b)));
+        } catch (error) {
+            console.error("Erro ao carregar moradores", error);
         }
     }
 
-    // 1. REGISTRAR NOVA ENCOMENDA (POST)
+    // Atualizar select de apartamentos
+    function atualizarAptos() {
+        const bloco = document.getElementById("blocoSelect").value;
+        const aptoSelect = document.getElementById("aptoSelect");
+        aptoSelect.innerHTML = '<option value="">Apto...</option>';
+        
+        const aptosDoBloco = moradoresDB.filter(m => m.bloco === bloco);
+        aptosDoBloco.forEach(m => aptoSelect.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+    }
+
+    // 2. REGISTRAR ENCOMENDA
     async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
         const desc = document.getElementById("descInput").value;
 
-        if (!bloco || !apto || !desc) { alert("Preencha todos os campos!"); return; }
+        if (!bloco || !apto || !desc) { alert("Selecione o morador e digite a descrição!"); return; }
 
-        const morador = moradores[bloco][apto];
+        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
+        
         const dados = {
+            acao: "nova_encomenda",
             id: Date.now().toString(),
-            bloco: bloco,
-            apto: apto,
-            nome: morador.nome,
-            telefone: morador.telefone,
-            descricao: desc,
-            dataHora: new Date().toLocaleString('pt-BR')
+            bloco: bloco, apto: apto, nome: morador.nome, telefone: morador.telefone,
+            descricao: desc, dataHora: new Date().toLocaleString('pt-BR')
         };
 
         const btn = document.getElementById("btnSalvar");
         btn.innerText = "Salvando..."; btn.disabled = true;
 
         try {
-            await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(dados)
-            });
-            
-            // Limpa o formulário e busca a lista atualizada
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(dados) });
             document.getElementById("descInput").value = "";
-            buscarNaNuvem(); 
+            alert("Salvo com sucesso!");
+            await buscarPendentes(); 
         } catch (error) {
             alert("Erro ao salvar. Verifique a internet.");
         } finally {
@@ -149,8 +162,8 @@
         }
     }
 
-    // 2. BUSCAR DADOS DA NUVEM (GET)
-    async function buscarNaNuvem() {
+    // 3. BUSCAR ENCOMENDAS PENDENTES
+    async function buscarPendentes() {
         document.getElementById("loading").style.display = "block";
         document.getElementById("listaPendentes").innerHTML = "";
 
@@ -165,31 +178,51 @@
         }
     }
 
-    // 3. DAR BAIXA / ENTREGAR (POST COM AÇÃO)
+    // 4. DAR BAIXA
     async function darBaixa(id) {
         if(!confirm("Confirmar entrega desta encomenda?")) return;
-
         document.getElementById("loading").style.display = "block";
         
         try {
-            await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ acao: "baixar", id: id.toString() })
-            });
-            buscarNaNuvem(); // Atualiza a lista após baixar
+            await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "baixar", id: id.toString() }) });
+            await buscarPendentes(); 
         } catch (error) {
             alert("Erro ao dar baixa.");
+            document.getElementById("loading").style.display = "none";
         }
     }
 
-    // Função auxiliar do WhatsApp
+    // 5. ENVIAR CHAMADO DE ATUALIZAÇÃO PARA O SEU WHATSAPP
+    function enviarChamado() {
+        const bloco = document.getElementById("chamadoBloco").value;
+        const apto = document.getElementById("chamadoApto").value;
+        const nome = document.getElementById("chamadoNome").value || "Não informado";
+        const tel = document.getElementById("chamadoTel").value || "Não informado";
+        const just = document.getElementById("chamadoJustificativa").value;
+
+        if (!bloco || !apto || !just) { 
+            alert("Pelo menos o Bloco, Apto e a Justificativa são obrigatórios!"); return; 
+        }
+
+        const msgTexto = `⚠️ *CHAMADO: ATUALIZAÇÃO DE CADASTRO*\n\n*Referência:* Bloco ${bloco} - Apto ${apto}\n*Nome Informado:* ${nome}\n*Novo Telefone:* ${tel}\n\n*Justificativa do Porteiro:*\n"${just}"`;
+        
+        const url = `https://wa.me/${SEU_NUMERO_WHATSAPP}?text=${encodeURIComponent(msgTexto)}`;
+        window.open(url, '_blank');
+
+        // Limpar campos após enviar
+        document.getElementById("chamadoBloco").value = ""; document.getElementById("chamadoApto").value = "";
+        document.getElementById("chamadoNome").value = ""; document.getElementById("chamadoTel").value = "";
+        document.getElementById("chamadoJustificativa").value = "";
+    }
+
+    // Função do WhatsApp para avisar o morador
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
-        const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria.`;
+        const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria da Suncity.`;
         const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
         window.open(url, '_blank');
     }
 
-    // Função para desenhar a lista na tela
+    // Desenhar lista na tela
     function renderizarLista(encomendas) {
         const lista = document.getElementById("listaPendentes");
         document.getElementById("contador").innerText = encomendas.length;
@@ -198,12 +231,15 @@
             const div = document.createElement("div");
             div.className = "encomenda-item";
             div.innerHTML = `
-                <strong>${enc.bloco}-${enc.apto}</strong> (${enc.nome})<br>
+                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small>Chegou em: ${enc.dataHora}</small>
                 
                 <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">
-                    💬 Avisar no WhatsApp
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+                    </svg>
+                    Avisar no WhatsApp
                 </button>
                 <button class="btn-baixa" onclick="darBaixa('${enc.id}')">
                     ✅ Marcar como Entregue
