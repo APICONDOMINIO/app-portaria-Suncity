@@ -73,7 +73,17 @@
                 <select id="blocoSelect" onchange="atualizarAptos()"><option value="">Bloco...</option></select>
                 <select id="aptoSelect"><option value="">Apto...</option></select>
             </div>
-            <input type="text" id="descInput" placeholder="Descrição (Ex: Caixa Amazon)">
+            
+            <!-- NOVO MENU DE DESCRIÇÃO -->
+            <select id="descInput">
+                <option value="">Selecione o tipo de pacote...</option>
+                <option value="Mercado Livre">Mercado Livre</option>
+                <option value="Shopee">Shopee</option>
+                <option value="Envelopes">Envelopes</option>
+                <option value="Detran">Detran</option>
+                <option value="Outros">Outros</option>
+            </select>
+            
             <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
         </div>
 
@@ -119,7 +129,7 @@
         <canvas id="signaturePad"></canvas>
         
         <div class="row">
-            <button class="btn-secondary" onclick="limparCanvas()">Limpar Assinatura</button>
+            <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
             <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
         </div>
         <button class="btn-primary" style="background:#25D366;" onclick="confirmarEntregaFinal()">✅ Confirmar Entrega</button>
@@ -128,7 +138,7 @@
 
 <script>
     // ==========================================
-    // COLE SUA URL AQUI DENTRO DAS ASPAS
+    // COLE SUA URL NOVA AQUI DENTRO DAS ASPAS
     // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycby2Ztzn4T6QrNYNiNHBmnHWvMuFLBfmRj4EPds6L3ieOnBIhlguqORKhCh1NVSgBYzC9A/exec"; 
     const SEU_WHATSAPP = "5571982282769";
@@ -161,7 +171,7 @@
                 document.getElementById("msgLogin").innerText = data.erro;
                 document.getElementById("msgLogin").style.display = "block";
             }
-        } catch(e) { alert("Erro na rede."); } 
+        } catch(e) { alert("Erro na rede. Verifique a internet e a URL da API."); } 
         finally { document.getElementById("loginContainer").style.opacity = "1"; }
     }
 
@@ -207,18 +217,18 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // FUNÇÃO WHATSAPP RESTAURADA
+    // WHATSAPP NATIVO (Sem abrir aba do navegador)
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
         const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria da Suncity.`;
-        const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-        window.open(url, '_blank');
+        // Mudança crítica: usa o link oficial da Meta e altera a janela atual (puxa o app)
+        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
 
     async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
         const desc = document.getElementById("descInput").value;
-        if (!bloco || !apto || !desc) { alert("Preencha tudo!"); return; }
+        if (!bloco || !apto || !desc) { alert("Preencha bloco, apto e a descrição!"); return; }
 
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
         const dados = {
@@ -233,11 +243,11 @@
             document.getElementById("descInput").value = "";
             await buscarPendentes(); 
             
-            // PERGUNTA SE DESEJA ENVIAR O WHATSAPP NA HORA
-            if(confirm("Entrada Registrada com sucesso!\n\nDeseja enviar o aviso por WhatsApp agora?")) {
+            // PERGUNTA E ABRE O WHATSAPP NATIVO
+            if(confirm("Entrada Registrada!\n\nDeseja enviar o aviso por WhatsApp agora?")) {
                 enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
             }
-        } catch (e) { alert("Erro ao salvar."); }
+        } catch (e) { alert("Erro ao salvar a encomenda."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
@@ -256,7 +266,7 @@
         renderizarLista(pendentesDB);
     }
 
-    // SISTEMA DE ASSINATURA REESCRITO PARA CELULAR
+    // CANVAS (ASSINATURA)
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -287,10 +297,7 @@
         ctx.stroke();
     }
 
-    function pararDesenho(e) { 
-        e.preventDefault();
-        isDrawing = false; 
-    }
+    function pararDesenho(e) { e.preventDefault(); isDrawing = false; }
 
     canvas.addEventListener('mousedown', iniciarDesenho);
     canvas.addEventListener('mousemove', desenhar);
@@ -336,7 +343,7 @@
             });
             alert("Baixa confirmada com sucesso!");
             await buscarPendentes(); 
-        } catch (error) { alert("Erro de conexão ao finalizar."); } 
+        } catch (error) { alert("Erro de conexão ao finalizar. Atualize a API no Google Sheets!"); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
@@ -371,8 +378,8 @@
         const apto = document.getElementById("chamadoApto").value;
         const just = document.getElementById("chamadoJustificativa").value;
         if (!bloco || !apto || !just) { alert("Preencha tudo!"); return; }
-        const url = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`)}`;
-        window.open(url, '_blank');
+        // Também mudado para não abrir aba do navegador
+        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`)}`;
     }
 </script>
 </body>
