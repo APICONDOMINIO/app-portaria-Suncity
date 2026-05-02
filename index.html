@@ -86,7 +86,6 @@
         <div id="tabPendentes" class="card tab-content">
             <h3>A Entregar (<span id="contador">0</span>)</h3>
             
-            <!-- MENU DE FILTRO INTERATIVO -->
             <div class="filter-area">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Menu de Exibição</p>
                 <input type="text" id="buscaGeral" placeholder="Digite nome, pacote ou apto..." onkeyup="aplicarFiltro()">
@@ -138,10 +137,9 @@
     let pendentesDB = []; 
     let porteiroLogado = ""; 
     let idEmBaixa = null; 
+    let encomendaSelecionada = null; // Guarda os dados da encomenda que está sendo entregue
 
-    // MODIFICADO: Exige login toda vez que a página abre ou atualiza
     window.onload = () => {
-        // Remove qualquer memória antiga no celular forçando novo login
         localStorage.removeItem("suncityUser"); 
         document.getElementById("loginContainer").style.display = "block";
     };
@@ -212,7 +210,7 @@
         try {
             const response = await fetch(API_URL);
             pendentesDB = await response.json();
-            aplicarFiltro(); // Já aplica o filtro atual ao buscar
+            aplicarFiltro(); 
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
@@ -251,28 +249,22 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // MODIFICADO: Filtro Dinâmico Interativo
     function aplicarFiltro() {
         const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
         const blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
         
         let filtrados = pendentesDB.filter(enc => {
-            // Verifica o bloco
             const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
-            
-            // Verifica se o texto digitado bate com nome, pacote ou apartamento
             const matchTexto = termoBusca === "" || 
                                enc.nome.toLowerCase().includes(termoBusca) || 
                                enc.descricao.toLowerCase().includes(termoBusca) ||
                                String(enc.apto).includes(termoBusca);
-                               
             return matchBloco && matchTexto;
         });
         
         renderizarLista(filtrados);
     }
 
-    // MODIFICADO: Botão Exibir Tudo
     function limparFiltro() {
         document.getElementById("buscaGeral").value = "";
         document.getElementById("filtroBlocoBusca").value = "";
@@ -304,12 +296,13 @@
 
     function abrirModalBaixa(id) {
         idEmBaixa = id;
+        encomendaSelecionada = pendentesDB.find(e => e.id === id); // Armazena os dados da entrega atual
         document.getElementById("nomeRetirante").value = "";
         document.getElementById("modalAssinatura").style.display = "flex";
         setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
     }
 
-    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; }
+    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
 
     async function confirmarEntregaFinal() {
         const quemRetirou = document.getElementById("nomeRetirante").value;
@@ -319,23 +312,33 @@
         btn.innerText = "Processando...";
         btn.disabled = true;
         
+        const dataBaixa = new Date().toLocaleString('pt-BR');
+
         try {
             const payload = { 
                 acao: "baixar", id: idEmBaixa.toString(), 
-                dataHora: new Date().toLocaleString('pt-BR'),
+                dataHora: dataBaixa,
                 porteiroSaida: porteiroLogado || "Não identificado",
                 quemRetirou: quemRetirou,
                 assinatura: "Sim" 
             };
 
-            const response = await fetch(API_URL, { 
+            await fetch(API_URL, { 
                 method: "POST", 
                 body: JSON.stringify(payload),
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
             fecharModal();
-            alert("Baixa confirmada com sucesso!");
+            alert("Baixa confirmada no sistema!");
+            
+            // NOVO: RECIBO DIGITAL NO WHATSAPP
+            if(encomendaSelecionada) {
+                const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${encomendaSelecionada.nome}, a sua encomenda (${encomendaSelecionada.descricao}) do Bloco ${encomendaSelecionada.bloco} Apto ${encomendaSelecionada.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
+                
+                window.location.href = `https://wa.me/${encomendaSelecionada.telefone}?text=${encodeURIComponent(msgRecibo)}`;
+            }
+            
             await buscarPendentes(); 
         } catch (error) { 
             alert("Erro da rede: " + error.message); 
