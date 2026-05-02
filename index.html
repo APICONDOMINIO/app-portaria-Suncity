@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Meta tags para forçar o celular a não usar o cache antigo -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -86,17 +85,19 @@
 
         <div id="tabPendentes" class="card tab-content">
             <h3>A Entregar (<span id="contador">0</span>)</h3>
+            
+            <!-- MENU DE FILTRO INTERATIVO -->
             <div class="filter-area">
-                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Localizar Encomenda</p>
+                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Menu de Exibição</p>
+                <input type="text" id="buscaGeral" placeholder="Digite nome, pacote ou apto..." onkeyup="aplicarFiltro()">
                 <div class="row">
-                    <input type="number" id="filtroBloco" placeholder="Bloco">
-                    <input type="text" id="filtroApto" placeholder="Apto">
-                </div>
-                <div class="row">
-                    <button class="btn-secondary" onclick="aplicarFiltro()">Buscar</button>
-                    <button class="btn-danger" onclick="limparFiltro()">Limpar</button>
+                    <select id="filtroBlocoBusca" onchange="aplicarFiltro()">
+                        <option value="">Todos os Blocos</option>
+                    </select>
+                    <button class="btn-secondary" onclick="limparFiltro()">Exibir Tudo</button>
                 </div>
             </div>
+
             <div id="listaPendentes"></div>
         </div>
 
@@ -128,7 +129,7 @@
 
 <script>
     // ==========================================
-    // COLE SUA URL NOVA AQUI DENTRO DAS ASPAS
+    // COLE SUA URL AQUI DENTRO DAS ASPAS
     // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwxEpfeV6SKQgPMkp8nl19ibzQSWV44djQe-pMM7z6722KUc6Qz2ljlpdAnVlnL4O53Ng/exec"; 
     const SEU_WHATSAPP = "5571982282769";
@@ -138,10 +139,11 @@
     let porteiroLogado = ""; 
     let idEmBaixa = null; 
 
+    // MODIFICADO: Exige login toda vez que a página abre ou atualiza
     window.onload = () => {
-        let salvo = localStorage.getItem("suncityUser");
-        if(salvo) { porteiroLogado = salvo; iniciarSistema(); } 
-        else { document.getElementById("loginContainer").style.display = "block"; }
+        // Remove qualquer memória antiga no celular forçando novo login
+        localStorage.removeItem("suncityUser"); 
+        document.getElementById("loginContainer").style.display = "block";
     };
 
     async function fazerLogin() {
@@ -155,7 +157,6 @@
             const data = await res.json();
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
-                localStorage.setItem("suncityUser", porteiroLogado);
                 iniciarSistema();
             } else {
                 document.getElementById("msgLogin").innerText = data.erro;
@@ -165,7 +166,7 @@
         finally { document.getElementById("loginContainer").style.opacity = "1"; }
     }
 
-    function fazerLogout() { localStorage.removeItem("suncityUser"); location.reload(); }
+    function fazerLogout() { location.reload(); }
 
     async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
@@ -185,8 +186,17 @@
             const response = await fetch(API_URL + "?acao=getMoradores");
             moradoresDB = await response.json();
             const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+            
             const s = document.getElementById("blocoSelect");
-            blocos.forEach(b => s.add(new Option(`Bloco ${b}`, b)));
+            const sFiltro = document.getElementById("filtroBlocoBusca");
+            
+            s.innerHTML = '<option value="">Bloco...</option>';
+            sFiltro.innerHTML = '<option value="">Todos os Blocos</option>';
+
+            blocos.forEach(b => {
+                s.add(new Option(`Bloco ${b}`, b));
+                sFiltro.add(new Option(`Bloco ${b}`, b));
+            });
         } catch (e) { console.error(e); }
     }
 
@@ -202,7 +212,7 @@
         try {
             const response = await fetch(API_URL);
             pendentesDB = await response.json();
-            renderizarLista(pendentesDB); 
+            aplicarFiltro(); // Já aplica o filtro atual ao buscar
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
@@ -241,22 +251,34 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
+    // MODIFICADO: Filtro Dinâmico Interativo
     function aplicarFiltro() {
-        const fBloco = document.getElementById("filtroBloco").value.padStart(2, '0');
-        const fApto = document.getElementById("filtroApto").value;
-        let filtrados = pendentesDB;
-        if(fBloco && fBloco !== "00") filtrados = filtrados.filter(e => e.bloco === fBloco);
-        if(fApto) filtrados = filtrados.filter(e => String(e.apto) === String(fApto));
+        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
+        const blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
+        
+        let filtrados = pendentesDB.filter(enc => {
+            // Verifica o bloco
+            const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
+            
+            // Verifica se o texto digitado bate com nome, pacote ou apartamento
+            const matchTexto = termoBusca === "" || 
+                               enc.nome.toLowerCase().includes(termoBusca) || 
+                               enc.descricao.toLowerCase().includes(termoBusca) ||
+                               String(enc.apto).includes(termoBusca);
+                               
+            return matchBloco && matchTexto;
+        });
+        
         renderizarLista(filtrados);
     }
 
+    // MODIFICADO: Botão Exibir Tudo
     function limparFiltro() {
-        document.getElementById("filtroBloco").value = "";
-        document.getElementById("filtroApto").value = "";
+        document.getElementById("buscaGeral").value = "";
+        document.getElementById("filtroBlocoBusca").value = "";
         renderizarLista(pendentesDB);
     }
 
-    // CANVAS E BAIXA BLINDADA
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -303,7 +325,7 @@
                 dataHora: new Date().toLocaleString('pt-BR'),
                 porteiroSaida: porteiroLogado || "Não identificado",
                 quemRetirou: quemRetirou,
-                assinatura: "Sim" // Simplificamos o envio para não travar
+                assinatura: "Sim" 
             };
 
             const response = await fetch(API_URL, { 
