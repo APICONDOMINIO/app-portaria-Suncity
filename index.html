@@ -74,7 +74,6 @@
                 <select id="aptoSelect"><option value="">Apto...</option></select>
             </div>
             
-            <!-- NOVO MENU DE DESCRIÇÃO -->
             <select id="descInput">
                 <option value="">Selecione o tipo de pacote...</option>
                 <option value="Mercado Livre">Mercado Livre</option>
@@ -138,7 +137,7 @@
 
 <script>
     // ==========================================
-    // COLE SUA URL NOVA AQUI DENTRO DAS ASPAS
+    // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycby2Ztzn4T6QrNYNiNHBmnHWvMuFLBfmRj4EPds6L3ieOnBIhlguqORKhCh1NVSgBYzC9A/exec"; 
     const SEU_WHATSAPP = "5571982282769";
@@ -217,10 +216,9 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // WHATSAPP NATIVO (Sem abrir aba do navegador)
+    // WHATSAPP NATIVO
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
         const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria da Suncity.`;
-        // Mudança crítica: usa o link oficial da Meta e altera a janela atual (puxa o app)
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
 
@@ -378,7 +376,7 @@
         const apto = document.getElementById("chamadoApto").value;
         const just = document.getElementById("chamadoJustificativa").value;
         if (!bloco || !apto || !just) { alert("Preencha tudo!"); return; }
-        // Também mudado para não abrir aba do navegador
+        // WHATSAPP NATIVO PARA O CHAMADO
         window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`)}`;
     }
 </script>
