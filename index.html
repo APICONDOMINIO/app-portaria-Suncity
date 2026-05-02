@@ -137,7 +137,7 @@
     let pendentesDB = []; 
     let porteiroLogado = ""; 
     let idEmBaixa = null; 
-    let encomendaSelecionada = null; // Guarda os dados da encomenda que está sendo entregue
+    let encomendaSelecionada = null; 
 
     window.onload = () => {
         localStorage.removeItem("suncityUser"); 
@@ -296,7 +296,8 @@
 
     function abrirModalBaixa(id) {
         idEmBaixa = id;
-        encomendaSelecionada = pendentesDB.find(e => e.id === id); // Armazena os dados da entrega atual
+        // Ajuste de segurança: Garante que ele encontra o pacote independente do formato do ID
+        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
         document.getElementById("nomeRetirante").value = "";
         document.getElementById("modalAssinatura").style.display = "flex";
         setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
@@ -313,6 +314,9 @@
         btn.disabled = true;
         
         const dataBaixa = new Date().toLocaleString('pt-BR');
+        
+        // SALVA OS DADOS DO PACOTE NO BOLSO ANTES DE FECHAR O MODAL
+        const pacoteFaturado = encomendaSelecionada;
 
         try {
             const payload = { 
@@ -329,14 +333,14 @@
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
-            fecharModal();
+            fecharModal(); // Agora ele pode fechar sem problemas
             alert("Baixa confirmada no sistema!");
             
-            // NOVO: RECIBO DIGITAL NO WHATSAPP
-            if(encomendaSelecionada) {
-                const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${encomendaSelecionada.nome}, a sua encomenda (${encomendaSelecionada.descricao}) do Bloco ${encomendaSelecionada.bloco} Apto ${encomendaSelecionada.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
+            // ABRE O WHATSAPP COM OS DADOS GUARDADOS NO BOLSO
+            if(pacoteFaturado) {
+                const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${pacoteFaturado.nome}, a sua encomenda (${pacoteFaturado.descricao}) do Bloco ${pacoteFaturado.bloco} Apto ${pacoteFaturado.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
                 
-                window.location.href = `https://wa.me/${encomendaSelecionada.telefone}?text=${encodeURIComponent(msgRecibo)}`;
+                window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
             
             await buscarPendentes(); 
