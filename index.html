@@ -139,7 +139,7 @@
     // ==========================================
     // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbztC4ft12axx9wK03Qe7EyyDIkliYtF19CdyetL3w-uHz0BeN_x9R3yTvDNwYonf_eOYg/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbwxEpfeV6SKQgPMkp8nl19ibzQSWV44djQe-pMM7z6722KUc6Qz2ljlpdAnVlnL4O53Ng/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = []; 
@@ -323,7 +323,7 @@
         const quemRetirou = document.getElementById("nomeRetirante").value;
         if(!quemRetirou) { alert("Digite quem está retirando!"); return; }
 
-        const imagemBase64 = canvas.toDataURL("image/png").split(',')[1];
+        const imagemBase64 = "true"; // Sinaliza apenas que assinou para não sobrecarregar a rede
         
         fecharModal();
         document.getElementById("loading").style.display = "block";
