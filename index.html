@@ -56,7 +56,7 @@
             .tabela-pdf tr { page-break-inside: avoid; page-break-after: auto; }
             .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 6px; text-align: left; }
             .tabela-pdf th { background-color: #f2f2f2; font-weight: bold; }
-            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 20px; font-family: Arial, sans-serif; }
+            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 10px; font-family: Arial, sans-serif; }
             h3.print-sub { font-family: Arial, sans-serif; margin-bottom: 8px; margin-top: 15px; page-break-after: avoid; }
         }
     </style>
@@ -123,6 +123,7 @@
             <div id="listaPendentes"></div>
         </div>
 
+        <!-- ABA DE RELATÓRIOS COM NOVOS FILTROS -->
         <div id="tabRelatorio" class="card tab-content">
             <h3>Visão Analítica</h3>
             <div class="stats-box">
@@ -132,15 +133,27 @@
             
             <div class="filter-area">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">Filtros de Relatório</p>
+                
+                <!-- Novos filtros de Status e Mês -->
+                <div class="row">
+                    <select id="relStatus" onchange="renderizarRelatorio()">
+                        <option value="">Todos os Status</option>
+                        <option value="Pendente">Pendentes</option>
+                        <option value="Entregue">Entregues</option>
+                    </select>
+                    <select id="relMes" onchange="renderizarRelatorio()">
+                        <option value="">Todos os Meses</option>
+                    </select>
+                </div>
+
                 <div class="row">
                     <select id="relBloco" onchange="renderizarRelatorio()"><option value="">Todos Blocos</option></select>
                     <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
                 </div>
                 <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
                 
-                <!-- BOTOES DE PDF -->
+                <!-- Botoes de Exportação -->
                 <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Imprimir PDF</button>
-                <!-- BOTÃO NOVO QUE MANDA PRO EMAIL DO ADM -->
                 <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
             </div>
             
@@ -179,7 +192,7 @@
     // ==========================================
     // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbyBfCUj67oek5Uf-YDdZbDPYxxAyRID4OHQ2DWTD-1j9Z8qb6THDBMI7AynU9d4RyZLTQ/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbz0t5-1yEwFdfoz7EoTfg-H3kl0KpEPgEogRQF3Po597Oyr9grJJJ4U19JLqsVyMJalrQ/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [];
@@ -269,12 +282,36 @@
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
+    // NOVA FUNÇÃO: Extrai os meses da base de dados e preenche o filtro
+    function popularFiltroMeses() {
+        const selectMes = document.getElementById("relMes");
+        selectMes.innerHTML = '<option value="">Todos os Meses</option>';
+        
+        const mesesSet = new Set();
+        todasAsEncomendasDB.forEach(enc => {
+            if(enc.dataHora && typeof enc.dataHora === 'string') {
+                // Pega "MM/YYYY" de dentro da data "DD/MM/YYYY HH:MM"
+                const mesAno = enc.dataHora.substring(3, 10); 
+                mesesSet.add(mesAno);
+            }
+        });
+
+        // Ordena os meses do mais recente pro mais antigo
+        [...mesesSet].sort((a, b) => {
+            let valA = a.substring(3) + a.substring(0,2);
+            let valB = b.substring(3) + b.substring(0,2);
+            return valB.localeCompare(valA); 
+        }).forEach(m => selectMes.add(new Option(m, m)));
+    }
+
     async function buscarPendentes() {
         document.getElementById("loading").style.display = "block";
         try {
             const response = await fetch(API_URL);
             todasAsEncomendasDB = await response.json();
             pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
+            
+            popularFiltroMeses(); // Atualiza a lista de meses disponíveis
             aplicarFiltro(); 
             renderizarRelatorio();
         } catch (e) { console.error(e); } 
@@ -328,12 +365,17 @@
         const termo = document.getElementById("relMorador").value.toLowerCase();
         const fBloco = document.getElementById("relBloco").value;
         const fApto = document.getElementById("relApto").value.toLowerCase();
+        const fStatus = document.getElementById("relStatus").value;
+        const fMes = document.getElementById("relMes").value;
 
         const filtradas = todasAsEncomendasDB.filter(enc => {
             const matchBloco = fBloco === "" || enc.bloco === fBloco;
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
-            return matchBloco && matchApto && matchNome;
+            const matchStatus = fStatus === "" || enc.status === fStatus;
+            const matchMes = fMes === "" || (enc.dataHora && enc.dataHora.includes(fMes));
+            
+            return matchBloco && matchApto && matchNome && matchStatus && matchMes;
         });
 
         document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
@@ -361,18 +403,24 @@
         const termo = document.getElementById("relMorador").value.toLowerCase();
         const fBloco = document.getElementById("relBloco").value;
         const fApto = document.getElementById("relApto").value.toLowerCase();
+        const fStatus = document.getElementById("relStatus").value;
+        const fMes = document.getElementById("relMes").value;
 
         const filtradas = todasAsEncomendasDB.filter(enc => {
             const matchBloco = fBloco === "" || enc.bloco === fBloco;
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
-            return matchBloco && matchApto && matchNome;
+            const matchStatus = fStatus === "" || enc.status === fStatus;
+            const matchMes = fMes === "" || (enc.dataHora && enc.dataHora.includes(fMes));
+            
+            return matchBloco && matchApto && matchNome && matchStatus && matchMes;
         });
 
         const pendentes = filtradas.filter(e => e.status === "Pendente");
         const entregues = filtradas.filter(e => e.status === "Entregue");
 
         let htmlPDF = `<h2 class="print-title">📊 Relatório Analítico - Express Suncity</h2>`;
+        htmlPDF += `<p style="text-align:center; font-family:Arial; font-size:12px; margin-bottom:20px;">Filtros: Mês (${fMes||"Todos"}) | Status (${fStatus||"Todos"})</p>`;
 
         if(pendentes.length > 0) {
             htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${pendentes.length})</h3>
@@ -395,7 +443,7 @@
         }
 
         if(pendentes.length === 0 && entregues.length === 0) {
-            htmlPDF += `<p>Nenhuma encomenda encontrada para este filtro.</p>`;
+            htmlPDF += `<p style="font-family:Arial;">Nenhuma encomenda encontrada para este filtro.</p>`;
         }
 
         document.getElementById("areaImpressao").innerHTML = htmlPDF;
@@ -411,7 +459,7 @@
         setTimeout(() => { document.title = tituloOriginal; }, 2000);
     }
 
-    // NOVA FUNÇÃO: O ROBÔ QUE ENVIA O PDF POR E-MAIL PARA O ADM
+    // INTEGRAÇÃO: O envio de E-mail agora leva em conta os novos filtros!
     async function enviarRelatorioEmail() {
         const btnEmail = document.getElementById("btnEmailRel");
         btnEmail.innerText = "⏳ Gerando e Enviando...";
@@ -420,13 +468,17 @@
         const termo = document.getElementById("relMorador").value;
         const fBloco = document.getElementById("relBloco").value;
         const fApto = document.getElementById("relApto").value;
+        const fStatus = document.getElementById("relStatus").value;
+        const fMes = document.getElementById("relMes").value;
 
         try {
             const payload = { 
                 acao: "enviar_relatorio_pdf", 
                 termo: termo, 
                 fBloco: fBloco, 
-                fApto: fApto 
+                fApto: fApto,
+                fStatus: fStatus,
+                fMes: fMes
             };
 
             await fetch(API_URL, { 
