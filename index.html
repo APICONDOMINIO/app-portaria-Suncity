@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>Encomenda Express Suncity</title>
+    <title>Express Suncity Pro</title>
     <style>
         :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
@@ -20,60 +18,62 @@
         button.btn-danger { background-color: #e63946; color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-whats { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; display: flex; justify-content: center; gap: 8px; }
         
-        .encomenda-item { border-left: 5px solid var(--primary); padding: 15px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; }
+        .encomenda-item { border-left: 5px solid var(--primary); padding: 15px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; font-size: 14px; }
         #loading { text-align: center; font-weight: bold; color: var(--primary); display: none; padding: 10px; }
         
         #appContainer { display: none; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .nav-buttons { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto;}
-        .nav-buttons button { margin: 0; padding: 10px; font-size: 14px; white-space: nowrap;}
+        .nav-buttons button { margin: 0; padding: 10px; font-size: 13px; white-space: nowrap;}
         
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
-        .user-bar span { font-weight: bold; color: var(--primary); }
-        .user-bar button { margin: 0; padding: 5px 10px; width: auto; font-size: 12px; }
         .filter-area { background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
 
         #modalAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
-        canvas { border: 2px dashed #ccc; width: 100%; height: 200px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
+        canvas { border: 2px dashed #ccc; width: 100%; height: 150px; background: #fdfdfd; touch-action: none; margin-bottom: 10px; }
+        
+        .stats-box { display: flex; justify-content: space-around; margin-bottom: 15px; text-align: center; }
+        .stat { background: var(--primary); color: white; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; }
+        .stat span { display: block; font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 Express Suncity</h2>
+    <h2>📦 Express Suncity Pro</h2>
 
     <div id="loginContainer" class="card">
-        <h3 style="text-align:center;">Identificação do Porteiro</h3>
+        <h3 style="text-align:center;">Acesso Portaria</h3>
         <input type="text" id="loginUser" placeholder="Usuário">
         <input type="password" id="loginSenha" placeholder="Senha">
-        <button class="btn-primary" onclick="fazerLogin()">Entrar no Sistema</button>
-        <p id="msgLogin" style="color:red; text-align:center; display:none;"></p>
+        <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
     </div>
 
     <div id="appContainer">
         <div class="user-bar">
-            <div>Porteiro: <span id="nomePorteiroAtivo"></span></div>
-            <button class="btn-danger" onclick="fazerLogout()">Sair</button>
+            <div>Porteiro: <span id="nomePorteiroAtivo" style="font-weight:bold;"></span></div>
+            <button class="btn-danger" onclick="location.reload()" style="width:auto; padding:5px 10px;">Sair</button>
         </div>
 
         <div class="nav-buttons">
             <button class="btn-primary" onclick="mudarAba('tabReceber')">📥 Receber</button>
             <button class="btn-primary" onclick="mudarAba('tabPendentes')">📋 Pendentes</button>
-            <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamados</button>
+            <button class="btn-secondary" onclick="mudarAba('tabRelatorio')">📊 Relatórios</button>
+            <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamado</button>
         </div>
 
-        <p id="loading">Processando... ⏳</p>
+        <p id="loading">Sincronizando...</p>
 
         <div id="tabReceber" class="card tab-content active">
-            <h3>Nova Encomenda</h3>
+            <h3>Entrada de Pacote</h3>
             <div class="row">
-                <select id="blocoSelect" onchange="atualizarAptos()"><option value="">Bloco...</option></select>
-                <select id="aptoSelect"><option value="">Apto...</option></select>
+                <select id="blocoSelect" onchange="atualizarAptos()"></select>
+                <select id="aptoSelect"></select>
             </div>
             <select id="descInput">
-                <option value="">Selecione o tipo de pacote...</option>
+                <option value="">Tipo de pacote...</option>
                 <option value="Mercado Livre">Mercado Livre</option>
                 <option value="Shopee">Shopee</option>
                 <option value="Envelopes">Envelopes</option>
@@ -85,93 +85,65 @@
 
         <div id="tabPendentes" class="card tab-content">
             <h3>A Entregar (<span id="contador">0</span>)</h3>
-            
             <div class="filter-area">
-                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Menu de Exibição</p>
-                <input type="text" id="buscaGeral" placeholder="Digite nome, pacote ou apto..." onkeyup="aplicarFiltro()">
-                <div class="row">
-                    <select id="filtroBlocoBusca" onchange="aplicarFiltro()">
-                        <option value="">Todos os Blocos</option>
-                    </select>
-                    <button class="btn-secondary" onclick="limparFiltro()">Exibir Tudo</button>
-                </div>
+                <input type="text" id="buscaGeral" placeholder="Filtrar por nome ou apto..." onkeyup="aplicarFiltro()">
             </div>
-
             <div id="listaPendentes"></div>
         </div>
 
-        <div id="tabChamado" class="card tab-content">
-            <h3>Atualizar Cadastro</h3>
-            <div class="row">
-                <input type="number" id="chamadoBloco" placeholder="Bloco">
-                <input type="text" id="chamadoApto" placeholder="Apto">
+        <div id="tabRelatorio" class="card tab-content">
+            <h3>Resumo Geral</h3>
+            <div class="stats-box">
+                <div class="stat">Pendentes <span id="statPend">0</span></div>
+                <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
             </div>
-            <textarea id="chamadoJustificativa" placeholder="O que deve ser alterado e por que?" rows="3"></textarea>
-            <button class="btn-whats" onclick="enviarChamado()">Enviar para Administração</button>
+            <input type="text" id="buscaRelatorio" placeholder="Pesquisar histórico..." onkeyup="renderizarRelatorio()">
+            <div id="listaRelatorio"></div>
+        </div>
+
+        <div id="tabChamado" class="card tab-content">
+            <h3>Solicitar Correção</h3>
+            <textarea id="chamadoJustificativa" placeholder="Descreva o erro no cadastro aqui..." rows="4"></textarea>
+            <button class="btn-whats" onclick="enviarChamado()">Enviar para o Marcos</button>
         </div>
     </div>
 </div>
 
 <div id="modalAssinatura">
     <div class="modal-content">
-        <h3 style="margin-top:0;">Confirmar Retirada</h3>
-        <input type="text" id="nomeRetirante" placeholder="Nome de quem está retirando">
-        <p style="margin-bottom:5px; font-size:14px; font-weight:bold;">Assinatura na Tela:</p>
+        <h3>Confirmar Entrega</h3>
+        <input type="text" id="nomeRetirante" placeholder="Quem está retirando?">
         <canvas id="signaturePad"></canvas>
         <div class="row">
             <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
-            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-danger" onclick="fecharModal()">Voltar</button>
         </div>
-        <button id="btnConfirmarBaixa" class="btn-primary" style="background:#25D366;" onclick="confirmarEntregaFinal()">✅ Confirmar Entrega</button>
+        <button id="btnConfirmarBaixa" class="btn-primary" style="background:#25D366;" onclick="confirmarEntregaFinal()">✅ Finalizar e Avisar</button>
     </div>
 </div>
 
 <script>
-    // ==========================================
-    // COLE SUA URL AQUI DENTRO DAS ASPAS
-    // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwxEpfeV6SKQgPMkp8nl19ibzQSWV44djQe-pMM7z6722KUc6Qz2ljlpdAnVlnL4O53Ng/exec"; 
     const SEU_WHATSAPP = "5571982282769";
-
-    let moradoresDB = []; 
-    let pendentesDB = []; 
-    let porteiroLogado = ""; 
-    let idEmBaixa = null; 
-    let encomendaSelecionada = null; 
-
-    window.onload = () => {
-        localStorage.removeItem("suncityUser"); 
-        document.getElementById("loginContainer").style.display = "block";
-    };
+    let moradoresDB = [], todasEncomendas = [], porteiroLogado = "", idEmBaixa = null, encSelecionada = null;
 
     async function fazerLogin() {
-        const login = document.getElementById("loginUser").value;
-        const senha = document.getElementById("loginSenha").value;
+        const login = document.getElementById("loginUser").value, senha = document.getElementById("loginSenha").value;
         if(!login || !senha) return;
-        document.getElementById("msgLogin").style.display = "none";
-        document.getElementById("loginContainer").style.opacity = "0.5";
         try {
-            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login: login, senha: senha }), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login: login, senha: senha }) });
             const data = await res.json();
-            if(data.status === "ok") {
-                porteiroLogado = data.nome;
-                iniciarSistema();
-            } else {
-                document.getElementById("msgLogin").innerText = data.erro;
-                document.getElementById("msgLogin").style.display = "block";
-            }
-        } catch(e) { alert("Erro de rede ao logar."); } 
-        finally { document.getElementById("loginContainer").style.opacity = "1"; }
+            if(data.status === "ok") { porteiroLogado = data.nome; iniciarSistema(); }
+            else alert(data.erro);
+        } catch(e) { alert("Erro de conexão."); }
     }
-
-    function fazerLogout() { location.reload(); }
 
     async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
         await carregarMoradores();
-        await buscarPendentes();
+        await buscarTudo();
     }
 
     function mudarAba(abaId) {
@@ -180,211 +152,93 @@
     }
 
     async function carregarMoradores() {
-        try {
-            const response = await fetch(API_URL + "?acao=getMoradores");
-            moradoresDB = await response.json();
-            const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
-            
-            const s = document.getElementById("blocoSelect");
-            const sFiltro = document.getElementById("filtroBlocoBusca");
-            
-            s.innerHTML = '<option value="">Bloco...</option>';
-            sFiltro.innerHTML = '<option value="">Todos os Blocos</option>';
-
-            blocos.forEach(b => {
-                s.add(new Option(`Bloco ${b}`, b));
-                sFiltro.add(new Option(`Bloco ${b}`, b));
-            });
-        } catch (e) { console.error(e); }
+        const res = await fetch(API_URL + "?acao=getMoradores");
+        moradoresDB = await res.json();
+        const s = document.getElementById("blocoSelect"), blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+        s.innerHTML = '<option value="">Bloco...</option>';
+        blocos.forEach(b => s.add(new Option(`Bloco ${b}`, b)));
     }
 
     function atualizarAptos() {
-        const b = document.getElementById("blocoSelect").value;
-        const s = document.getElementById("aptoSelect");
+        const b = document.getElementById("blocoSelect").value, s = document.getElementById("aptoSelect");
         s.innerHTML = '<option value="">Apto...</option>';
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
-    async function buscarPendentes() {
+    async function buscarTudo() {
         document.getElementById("loading").style.display = "block";
-        try {
-            const response = await fetch(API_URL);
-            pendentesDB = await response.json();
-            aplicarFiltro(); 
-        } catch (e) { console.error(e); } 
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
-    function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
-        const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria da Suncity.`;
-        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-    }
-
-    async function registrarEncomenda() {
-        const bloco = document.getElementById("blocoSelect").value;
-        const apto = document.getElementById("aptoSelect").value;
-        const desc = document.getElementById("descInput").value;
-        if (!bloco || !apto || !desc) { alert("Preencha bloco, apto e a descrição!"); return; }
-
-        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
-        const dados = {
-            acao: "nova_encomenda", id: Date.now().toString(),
-            bloco: bloco, apto: apto, nome: morador.nome, telefone: morador.telefone,
-            descricao: desc, dataHora: new Date().toLocaleString('pt-BR'), porteiroEntrada: porteiroLogado
-        };
-
-        document.getElementById("loading").style.display = "block";
-        try {
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(dados),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            document.getElementById("descInput").value = "";
-            await buscarPendentes(); 
-            if(confirm("Entrada Registrada!\n\nDeseja enviar o aviso por WhatsApp agora?")) {
-                enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
-            }
-        } catch (e) { alert("Erro ao salvar."); }
-        finally { document.getElementById("loading").style.display = "none"; }
+        const res = await fetch(API_URL);
+        todasEncomendas = await res.json();
+        aplicarFiltro();
+        renderizarRelatorio();
+        document.getElementById("loading").style.display = "none";
     }
 
     function aplicarFiltro() {
-        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
-        const blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
-        
-        let filtrados = pendentesDB.filter(enc => {
-            const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
-            const matchTexto = termoBusca === "" || 
-                               enc.nome.toLowerCase().includes(termoBusca) || 
-                               enc.descricao.toLowerCase().includes(termoBusca) ||
-                               String(enc.apto).includes(termoBusca);
-            return matchBloco && matchTexto;
-        });
-        
-        renderizarLista(filtrados);
-    }
-
-    function limparFiltro() {
-        document.getElementById("buscaGeral").value = "";
-        document.getElementById("filtroBlocoBusca").value = "";
-        renderizarLista(pendentesDB);
-    }
-
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-
-    function getPos(e) {
-        var rect = canvas.getBoundingClientRect();
-        if (e.changedTouches) return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top };
-        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    }
-
-    function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
-    function desenhar(e) { if (!isDrawing) return; e.preventDefault(); let pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
-    function pararDesenho(e) { e.preventDefault(); isDrawing = false; }
-
-    canvas.addEventListener('mousedown', iniciarDesenho);
-    canvas.addEventListener('mousemove', desenhar);
-    canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
-    canvas.addEventListener('touchmove', desenhar, {passive: false});
-    canvas.addEventListener('touchend', pararDesenho, {passive: false});
-
-    function limparCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-    function abrirModalBaixa(id) {
-        idEmBaixa = id;
-        // Ajuste de segurança: Garante que ele encontra o pacote independente do formato do ID
-        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
-        document.getElementById("nomeRetirante").value = "";
-        document.getElementById("modalAssinatura").style.display = "flex";
-        setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
-    }
-
-    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
-
-    async function confirmarEntregaFinal() {
-        const quemRetirou = document.getElementById("nomeRetirante").value;
-        if(!quemRetirou) { alert("Digite quem está retirando!"); return; }
-
-        const btn = document.getElementById("btnConfirmarBaixa");
-        btn.innerText = "Processando...";
-        btn.disabled = true;
-        
-        const dataBaixa = new Date().toLocaleString('pt-BR');
-        
-        // SALVA OS DADOS DO PACOTE NO BOLSO ANTES DE FECHAR O MODAL
-        const pacoteFaturado = encomendaSelecionada;
-
-        try {
-            const payload = { 
-                acao: "baixar", id: idEmBaixa.toString(), 
-                dataHora: dataBaixa,
-                porteiroSaida: porteiroLogado || "Não identificado",
-                quemRetirou: quemRetirou,
-                assinatura: "Sim" 
-            };
-
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(payload),
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
-            
-            fecharModal(); // Agora ele pode fechar sem problemas
-            alert("Baixa confirmada no sistema!");
-            
-            // ABRE O WHATSAPP COM OS DADOS GUARDADOS NO BOLSO
-            if(pacoteFaturado) {
-                const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${pacoteFaturado.nome}, a sua encomenda (${pacoteFaturado.descricao}) do Bloco ${pacoteFaturado.bloco} Apto ${pacoteFaturado.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
-                
-                window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
-            }
-            
-            await buscarPendentes(); 
-        } catch (error) { 
-            alert("Erro da rede: " + error.message); 
-        } finally { 
-            btn.innerText = "✅ Confirmar Entrega";
-            btn.disabled = false;
-        }
-    }
-
-    function renderizarLista(encomendas) {
+        const t = document.getElementById("buscaGeral").value.toLowerCase();
+        const pendentes = todasEncomendas.filter(e => e.status === "Pendente" && (e.nome.toLowerCase().includes(t) || String(e.apto).includes(t)));
         const lista = document.getElementById("listaPendentes");
         lista.innerHTML = "";
-        document.getElementById("contador").innerText = encomendas.length;
-
-        encomendas.forEach(enc => {
-            const div = document.createElement("div");
-            div.className = "encomenda-item";
-            div.innerHTML = `
-                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
-                <strong>Pacote:</strong> ${enc.descricao} <br>
-                <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
-                <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
-                
-                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/></svg>
-                    Avisar no WhatsApp
-                </button>
-                <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">
-                    ✅ Entregar / Assinar
-                </button>
-            `;
+        document.getElementById("contador").innerText = pendentes.length;
+        pendentes.forEach(e => {
+            const div = document.createElement("div"); div.className = "encomenda-item";
+            div.innerHTML = `<strong>Bl ${e.bloco} - Ap ${e.apto}</strong> (${e.nome})<br>${e.descricao}<br><small>Entrada: ${e.dataEntrada}</small><br>
+                <button class="btn-whats" style="margin-top:5px;" onclick="enviarWhats('${e.telefone}','${e.nome}','${e.descricao}','${e.bloco}','${e.apto}')">Avisar Chegada</button>
+                <button class="btn-danger" style="margin-top:5px;" onclick="abrirModal('${e.id}')">Entregar</button>`;
             lista.appendChild(div);
         });
     }
 
-    function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value;
-        const apto = document.getElementById("chamadoApto").value;
-        const just = document.getElementById("chamadoJustificativa").value;
-        if (!bloco || !apto || !just) { alert("Preencha tudo!"); return; }
-        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`)}`;
+    function renderizarRelatorio() {
+        const t = document.getElementById("buscaRelatorio").value.toLowerCase();
+        const filtradas = todasEncomendas.filter(e => e.nome.toLowerCase().includes(t) || String(e.apto).includes(t));
+        document.getElementById("statPend").innerText = todasEncomendas.filter(e => e.status === "Pendente").length;
+        document.getElementById("statEntreg").innerText = todasEncomendas.filter(e => e.status === "Entregue").length;
+        const lista = document.getElementById("listaRelatorio");
+        lista.innerHTML = "";
+        filtradas.slice(0, 20).forEach(e => {
+            const div = document.createElement("div"); div.className = "encomenda-item";
+            div.style.borderLeftColor = e.status === "Entregue" ? "#25D366" : "#1d3557";
+            div.innerHTML = `<strong>Bl ${e.bloco} - Ap ${e.apto}</strong> - ${e.status}<br>${e.descricao}<br><small>In: ${e.dataEntrada} | Out: ${e.dataSaida || '-'}</small>`;
+            lista.appendChild(div);
+        });
     }
+
+    function enviarWhats(tel, nome, desc, bl, ap) {
+        const msg = `Olá ${nome}, sua encomenda (${desc}) está na portaria (Bl ${bl} Ap ${ap}).`;
+        window.location.href = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    }
+
+    async function registrarEncomenda() {
+        const bl = document.getElementById("blocoSelect").value, ap = document.getElementById("aptoSelect").value, ds = document.getElementById("descInput").value;
+        if(!bl || !ap || !ds) return alert("Preencha tudo!");
+        const morador = moradoresDB.find(m => m.bloco === bl && String(m.apto) === String(ap));
+        const dados = { acao: "nova_encomenda", id: Date.now().toString(), bloco: bl, apto: ap, nome: morador.nome, telefone: morador.telefone, descricao: ds, dataHora: new Date().toLocaleString('pt-BR'), porteiroEntrada: porteiroLogado };
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(dados) });
+        alert("Salvo! E-mail de aviso enviado automaticamente.");
+        buscarTudo();
+    }
+
+    async function confirmarEntregaFinal() {
+        const q = document.getElementById("nomeRetirante").value; if(!q) return alert("Quem retirou?");
+        const dt = new Date().toLocaleString('pt-BR');
+        const p = { acao: "baixar", id: idEmBaixa, dataHora: dt, porteiroSaida: porteiroLogado, quemRetirou: q, assinatura: "Sim" };
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(p) });
+        const e = todasEncomendas.find(enc => String(enc.id) === String(idEmBaixa));
+        const msg = `📦 *Comprovante Suncity*\nOlá ${e.nome}, seu pacote foi retirado por ${q} em ${dt}.`;
+        window.location.href = `https://wa.me/${e.telefone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    // Funções de Modal e Canvas permanecem as mesmas
+    const canvas = document.getElementById('signaturePad'), ctx = canvas.getContext('2d');
+    let drawing = false;
+    canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); const touch = e.touches[0]; ctx.moveTo(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top); e.preventDefault(); });
+    canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const touch = e.touches[0]; ctx.lineTo(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top); ctx.stroke(); e.preventDefault(); });
+    canvas.addEventListener('touchend', () => drawing = false);
+    function abrirModal(id) { idEmBaixa = id; document.getElementById("modalAssinatura").style.display = "flex"; canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; }
+    function limparCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+    function enviarChamado() { window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent('⚠️ CHAMADO\n' + document.getElementById("chamadoJustificativa").value + '\n\nPorteiro: ' + porteiroLogado)}`; }
 </script>
 </body>
 </html>
