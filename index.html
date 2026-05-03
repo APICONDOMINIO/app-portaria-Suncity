@@ -37,6 +37,14 @@
         #modalAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
         canvas { border: 2px dashed #ccc; width: 100%; height: 200px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
+
+        /* Estilos adicionados para a aba de Relatórios */
+        .stats-box { display: flex; justify-content: space-around; margin-bottom: 15px; text-align: center; }
+        .stat { background: var(--primary); color: white; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; }
+        .stat span { display: block; font-size: 20px; font-weight: bold; }
+        .relatorio-item { border-left: 5px solid #ccc; padding: 15px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; font-size: 14px;}
+        .status-pendente { border-left-color: var(--primary); }
+        .status-entregue { border-left-color: var(--success); }
     </style>
 </head>
 <body>
@@ -61,6 +69,8 @@
         <div class="nav-buttons">
             <button class="btn-primary" onclick="mudarAba('tabReceber')">📥 Receber</button>
             <button class="btn-primary" onclick="mudarAba('tabPendentes')">📋 Pendentes</button>
+            <!-- Novo botão de Relatórios incluído aqui -->
+            <button class="btn-secondary" onclick="mudarAba('tabRelatorio')">📊 Relatórios</button>
             <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamados</button>
         </div>
 
@@ -100,6 +110,19 @@
             <div id="listaPendentes"></div>
         </div>
 
+        <!-- Nova aba de Relatórios inserida aqui -->
+        <div id="tabRelatorio" class="card tab-content">
+            <h3>Visão Geral</h3>
+            <div class="stats-box">
+                <div class="stat">Pendentes <span id="statPend">0</span></div>
+                <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
+            </div>
+            <div class="filter-area">
+                <input type="text" id="buscaRelatorio" placeholder="Pesquisar histórico por morador..." onkeyup="renderizarRelatorio()">
+            </div>
+            <div id="listaRelatorio"></div>
+        </div>
+
         <div id="tabChamado" class="card tab-content">
             <h3>Atualizar Cadastro</h3>
             <div class="row">
@@ -130,10 +153,11 @@
     // ==========================================
     // COLE SUA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbwxEpfeV6SKQgPMkp8nl19ibzQSWV44djQe-pMM7z6722KUc6Qz2ljlpdAnVlnL4O53Ng/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbztm2tr5x2iGZ1JKBgb9Xd2NKw7nBg_6tsyBsYUPaUuGAVyM41mLPZgudCWhv2EHa_uBw/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = []; 
+    let todasAsEncomendasDB = []; // Criado para armazenar tudo para o relatório
     let pendentesDB = []; 
     let porteiroLogado = ""; 
     let idEmBaixa = null; 
@@ -209,8 +233,14 @@
         document.getElementById("loading").style.display = "block";
         try {
             const response = await fetch(API_URL);
-            pendentesDB = await response.json();
+            todasAsEncomendasDB = await response.json();
+            // Filtra os pendentes para manter a aba principal exatamente como era
+            pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
+            
             aplicarFiltro(); 
+            // Atualiza os relatórios silenciosamente
+            if (typeof renderizarRelatorio === "function") renderizarRelatorio();
+            
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
@@ -242,7 +272,8 @@
             });
             document.getElementById("descInput").value = "";
             await buscarPendentes(); 
-            if(confirm("Entrada Registrada!\n\nDeseja enviar o aviso por WhatsApp agora?")) {
+            // ALERTA ATUALIZADO CITANDO O E-MAIL
+            if(confirm("Entrada Registrada no Sistema!\n\n(Se o morador tiver e-mail cadastrado, já foi avisado automaticamente).\n\nDeseja enviar o aviso também por WhatsApp agora?")) {
                 enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
             }
         } catch (e) { alert("Erro ao salvar."); }
@@ -271,6 +302,43 @@
         renderizarLista(pendentesDB);
     }
 
+    // NOVA FUNÇÃO: Gera a tela de relatórios
+    function renderizarRelatorio() {
+        const termo = document.getElementById("buscaRelatorio").value.toLowerCase();
+        
+        const pendentesCount = todasAsEncomendasDB.filter(e => e.status === "Pendente").length;
+        const entreguesCount = todasAsEncomendasDB.filter(e => e.status === "Entregue").length;
+        
+        document.getElementById("statPend").innerText = pendentesCount;
+        document.getElementById("statEntreg").innerText = entreguesCount;
+
+        const lista = document.getElementById("listaRelatorio");
+        lista.innerHTML = "";
+
+        const filtradas = todasAsEncomendasDB.filter(enc => 
+            enc.nome.toLowerCase().includes(termo) || 
+            String(enc.apto).includes(termo) ||
+            enc.descricao.toLowerCase().includes(termo)
+        );
+
+        // Mostra os 30 últimos registros para não pesar o navegador do celular
+        filtradas.slice().reverse().slice(0, 30).forEach(enc => {
+            const div = document.createElement("div");
+            div.className = "relatorio-item " + (enc.status === "Entregue" ? "status-entregue" : "status-pendente");
+            
+            let infoSaida = enc.status === "Entregue" ? `<br><strong>Retirado por:</strong> ${enc.quemRetirou} <br><small>Saída: ${enc.dataSaida} (${enc.porteiroSaida})</small>` : ``;
+
+            div.innerHTML = `
+                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
+                <strong>Status:</strong> ${enc.status}<br>
+                <strong>Pacote:</strong> ${enc.descricao} <br>
+                <small>Entrada: ${enc.dataHora} (${enc.porteiroEntrada})</small>
+                ${infoSaida}
+            `;
+            lista.appendChild(div);
+        });
+    }
+
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -296,7 +364,6 @@
 
     function abrirModalBaixa(id) {
         idEmBaixa = id;
-        // Ajuste de segurança: Garante que ele encontra o pacote independente do formato do ID
         encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
         document.getElementById("nomeRetirante").value = "";
         document.getElementById("modalAssinatura").style.display = "flex";
@@ -315,7 +382,6 @@
         
         const dataBaixa = new Date().toLocaleString('pt-BR');
         
-        // SALVA OS DADOS DO PACOTE NO BOLSO ANTES DE FECHAR O MODAL
         const pacoteFaturado = encomendaSelecionada;
 
         try {
@@ -333,10 +399,10 @@
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
-            fecharModal(); // Agora ele pode fechar sem problemas
-            alert("Baixa confirmada no sistema!");
+            fecharModal(); 
+            // ALERTA ATUALIZADO CITANDO O E-MAIL
+            alert("Baixa confirmada no sistema!\n\n(Se o morador tiver e-mail cadastrado, o recibo também já foi enviado).");
             
-            // ABRE O WHATSAPP COM OS DADOS GUARDADOS NO BOLSO
             if(pacoteFaturado) {
                 const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${pacoteFaturado.nome}, a sua encomenda (${pacoteFaturado.descricao}) do Bloco ${pacoteFaturado.bloco} Apto ${pacoteFaturado.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
                 
