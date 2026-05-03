@@ -3,9 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>Encomenda Express Suncity</title>
     <style>
         :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
@@ -26,8 +23,10 @@
         #appContainer { display: none; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .nav-buttons { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto;}
-        .nav-buttons button { margin: 0; padding: 10px; font-size: 14px; white-space: nowrap;}
+        
+        /* NOVO LAYOUT DOS BOTÕES (Em bloco) */
+        .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .nav-buttons button { margin: 0; padding: 12px; font-size: 14px; }
         
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
         .user-bar span { font-weight: bold; color: var(--primary); }
@@ -38,13 +37,21 @@
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
         canvas { border: 2px dashed #ccc; width: 100%; height: 200px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
 
-        /* Estilos adicionados para a aba de Relatórios */
+        /* Estilos do Relatório */
         .stats-box { display: flex; justify-content: space-around; margin-bottom: 15px; text-align: center; }
         .stat { background: var(--primary); color: white; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; }
         .stat span { display: block; font-size: 20px; font-weight: bold; }
         .relatorio-item { border-left: 5px solid #ccc; padding: 15px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; font-size: 14px;}
         .status-pendente { border-left-color: var(--primary); }
         .status-entregue { border-left-color: var(--success); }
+
+        /* REGRA PARA O PDF (Esconde o que não importa) */
+        @media print {
+            body * { visibility: hidden; }
+            #tabRelatorio, #tabRelatorio * { visibility: visible; }
+            #tabRelatorio { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
+            .nav-buttons, .user-bar, .filter-area, #btnImprimir { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -69,7 +76,6 @@
         <div class="nav-buttons">
             <button class="btn-primary" onclick="mudarAba('tabReceber')">📥 Receber</button>
             <button class="btn-primary" onclick="mudarAba('tabPendentes')">📋 Pendentes</button>
-            <!-- Novo botão de Relatórios incluído aqui -->
             <button class="btn-secondary" onclick="mudarAba('tabRelatorio')">📊 Relatórios</button>
             <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamados</button>
         </div>
@@ -97,29 +103,37 @@
             <h3>A Entregar (<span id="contador">0</span>)</h3>
             
             <div class="filter-area">
-                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Menu de Exibição</p>
+                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtro Dinâmico</p>
                 <input type="text" id="buscaGeral" placeholder="Digite nome, pacote ou apto..." onkeyup="aplicarFiltro()">
                 <div class="row">
                     <select id="filtroBlocoBusca" onchange="aplicarFiltro()">
                         <option value="">Todos os Blocos</option>
                     </select>
-                    <button class="btn-secondary" onclick="limparFiltro()">Exibir Tudo</button>
+                    <button class="btn-secondary" onclick="limparFiltro()">Limpar</button>
                 </div>
             </div>
 
             <div id="listaPendentes"></div>
         </div>
 
-        <!-- Nova aba de Relatórios inserida aqui -->
+        <!-- ABA DE RELATÓRIOS -->
         <div id="tabRelatorio" class="card tab-content">
-            <h3>Visão Geral</h3>
+            <h3>Visão Analítica</h3>
             <div class="stats-box">
                 <div class="stat">Pendentes <span id="statPend">0</span></div>
                 <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
             </div>
+            
             <div class="filter-area">
-                <input type="text" id="buscaRelatorio" placeholder="Pesquisar histórico por morador..." onkeyup="renderizarRelatorio()">
+                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">Filtros de Relatório</p>
+                <div class="row">
+                    <select id="relBloco" onchange="renderizarRelatorio()"><option value="">Todos Blocos</option></select>
+                    <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
+                </div>
+                <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
+                <button id="btnImprimir" class="btn-secondary" onclick="window.print()">🖨️ Exportar PDF</button>
             </div>
+            
             <div id="listaRelatorio"></div>
         </div>
 
@@ -153,24 +167,36 @@
     // ==========================================
     // COLE SUA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbztm2tr5x2iGZ1JKBgb9Xd2NKw7nBg_6tsyBsYUPaUuGAVyM41mLPZgudCWhv2EHa_uBw/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbxbwHSWWLPLGxhXWNxRDuFeqWEQcI_SMzxWXYLZBlIS6HWCx6wzY9D17TtA5JiPg159wg/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
-    let moradoresDB = []; 
-    let todasAsEncomendasDB = []; // Criado para armazenar tudo para o relatório
-    let pendentesDB = []; 
-    let porteiroLogado = ""; 
-    let idEmBaixa = null; 
-    let encomendaSelecionada = null; 
+    let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [];
+    let porteiroLogado = "", idEmBaixa = null, encomendaSelecionada = null; 
 
+    // NOVO: Regra de Inatividade (5 minutos)
+    let ultimaAtividade = Date.now();
+    const resetarTimer = () => ultimaAtividade = Date.now();
+    window.addEventListener('touchstart', resetarTimer);
+    window.addEventListener('click', resetarTimer);
+    window.addEventListener('scroll', resetarTimer);
+    window.addEventListener('keypress', resetarTimer);
+
+    setInterval(() => {
+        if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) {
+            alert("A sessão expirou por inatividade de 5 minutos.");
+            fazerLogout();
+        }
+    }, 60000); // Verifica a cada minuto
+
+    // O Login agora não expira mais ao recarregar a tela!
     window.onload = () => {
-        localStorage.removeItem("suncityUser"); 
-        document.getElementById("loginContainer").style.display = "block";
+        let salvo = localStorage.getItem("suncityUser");
+        if(salvo) { porteiroLogado = salvo; iniciarSistema(); }
+        else { document.getElementById("loginContainer").style.display = "block"; }
     };
 
     async function fazerLogin() {
-        const login = document.getElementById("loginUser").value;
-        const senha = document.getElementById("loginSenha").value;
+        const login = document.getElementById("loginUser").value, senha = document.getElementById("loginSenha").value;
         if(!login || !senha) return;
         document.getElementById("msgLogin").style.display = "none";
         document.getElementById("loginContainer").style.opacity = "0.5";
@@ -179,6 +205,7 @@
             const data = await res.json();
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
+                localStorage.setItem("suncityUser", porteiroLogado); // Salva no celular
                 iniciarSistema();
             } else {
                 document.getElementById("msgLogin").innerText = data.erro;
@@ -188,12 +215,13 @@
         finally { document.getElementById("loginContainer").style.opacity = "1"; }
     }
 
-    function fazerLogout() { location.reload(); }
+    function fazerLogout() { localStorage.removeItem("suncityUser"); location.reload(); }
 
     async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
+        ultimaAtividade = Date.now(); // Inicia o contador
         await carregarMoradores();
         await buscarPendentes();
     }
@@ -211,20 +239,22 @@
             
             const s = document.getElementById("blocoSelect");
             const sFiltro = document.getElementById("filtroBlocoBusca");
+            const relBloco = document.getElementById("relBloco");
             
             s.innerHTML = '<option value="">Bloco...</option>';
             sFiltro.innerHTML = '<option value="">Todos os Blocos</option>';
+            relBloco.innerHTML = '<option value="">Todos Blocos</option>';
 
             blocos.forEach(b => {
                 s.add(new Option(`Bloco ${b}`, b));
                 sFiltro.add(new Option(`Bloco ${b}`, b));
+                relBloco.add(new Option(`Bloco ${b}`, b));
             });
         } catch (e) { console.error(e); }
     }
 
     function atualizarAptos() {
-        const b = document.getElementById("blocoSelect").value;
-        const s = document.getElementById("aptoSelect");
+        const b = document.getElementById("blocoSelect").value, s = document.getElementById("aptoSelect");
         s.innerHTML = '<option value="">Apto...</option>';
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
@@ -234,13 +264,9 @@
         try {
             const response = await fetch(API_URL);
             todasAsEncomendasDB = await response.json();
-            // Filtra os pendentes para manter a aba principal exatamente como era
             pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
-            
             aplicarFiltro(); 
-            // Atualiza os relatórios silenciosamente
-            if (typeof renderizarRelatorio === "function") renderizarRelatorio();
-            
+            renderizarRelatorio();
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
@@ -251,9 +277,7 @@
     }
 
     async function registrarEncomenda() {
-        const bloco = document.getElementById("blocoSelect").value;
-        const apto = document.getElementById("aptoSelect").value;
-        const desc = document.getElementById("descInput").value;
+        const bloco = document.getElementById("blocoSelect").value, apto = document.getElementById("aptoSelect").value, desc = document.getElementById("descInput").value;
         if (!bloco || !apto || !desc) { alert("Preencha bloco, apto e a descrição!"); return; }
 
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
@@ -265,15 +289,10 @@
 
         document.getElementById("loading").style.display = "block";
         try {
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(dados),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(dados), headers: { "Content-Type": "text/plain;charset=utf-8" } });
             document.getElementById("descInput").value = "";
             await buscarPendentes(); 
-            // ALERTA ATUALIZADO CITANDO O E-MAIL
-            if(confirm("Entrada Registrada no Sistema!\n\n(Se o morador tiver e-mail cadastrado, já foi avisado automaticamente).\n\nDeseja enviar o aviso também por WhatsApp agora?")) {
+            if(confirm("Entrada Registrada no Sistema!\n\n(E-mail de aviso disparado).\n\nDeseja enviar aviso por WhatsApp agora?")) {
                 enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
             }
         } catch (e) { alert("Erro ao salvar."); }
@@ -281,18 +300,11 @@
     }
 
     function aplicarFiltro() {
-        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
-        const blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
-        
+        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase(), blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
         let filtrados = pendentesDB.filter(enc => {
-            const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
-            const matchTexto = termoBusca === "" || 
-                               enc.nome.toLowerCase().includes(termoBusca) || 
-                               enc.descricao.toLowerCase().includes(termoBusca) ||
-                               String(enc.apto).includes(termoBusca);
-            return matchBloco && matchTexto;
+            return (blocoSelecionado === "" || enc.bloco === blocoSelecionado) && 
+                   (termoBusca === "" || enc.nome.toLowerCase().includes(termoBusca) || enc.descricao.toLowerCase().includes(termoBusca) || String(enc.apto).includes(termoBusca));
         });
-        
         renderizarLista(filtrados);
     }
 
@@ -302,32 +314,31 @@
         renderizarLista(pendentesDB);
     }
 
-    // NOVA FUNÇÃO: Gera a tela de relatórios
+    // O RELATÓRIO COMPLETÍSSIMO COM FILTROS DE BLOCO/APTO/MORADOR
     function renderizarRelatorio() {
-        const termo = document.getElementById("buscaRelatorio").value.toLowerCase();
-        
-        const pendentesCount = todasAsEncomendasDB.filter(e => e.status === "Pendente").length;
-        const entreguesCount = todasAsEncomendasDB.filter(e => e.status === "Entregue").length;
-        
-        document.getElementById("statPend").innerText = pendentesCount;
-        document.getElementById("statEntreg").innerText = entreguesCount;
+        const termo = document.getElementById("relMorador").value.toLowerCase();
+        const fBloco = document.getElementById("relBloco").value;
+        const fApto = document.getElementById("relApto").value.toLowerCase();
+
+        // Filtra a base completa
+        const filtradas = todasAsEncomendasDB.filter(enc => {
+            const matchBloco = fBloco === "" || enc.bloco === fBloco;
+            const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
+            const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
+            return matchBloco && matchApto && matchNome;
+        });
+
+        // Contadores dinâmicos da pesquisa
+        document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
+        document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status === "Entregue").length;
 
         const lista = document.getElementById("listaRelatorio");
         lista.innerHTML = "";
 
-        const filtradas = todasAsEncomendasDB.filter(enc => 
-            enc.nome.toLowerCase().includes(termo) || 
-            String(enc.apto).includes(termo) ||
-            enc.descricao.toLowerCase().includes(termo)
-        );
-
-        // Mostra os 30 últimos registros para não pesar o navegador do celular
-        filtradas.slice().reverse().slice(0, 30).forEach(enc => {
+        filtradas.slice().reverse().forEach(enc => {
             const div = document.createElement("div");
             div.className = "relatorio-item " + (enc.status === "Entregue" ? "status-entregue" : "status-pendente");
-            
             let infoSaida = enc.status === "Entregue" ? `<br><strong>Retirado por:</strong> ${enc.quemRetirou} <br><small>Saída: ${enc.dataSaida} (${enc.porteiroSaida})</small>` : ``;
-
             div.innerHTML = `
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Status:</strong> ${enc.status}<br>
@@ -339,37 +350,22 @@
         });
     }
 
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('signaturePad'), ctx = canvas.getContext('2d');
     let isDrawing = false;
-
-    function getPos(e) {
-        var rect = canvas.getBoundingClientRect();
-        if (e.changedTouches) return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top };
-        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    }
-
+    function getPos(e) { var rect = canvas.getBoundingClientRect(); if (e.changedTouches) return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top }; return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
     function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
     function desenhar(e) { if (!isDrawing) return; e.preventDefault(); let pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
-    function pararDesenho(e) { e.preventDefault(); isDrawing = false; }
-
-    canvas.addEventListener('mousedown', iniciarDesenho);
-    canvas.addEventListener('mousemove', desenhar);
-    canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
-    canvas.addEventListener('touchmove', desenhar, {passive: false});
-    canvas.addEventListener('touchend', pararDesenho, {passive: false});
-
+    function pararDesenho(e) { e.preventDefault(); isDrawing = false; resetarTimer(); }
+    
+    canvas.addEventListener('mousedown', iniciarDesenho); canvas.addEventListener('mousemove', desenhar); canvas.addEventListener('mouseup', pararDesenho);
+    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false}); canvas.addEventListener('touchmove', desenhar, {passive: false}); canvas.addEventListener('touchend', pararDesenho, {passive: false});
     function limparCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function abrirModalBaixa(id) {
-        idEmBaixa = id;
-        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
-        document.getElementById("nomeRetirante").value = "";
-        document.getElementById("modalAssinatura").style.display = "flex";
+        idEmBaixa = id; encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
+        document.getElementById("nomeRetirante").value = ""; document.getElementById("modalAssinatura").style.display = "flex";
         setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
     }
-
     function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
 
     async function confirmarEntregaFinal() {
@@ -377,52 +373,31 @@
         if(!quemRetirou) { alert("Digite quem está retirando!"); return; }
 
         const btn = document.getElementById("btnConfirmarBaixa");
-        btn.innerText = "Processando...";
-        btn.disabled = true;
+        btn.innerText = "Processando..."; btn.disabled = true;
         
         const dataBaixa = new Date().toLocaleString('pt-BR');
-        
         const pacoteFaturado = encomendaSelecionada;
 
         try {
-            const payload = { 
-                acao: "baixar", id: idEmBaixa.toString(), 
-                dataHora: dataBaixa,
-                porteiroSaida: porteiroLogado || "Não identificado",
-                quemRetirou: quemRetirou,
-                assinatura: "Sim" 
-            };
-
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(payload),
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
+            const payload = { acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identificado", quemRetirou: quemRetirou, assinatura: "Sim" };
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" } });
             
             fecharModal(); 
-            // ALERTA ATUALIZADO CITANDO O E-MAIL
-            alert("Baixa confirmada no sistema!\n\n(Se o morador tiver e-mail cadastrado, o recibo também já foi enviado).");
+            alert("Baixa confirmada!\n\n(Recibo enviado por e-mail automaticamente).");
             
             if(pacoteFaturado) {
                 const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${pacoteFaturado.nome}, a sua encomenda (${pacoteFaturado.descricao}) do Bloco ${pacoteFaturado.bloco} Apto ${pacoteFaturado.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
-                
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
-            
             await buscarPendentes(); 
-        } catch (error) { 
-            alert("Erro da rede: " + error.message); 
-        } finally { 
-            btn.innerText = "✅ Confirmar Entrega";
-            btn.disabled = false;
-        }
+        } catch (error) { alert("Erro da rede: " + error.message); } 
+        finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
     }
 
     function renderizarLista(encomendas) {
         const lista = document.getElementById("listaPendentes");
         lista.innerHTML = "";
         document.getElementById("contador").innerText = encomendas.length;
-
         encomendas.forEach(enc => {
             const div = document.createElement("div");
             div.className = "encomenda-item";
@@ -431,23 +406,15 @@
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
-                
-                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/></svg>
-                    Avisar no WhatsApp
-                </button>
-                <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">
-                    ✅ Entregar / Assinar
-                </button>
+                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">Avisar no WhatsApp</button>
+                <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">✅ Entregar / Assinar</button>
             `;
             lista.appendChild(div);
         });
     }
 
     function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value;
-        const apto = document.getElementById("chamadoApto").value;
-        const just = document.getElementById("chamadoJustificativa").value;
+        const bloco = document.getElementById("chamadoBloco").value, apto = document.getElementById("chamadoApto").value, just = document.getElementById("chamadoJustificativa").value;
         if (!bloco || !apto || !just) { alert("Preencha tudo!"); return; }
         window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`)}`;
     }
