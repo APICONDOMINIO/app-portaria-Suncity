@@ -46,22 +46,16 @@
         .status-pendente { border-left-color: var(--primary); }
         .status-entregue { border-left-color: var(--success); }
 
-        /* MAGIA DO RELATÓRIO PDF BLINDADO CONTRA PÁGINAS EM BRANCO */
         #areaImpressao { display: none; }
         @media print {
-            /* Apaga todo o site da memória da impressora */
             body { background: white; margin: 0; padding: 0; }
             .container, #modalAssinatura { display: none !important; }
-            
-            /* Exibe apenas a área de impressão desenhada perfeitamente */
             #areaImpressao { display: block !important; position: static; width: 100%; margin: 0; }
             @page { size: landscape; margin: 10mm; }
-            
             .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-bottom: 25px; page-break-inside: auto; }
             .tabela-pdf tr { page-break-inside: avoid; page-break-after: auto; }
             .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 6px; text-align: left; }
             .tabela-pdf th { background-color: #f2f2f2; font-weight: bold; }
-            
             h2.print-title { text-align: center; color: #1d3557; margin-bottom: 20px; font-family: Arial, sans-serif; }
             h3.print-sub { font-family: Arial, sans-serif; margin-bottom: 8px; margin-top: 15px; page-break-after: avoid; }
         }
@@ -143,7 +137,11 @@
                     <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
                 </div>
                 <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
-                <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Gerar PDF Analítico</button>
+                
+                <!-- BOTOES DE PDF -->
+                <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Imprimir PDF</button>
+                <!-- BOTÃO NOVO QUE MANDA PRO EMAIL DO ADM -->
+                <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
             </div>
             
             <div id="listaRelatorio"></div>
@@ -161,7 +159,6 @@
     </div>
 </div>
 
-<!-- Área onde a mágica do PDF é desenhada perfeitamente -->
 <div id="areaImpressao"></div>
 
 <div id="modalAssinatura">
@@ -182,7 +179,7 @@
     // ==========================================
     // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbyBYU37ZYq0twLtVqkl85iPMetY3sbRRWAmHRc0zyQkOkzbXbBLM-oQl74EvuqXFZF_CA/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyBfCUj67oek5Uf-YDdZbDPYxxAyRID4OHQ2DWTD-1j9Z8qb6THDBMI7AynU9d4RyZLTQ/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [];
@@ -360,7 +357,6 @@
         });
     }
 
-    // GERA A TABELA DO PDF PERFEITA E NOMEIA O ARQUIVO AUTOMATICAMENTE
     function imprimirRelatorio() {
         const termo = document.getElementById("relMorador").value.toLowerCase();
         const fBloco = document.getElementById("relBloco").value;
@@ -404,7 +400,6 @@
 
         document.getElementById("areaImpressao").innerHTML = htmlPDF;
 
-        // O TRUQUE DE MESTRE PARA NOMEAR O ARQUIVO PDF
         const tituloOriginal = document.title;
         const agora = new Date();
         const strData = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
@@ -413,8 +408,40 @@
 
         window.print();
 
-        // Devolve o nome original após a tela de impressão abrir
         setTimeout(() => { document.title = tituloOriginal; }, 2000);
+    }
+
+    // NOVA FUNÇÃO: O ROBÔ QUE ENVIA O PDF POR E-MAIL PARA O ADM
+    async function enviarRelatorioEmail() {
+        const btnEmail = document.getElementById("btnEmailRel");
+        btnEmail.innerText = "⏳ Gerando e Enviando...";
+        btnEmail.disabled = true;
+
+        const termo = document.getElementById("relMorador").value;
+        const fBloco = document.getElementById("relBloco").value;
+        const fApto = document.getElementById("relApto").value;
+
+        try {
+            const payload = { 
+                acao: "enviar_relatorio_pdf", 
+                termo: termo, 
+                fBloco: fBloco, 
+                fApto: fApto 
+            };
+
+            await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify(payload), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
+            
+            alert("🚀 Relatório em PDF gerado e enviado para o seu e-mail de administrador com sucesso!");
+        } catch (error) { 
+            alert("Erro ao enviar e-mail: " + error.message); 
+        } finally { 
+            btnEmail.innerText = "✉️ Enviar para meu E-mail";
+            btnEmail.disabled = false;
+        }
     }
 
     const canvas = document.getElementById('signaturePad'), ctx = canvas.getContext('2d');
