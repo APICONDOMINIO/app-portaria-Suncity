@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Encomenda Express Suncity</title>
     <style>
         :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
@@ -43,18 +46,24 @@
         .status-pendente { border-left-color: var(--primary); }
         .status-entregue { border-left-color: var(--success); }
 
-        /* MAGIA DO RELATÓRIO PDF EM TABELA */
+        /* MAGIA DO RELATÓRIO PDF BLINDADO CONTRA PÁGINAS EM BRANCO */
         #areaImpressao { display: none; }
         @media print {
-            body * { visibility: hidden; }
-            #areaImpressao, #areaImpressao * { visibility: visible; }
-            #areaImpressao { display: block; position: absolute; left: 0; top: 0; width: 100%; }
+            /* Apaga todo o site da memória da impressora */
+            body { background: white; margin: 0; padding: 0; }
+            .container, #modalAssinatura { display: none !important; }
+            
+            /* Exibe apenas a área de impressão desenhada perfeitamente */
+            #areaImpressao { display: block !important; position: static; width: 100%; margin: 0; }
             @page { size: landscape; margin: 10mm; }
-            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-bottom: 20px; }
-            .tabela-pdf th, .tabela-pdf td { border: 1px solid #000; padding: 6px; text-align: left; }
+            
+            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-bottom: 25px; page-break-inside: auto; }
+            .tabela-pdf tr { page-break-inside: avoid; page-break-after: auto; }
+            .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 6px; text-align: left; }
             .tabela-pdf th { background-color: #f2f2f2; font-weight: bold; }
+            
             h2.print-title { text-align: center; color: #1d3557; margin-bottom: 20px; font-family: Arial, sans-serif; }
-            h3.print-sub { font-family: Arial, sans-serif; margin-bottom: 5px;}
+            h3.print-sub { font-family: Arial, sans-serif; margin-bottom: 8px; margin-top: 15px; page-break-after: avoid; }
         }
     </style>
 </head>
@@ -134,7 +143,6 @@
                     <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
                 </div>
                 <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
-                <!-- Chama a nova função que constrói a tabela PDF -->
                 <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Gerar PDF Analítico</button>
             </div>
             
@@ -153,7 +161,7 @@
     </div>
 </div>
 
-<!-- Área invisível onde a mágica do PDF acontece -->
+<!-- Área onde a mágica do PDF é desenhada perfeitamente -->
 <div id="areaImpressao"></div>
 
 <div id="modalAssinatura">
@@ -276,7 +284,6 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // WHATSAPP DE ENTRADA SUPER ATRATIVO
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
         const mensagem = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${descricao}\n🏢 *Local:* Bloco ${bloco} - Apto ${apto}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
@@ -353,7 +360,7 @@
         });
     }
 
-    // NOVA FUNÇÃO: GERA A TABELA DO PDF (Baseado no filtro atual da tela)
+    // GERA A TABELA DO PDF PERFEITA E NOMEIA O ARQUIVO AUTOMATICAMENTE
     function imprimirRelatorio() {
         const termo = document.getElementById("relMorador").value.toLowerCase();
         const fBloco = document.getElementById("relBloco").value;
@@ -382,7 +389,7 @@
         }
 
         if(entregues.length > 0) {
-            htmlPDF += `<h3 class="print-sub" style="margin-top:20px;">🟢 ENTREGUES (${entregues.length})</h3>
+            htmlPDF += `<h3 class="print-sub">🟢 ENTREGUES (${entregues.length})</h3>
             <table class="tabela-pdf">
             <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA ENTRADA</th><th>DATA SAÍDA</th><th>QUEM RETIROU</th><th>PORTEIRO OUT</th></tr>`;
             entregues.forEach(e => {
@@ -396,7 +403,18 @@
         }
 
         document.getElementById("areaImpressao").innerHTML = htmlPDF;
+
+        // O TRUQUE DE MESTRE PARA NOMEAR O ARQUIVO PDF
+        const tituloOriginal = document.title;
+        const agora = new Date();
+        const strData = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const strHora = agora.toLocaleTimeString('pt-BR').substring(0, 5).replace(':', 'h') + 'm';
+        document.title = `RELATÓRIO DE ENCOMENDAS SUNCITY ${strData} ${strHora}`;
+
         window.print();
+
+        // Devolve o nome original após a tela de impressão abrir
+        setTimeout(() => { document.title = tituloOriginal; }, 2000);
     }
 
     const canvas = document.getElementById('signaturePad'), ctx = canvas.getContext('2d');
@@ -417,7 +435,6 @@
     }
     function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
 
-    // WHATSAPP DE RECIBO SUPER ATRATIVO
     async function confirmarEntregaFinal() {
         const quemRetirou = document.getElementById("nomeRetirante").value;
         if(!quemRetirou) { alert("Digite quem está retirando!"); return; }
