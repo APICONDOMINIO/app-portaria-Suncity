@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Bloqueador de Cache rigoroso para a tela de login -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -38,22 +37,13 @@
         #modalAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
         canvas { border: 2px dashed #ccc; width: 100%; height: 200px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
-
-        /* Estilo da aba de Relatórios */
-        .stats-box { display: flex; justify-content: space-around; margin-bottom: 15px; text-align: center; }
-        .stat { background: var(--primary); color: white; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; }
-        .stat span { display: block; font-size: 20px; font-weight: bold; }
-        .relatorio-item { border-left: 5px solid #ccc; padding: 15px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; font-size: 14px;}
-        .status-pendente { border-left-color: var(--primary); }
-        .status-entregue { border-left-color: var(--success); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 Express Suncity Pro</h2>
+    <h2>📦 Express Suncity</h2>
 
-    <!-- TELA DE LOGIN -->
     <div id="loginContainer" class="card">
         <h3 style="text-align:center;">Identificação do Porteiro</h3>
         <input type="text" id="loginUser" placeholder="Usuário">
@@ -62,7 +52,6 @@
         <p id="msgLogin" style="color:red; text-align:center; display:none;"></p>
     </div>
 
-    <!-- SISTEMA PRINCIPAL -->
     <div id="appContainer">
         <div class="user-bar">
             <div>Porteiro: <span id="nomePorteiroAtivo"></span></div>
@@ -72,13 +61,11 @@
         <div class="nav-buttons">
             <button class="btn-primary" onclick="mudarAba('tabReceber')">📥 Receber</button>
             <button class="btn-primary" onclick="mudarAba('tabPendentes')">📋 Pendentes</button>
-            <button class="btn-secondary" onclick="mudarAba('tabRelatorio')">📊 Relatórios</button>
-            <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamado</button>
+            <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamados</button>
         </div>
 
         <p id="loading">Processando... ⏳</p>
 
-        <!-- ABA 1: Registrar Chegada -->
         <div id="tabReceber" class="card tab-content active">
             <h3>Nova Encomenda</h3>
             <div class="row">
@@ -96,7 +83,6 @@
             <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
         </div>
 
-        <!-- ABA 2: Pendentes e Filtros -->
         <div id="tabPendentes" class="card tab-content">
             <h3>A Entregar (<span id="contador">0</span>)</h3>
             
@@ -114,20 +100,6 @@
             <div id="listaPendentes"></div>
         </div>
 
-        <!-- ABA 3: RELATÓRIOS (NOVIDADE) -->
-        <div id="tabRelatorio" class="card tab-content">
-            <h3>Visão Geral</h3>
-            <div class="stats-box">
-                <div class="stat">Pendentes <span id="statPend">0</span></div>
-                <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
-            </div>
-            <div class="filter-area">
-                <input type="text" id="buscaRelatorio" placeholder="Pesquisar histórico por morador..." onkeyup="renderizarRelatorio()">
-            </div>
-            <div id="listaRelatorio"></div>
-        </div>
-
-        <!-- ABA 4: Chamados -->
         <div id="tabChamado" class="card tab-content">
             <h3>Atualizar Cadastro</h3>
             <div class="row">
@@ -140,7 +112,6 @@
     </div>
 </div>
 
-<!-- MODAL DE ASSINATURA -->
 <div id="modalAssinatura">
     <div class="modal-content">
         <h3 style="margin-top:0;">Confirmar Retirada</h3>
@@ -163,13 +134,11 @@
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = []; 
-    let todasAsEncomendasDB = []; // Guarda TUDO (Entregues e Pendentes)
-    let pendentesDB = [];         // Guarda apenas os Pendentes para a Aba 2
+    let pendentesDB = []; 
     let porteiroLogado = ""; 
     let idEmBaixa = null; 
     let encomendaSelecionada = null; 
 
-    // MODIFICAÇÃO DE SEGURANÇA: Limpa a memória toda vez que a página atualiza
     window.onload = () => {
         localStorage.removeItem("suncityUser"); 
         document.getElementById("loginContainer").style.display = "block";
@@ -179,18 +148,11 @@
         const login = document.getElementById("loginUser").value;
         const senha = document.getElementById("loginSenha").value;
         if(!login || !senha) return;
-        
         document.getElementById("msgLogin").style.display = "none";
         document.getElementById("loginContainer").style.opacity = "0.5";
-        
         try {
-            const res = await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify({ acao: "login", login: login, senha: senha }), 
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login: login, senha: senha }), headers: { "Content-Type": "text/plain;charset=utf-8" } });
             const data = await res.json();
-            
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
                 iniciarSistema();
@@ -198,7 +160,7 @@
                 document.getElementById("msgLogin").innerText = data.erro;
                 document.getElementById("msgLogin").style.display = "block";
             }
-        } catch(e) { alert("Erro de rede ao logar. Verifique o link e a internet."); } 
+        } catch(e) { alert("Erro de rede ao logar."); } 
         finally { document.getElementById("loginContainer").style.opacity = "1"; }
     }
 
@@ -208,7 +170,6 @@
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
-        
         await carregarMoradores();
         await buscarPendentes();
     }
@@ -248,20 +209,13 @@
         document.getElementById("loading").style.display = "block";
         try {
             const response = await fetch(API_URL);
-            todasAsEncomendasDB = await response.json();
-            
-            // Filtra os pendentes para a aba de Entregas
-            pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
-            
+            pendentesDB = await response.json();
             aplicarFiltro(); 
-            renderizarRelatorio();
-            
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // A MENSAGEM DO WHATSAPP DE ENTRADA RESTAURADA
-    function enviarWhatsAppEntrada(telefone, nome, descricao, bloco, apto) {
+    function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
         const mensagem = `Olá ${nome}, chegou uma encomenda para o Bloco ${bloco} Apto ${apto} (${descricao}). Por favor, retirar na portaria da Suncity.`;
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
@@ -288,12 +242,10 @@
             });
             document.getElementById("descInput").value = "";
             await buscarPendentes(); 
-            
-            // A PERGUNTA INTERATIVA RESTAURADA AQUI
-            if(confirm("Entrada Registrada no Sistema!\n\n(Se o morador tiver e-mail, já foi avisado automaticamente).\n\nDeseja enviar o aviso também por WhatsApp agora?")) {
-                enviarWhatsAppEntrada(morador.telefone, morador.nome, desc, bloco, apto);
+            if(confirm("Entrada Registrada!\n\nDeseja enviar o aviso por WhatsApp agora?")) {
+                enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
             }
-        } catch (e) { alert("Erro ao salvar a encomenda."); }
+        } catch (e) { alert("Erro ao salvar."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
@@ -319,44 +271,6 @@
         renderizarLista(pendentesDB);
     }
 
-    // GERA A TELA DE RELATÓRIOS
-    function renderizarRelatorio() {
-        const termo = document.getElementById("buscaRelatorio").value.toLowerCase();
-        
-        const pendentesCount = todasAsEncomendasDB.filter(e => e.status === "Pendente").length;
-        const entreguesCount = todasAsEncomendasDB.filter(e => e.status === "Entregue").length;
-        
-        document.getElementById("statPend").innerText = pendentesCount;
-        document.getElementById("statEntreg").innerText = entreguesCount;
-
-        const lista = document.getElementById("listaRelatorio");
-        lista.innerHTML = "";
-
-        const filtradas = todasAsEncomendasDB.filter(enc => 
-            enc.nome.toLowerCase().includes(termo) || 
-            String(enc.apto).includes(termo) ||
-            enc.descricao.toLowerCase().includes(termo)
-        );
-
-        // Mostra os 30 últimos registros para não travar o celular
-        filtradas.slice().reverse().slice(0, 30).forEach(enc => {
-            const div = document.createElement("div");
-            div.className = "relatorio-item " + (enc.status === "Entregue" ? "status-entregue" : "status-pendente");
-            
-            let infoSaida = enc.status === "Entregue" ? `<br><strong>Retirado por:</strong> ${enc.quemRetirou} <br><small>Saída: ${enc.dataSaida} (${enc.porteiroSaida})</small>` : ``;
-
-            div.innerHTML = `
-                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
-                <strong>Status:</strong> ${enc.status}<br>
-                <strong>Pacote:</strong> ${enc.descricao} <br>
-                <small>Entrada: ${enc.dataHora} (${enc.porteiroEntrada})</small>
-                ${infoSaida}
-            `;
-            lista.appendChild(div);
-        });
-    }
-
-    // CANVAS E ASSINATURA
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -382,6 +296,7 @@
 
     function abrirModalBaixa(id) {
         idEmBaixa = id;
+        // Ajuste de segurança: Garante que ele encontra o pacote independente do formato do ID
         encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
         document.getElementById("nomeRetirante").value = "";
         document.getElementById("modalAssinatura").style.display = "flex";
@@ -390,7 +305,6 @@
 
     function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
 
-    // O RECIBO GIGANTESCO NO WHATSAPP RESTAURADO AQUI
     async function confirmarEntregaFinal() {
         const quemRetirou = document.getElementById("nomeRetirante").value;
         if(!quemRetirou) { alert("Digite quem está retirando!"); return; }
@@ -400,6 +314,8 @@
         btn.disabled = true;
         
         const dataBaixa = new Date().toLocaleString('pt-BR');
+        
+        // SALVA OS DADOS DO PACOTE NO BOLSO ANTES DE FECHAR O MODAL
         const pacoteFaturado = encomendaSelecionada;
 
         try {
@@ -417,12 +333,12 @@
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
-            fecharModal(); 
-            alert("Baixa confirmada no sistema!\n\n(Se o morador tiver e-mail, o recibo também já foi enviado).");
+            fecharModal(); // Agora ele pode fechar sem problemas
+            alert("Baixa confirmada no sistema!");
             
-            // O RECIBO GIGANTE RESTAURADO
+            // ABRE O WHATSAPP COM OS DADOS GUARDADOS NO BOLSO
             if(pacoteFaturado) {
-                const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${pacoteFaturado.nome}, a sua encomenda (${pacoteFaturado.descricao}) do Bloco ${pacoteFaturado.bloco} Apto ${pacoteFaturado.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema da portaria.`;
+                const msgRecibo = `📦 *Suncity - Comprovante de Entrega*\n\nOlá ${pacoteFaturado.nome}, a sua encomenda (${pacoteFaturado.descricao}) do Bloco ${pacoteFaturado.bloco} Apto ${pacoteFaturado.apto} acabou de ser retirada!\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✅ Assinatura coletada na tela e entrega salva no sistema.`;
                 
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
@@ -450,7 +366,7 @@
                 <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
                 
-                <button class="btn-whats" onclick="enviarWhatsAppEntrada('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">
+                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/></svg>
                     Avisar no WhatsApp
                 </button>
