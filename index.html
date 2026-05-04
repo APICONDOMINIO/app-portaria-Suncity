@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Express Suncity Pro</title>
     <style>
         :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
@@ -35,15 +38,21 @@
         .stat span { display: block; font-size: 20px; font-weight: bold; }
         .relatorio-item { border-left: 5px solid #ccc; padding: 12px; background: #fafafa; margin-bottom: 8px; border-radius: 4px; font-size: 13px;}
 
+        /* AQUI FOI CORRIGIDO O BUG DO MODAL - ELE FICA INVISÍVEL ATÉ SER CHAMADO */
+        #modalAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
+        canvas { border: 2px dashed #ccc; width: 100%; height: 200px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
+
         #areaImpressao { display: none; }
         @media print {
             body { background: white; margin: 0; padding: 0; }
             .container, #modalAssinatura { display: none !important; }
             #areaImpressao { display: block !important; width: 100%; }
             @page { size: landscape; margin: 10mm; }
-            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial; font-size: 10px; }
-            .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 5px; }
+            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial; font-size: 10px; margin-top: 15px;}
+            .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 5px; text-align: left; }
             .tabela-pdf th { background: #f2f2f2; }
+            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 5px; }
         }
     </style>
 </head>
@@ -52,13 +61,16 @@
 <div class="container">
     <h2>📦 Express Suncity</h2>
 
+    <!-- TELA DE LOGIN -->
     <div id="loginContainer" class="card">
         <h3 style="text-align:center;">Acesso Portaria</h3>
         <input type="text" id="loginUser" placeholder="Usuário">
         <input type="password" id="loginSenha" placeholder="Senha">
         <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+        <p id="msgLogin" style="color:red; text-align:center; display:none;"></p>
     </div>
 
+    <!-- APLICATIVO PRINCIPAL -->
     <div id="appContainer">
         <div class="user-bar">
             <div>Porteiro: <span id="nomePorteiroAtivo"></span></div>
@@ -74,9 +86,13 @@
 
         <p id="loading">Sincronizando... ⏳</p>
 
+        <!-- ABA RECEBER -->
         <div id="tabReceber" class="card tab-content active">
             <h3>Nova Encomenda</h3>
-            <div class="row"><select id="blocoSelect" onchange="atualizarAptos()"></select><select id="aptoSelect"></select></div>
+            <div class="row">
+                <select id="blocoSelect" onchange="atualizarAptos()"><option value="">Bloco...</option></select>
+                <select id="aptoSelect"><option value="">Apto...</option></select>
+            </div>
             <select id="descInput">
                 <option value="">Tipo de pacote...</option>
                 <option value="Mercado Livre">Mercado Livre</option>
@@ -88,36 +104,52 @@
             <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
         </div>
 
+        <!-- ABA PENDENTES -->
         <div id="tabPendentes" class="card tab-content">
             <h3>A Entregar (<span id="contador">0</span>)</h3>
-            <input type="text" id="buscaGeral" placeholder="Nome ou Apto..." onkeyup="aplicarFiltro()">
+            <div class="filter-area">
+                <input type="text" id="buscaGeral" placeholder="Filtrar por nome ou apto..." onkeyup="aplicarFiltro()">
+            </div>
             <div id="listaPendentes"></div>
         </div>
 
+        <!-- ABA RELATÓRIOS -->
         <div id="tabRelatorio" class="card tab-content">
             <h3>Filtros Atuais</h3>
             <div class="stats-box">
                 <div class="stat">Pendentes <span id="statPend">0</span></div>
                 <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
             </div>
-            <select id="relStatus" onchange="renderizarRelatorio()"><option value="">Status: Todos</option><option value="Pendente">Pendentes</option><option value="Entregue">Entregues</option></select>
-            <div class="row"><select id="relBloco" onchange="renderizarRelatorio()"><option value="">Blocos</option></select><input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()"></div>
-            <input type="text" id="relMorador" placeholder="Morador ou Pacote..." onkeyup="renderizarRelatorio()">
             
-            <div style="background:#eee; padding:10px; border-radius:8px; margin-top:10px;">
-                <p style="margin:0 0 5px 0; font-weight:bold; font-size:12px;">🔍 Pesquisar em Histórico Antigo (Arquivo Morto):</p>
+            <div class="filter-area">
+                <select id="relStatus" onchange="renderizarRelatorio()">
+                    <option value="">Status: Todos</option>
+                    <option value="Pendente">Pendentes</option>
+                    <option value="Entregue">Entregues</option>
+                </select>
                 <div class="row">
-                    <input type="text" id="buscaArquivo" placeholder="Nome ou Apto antigo...">
+                    <select id="relBloco" onchange="renderizarRelatorio()"><option value="">Todos Blocos</option></select>
+                    <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
+                </div>
+                <input type="text" id="relMorador" placeholder="Morador ou Pacote..." onkeyup="renderizarRelatorio()">
+            </div>
+
+            <!-- NOVA CAIXA: BUSCA NO ARQUIVO MORTO -->
+            <div style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cbd5e1;">
+                <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1d3557;">🔍 Pesquisar no Arquivo Morto (+30 dias):</p>
+                <div class="row">
+                    <input type="text" id="buscaArquivo" placeholder="Nome, apto ou pacote antigo...">
                     <button class="btn-primary" style="width:40%;" onclick="pesquisarNoArquivo()">Buscar</button>
                 </div>
             </div>
 
-            <button class="btn-secondary" style="margin-top:15px;" onclick="imprimirRelatorio()">🖨️ PDF do que está na tela</button>
-            <button class="btn-primary" style="background:#1d3557; margin-top:5px;" onclick="enviarRelatorioEmail()">✉️ Enviar p/ meu E-mail</button>
+            <button class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Gerar PDF da Tela</button>
+            <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
             
-            <div id="listaRelatorio"></div>
+            <div id="listaRelatorio" style="margin-top:15px;"></div>
         </div>
 
+        <!-- ABA CHAMADOS -->
         <div id="tabChamado" class="card tab-content">
             <h3>Solicitar Alteração</h3>
             <textarea id="chamadoJustificativa" placeholder="O que deve ser alterado?" rows="3"></textarea>
@@ -126,23 +158,32 @@
     </div>
 </div>
 
+<!-- CONTAINER INVISÍVEL QUE GERA O PDF -->
 <div id="areaImpressao"></div>
 
+<!-- MODAL ASSINATURA -->
 <div id="modalAssinatura">
     <div class="modal-content">
-        <h3>Assinatura na Tela:</h3>
+        <h3 style="margin-top:0;">Assinatura na Tela:</h3>
         <input type="text" id="nomeRetirante" placeholder="Nome de quem retira">
-        <canvas id="signaturePad" style="border:1px dashed #aaa; width:100%; height:200px; touch-action:none;"></canvas>
-        <div class="row"><button class="btn-secondary" onclick="limparCanvas()">Limpar</button><button class="btn-danger" onclick="fecharModal()">Voltar</button></div>
-        <button id="btnConfirmarBaixa" class="btn-primary" style="background:#25D366;" onclick="confirmarEntregaFinal()">✅ Confirmar Entrega</button>
+        <canvas id="signaturePad"></canvas>
+        <div class="row">
+            <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+        </div>
+        <button id="btnConfirmarBaixa" class="btn-primary" style="background:#25D366; margin-top:10px;" onclick="confirmarEntregaFinal()">✅ Confirmar Entrega</button>
     </div>
 </div>
 
 <script>
+    // ==========================================
+    // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
+    // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwDKWEtsWqNFkA1f-0nqPwUQl6BzPBmmRxF-jGdVaKFvXLoqgblXFHjhSICGO_iEPtg3g/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
-    let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [], porteiroLogado = "", idEmBaixa = null, encSelecionada = null; 
+    let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [];
+    let porteiroLogado = "", idEmBaixa = null, encSelecionada = null; 
     let ultimaAtividade = Date.now();
 
     window.onload = () => {
@@ -152,129 +193,314 @@
     };
 
     const resetarTimer = () => ultimaAtividade = Date.now();
-    window.addEventListener('touchstart', resetarTimer); window.addEventListener('click', resetarTimer);
-    setInterval(() => { if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) { alert("Sessão expirada."); fazerLogout(); } }, 60000);
+    window.addEventListener('touchstart', resetarTimer); 
+    window.addEventListener('click', resetarTimer);
+    
+    setInterval(() => { 
+        if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) { 
+            alert("Sessão expirada."); 
+            fazerLogout(); 
+        } 
+    }, 60000);
 
     async function fazerLogin() {
-        const u = document.getElementById("loginUser").value, s = document.getElementById("loginSenha").value;
+        const u = document.getElementById("loginUser").value;
+        const s = document.getElementById("loginSenha").value;
         if(!u || !s) return;
-        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login: u, senha: s }) });
-        const data = await res.json();
-        if(data.status === "ok") { porteiroLogado = data.nome; localStorage.setItem("suncityUser", porteiroLogado); iniciarSistema(); }
-        else alert(data.erro);
+        
+        document.getElementById("msgLogin").style.display = "none";
+        document.getElementById("loginContainer").style.opacity = "0.5";
+        
+        try {
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login: u, senha: s }), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+            const data = await res.json();
+            
+            if(data.status === "ok") { 
+                porteiroLogado = data.nome; 
+                localStorage.setItem("suncityUser", porteiroLogado); 
+                iniciarSistema(); 
+            } else {
+                document.getElementById("msgLogin").innerText = data.erro;
+                document.getElementById("msgLogin").style.display = "block";
+            }
+        } catch(e) {
+            alert("Erro de conexão.");
+        } finally {
+            document.getElementById("loginContainer").style.opacity = "1";
+        }
     }
 
-    function fazerLogout() { localStorage.removeItem("suncityUser"); location.reload(); }
+    function fazerLogout() { 
+        localStorage.removeItem("suncityUser"); 
+        location.reload(); 
+    }
 
     async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
-        const resM = await fetch(API_URL + "?acao=getMoradores"); moradoresDB = await resM.json();
-        const bS = document.getElementById("blocoSelect"), bF = document.getElementById("relBloco"), blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
-        bS.innerHTML = '<option value="">Bloco...</option>'; bF.innerHTML = '<option value="">Blocos</option>';
-        blocos.forEach(b => { bS.add(new Option(`Bloco ${b}`, b)); bF.add(new Option(`Bl ${b}`, b)); });
+        
+        const resM = await fetch(API_URL + "?acao=getMoradores"); 
+        moradoresDB = await resM.json();
+        
+        const bS = document.getElementById("blocoSelect");
+        const bF = document.getElementById("relBloco");
+        const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+        
+        bS.innerHTML = '<option value="">Bloco...</option>'; 
+        bF.innerHTML = '<option value="">Todos Blocos</option>';
+        
+        blocos.forEach(b => { 
+            bS.add(new Option(`Bloco ${b}`, b)); 
+            bF.add(new Option(`Bl ${b}`, b)); 
+        });
+        
         await buscarPendentes();
     }
 
-    function mudarAba(id) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-    function atualizarAptos() { const b = document.getElementById("blocoSelect").value, s = document.getElementById("aptoSelect"); s.innerHTML = '<option value="">Apto...</option>'; moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto))); }
+    function mudarAba(id) { 
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+    }
+    
+    function atualizarAptos() { 
+        const b = document.getElementById("blocoSelect").value;
+        const s = document.getElementById("aptoSelect"); 
+        s.innerHTML = '<option value="">Apto...</option>'; 
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto))); 
+    }
 
     async function buscarPendentes() {
         document.getElementById("loading").style.display = "block";
-        const res = await fetch(API_URL); todasAsEncomendasDB = await res.json();
+        const res = await fetch(API_URL); 
+        todasAsEncomendasDB = await res.json();
         pendentesDB = todasAsEncomendasDB.filter(e => e.status === "Pendente");
-        aplicarFiltro(); renderizarRelatorio();
+        aplicarFiltro(); 
+        renderizarRelatorio();
         document.getElementById("loading").style.display = "none";
     }
 
     async function registrarEncomenda() {
-        const bl = document.getElementById("blocoSelect").value, ap = document.getElementById("aptoSelect").value, ds = document.getElementById("descInput").value;
+        const bl = document.getElementById("blocoSelect").value;
+        const ap = document.getElementById("aptoSelect").value;
+        const ds = document.getElementById("descInput").value;
+        
         if (!bl || !ap || !ds) return alert("Preencha tudo!");
+        
         const m = moradoresDB.find(mo => mo.bloco === bl && String(mo.apto) === String(ap));
         const d = { acao: "nova_encomenda", id: Date.now().toString(), bloco: bl, apto: ap, nome: m.nome, telefone: m.telefone, descricao: ds, dataHora: new Date().toLocaleString('pt-BR'), porteiroEntrada: porteiroLogado };
+        
+        document.getElementById("loading").style.display = "block";
         await fetch(API_URL, { method: "POST", body: JSON.stringify(d) });
-        if(confirm("Salvo! Enviar WhatsApp?")) window.location.href = `https://wa.me/${m.telefone}?text=${encodeURIComponent('🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *'+m.nome+'*! 👋\nSua encomenda ('+ds+') está na portaria.\n🛡️ *Porteiro:* '+porteiroLogado)}`;
+        
+        if(confirm("Salvo! Enviar WhatsApp?")) {
+            const txtMsg = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${m.nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${ds}\n🏢 *Local:* Bloco ${bl} - Apto ${ap}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
+            window.location.href = `https://wa.me/${m.telefone}?text=${encodeURIComponent(txtMsg)}`;
+        }
         buscarPendentes();
     }
 
+    // A NOVA INTELIGÊNCIA: Buscar no Arquivo Morto
     async function pesquisarNoArquivo() {
         const termo = document.getElementById("buscaArquivo").value;
-        if(!termo) return alert("Digite algo para buscar no arquivo morto.");
+        if(!termo) return alert("Digite um nome ou apartamento para buscar no arquivo morto.");
+        
         document.getElementById("loading").style.display = "block";
-        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "buscar_arquivo", termo: termo }) });
-        const dadosArquivo = await res.json();
-        if(dadosArquivo.length === 0) alert("Nenhum registro antigo encontrado.");
-        else {
-            todasAsEncomendasDB = dadosArquivo; // Temporariamente substitui para exibir na tela
-            renderizarRelatorio();
-            alert("Exibindo "+dadosArquivo.length+" registros do Arquivo Morto. Para voltar ao atual, atualize a página.");
+        
+        try {
+            const res = await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ acao: "buscar_arquivo", termo: termo }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const dadosArquivo = await res.json();
+            
+            if(dadosArquivo.length === 0) {
+                alert("Nenhum registro antigo encontrado com essa palavra.");
+            } else {
+                todasAsEncomendasDB = dadosArquivo; 
+                renderizarRelatorio();
+                alert(`Encontrado! Exibindo ${dadosArquivo.length} registros do Arquivo Morto. Para voltar aos registros atuais, recarregue a página (F5).`);
+            }
+        } catch(e) {
+            alert("Erro ao buscar no arquivo.");
+        } finally {
+            document.getElementById("loading").style.display = "none";
         }
-        document.getElementById("loading").style.display = "none";
     }
 
     function aplicarFiltro() {
         const t = document.getElementById("buscaGeral").value.toLowerCase();
         const f = pendentesDB.filter(e => e.nome.toLowerCase().includes(t) || String(e.apto).includes(t));
-        const l = document.getElementById("listaPendentes"); l.innerHTML = ""; document.getElementById("contador").innerText = f.length;
+        
+        const l = document.getElementById("listaPendentes"); 
+        l.innerHTML = ""; 
+        document.getElementById("contador").innerText = f.length;
+        
         f.forEach(e => {
-            const div = document.createElement("div"); div.className = "encomenda-item";
-            div.innerHTML = `<strong>Bl ${e.bloco} - Ap ${e.apto}</strong> (${e.nome})<br>${e.descricao}<br><button class="btn-danger" style="margin-top:5px;" onclick="abrirModal('${e.id}')">✅ Entregar</button>`;
+            const div = document.createElement("div"); 
+            div.className = "encomenda-item";
+            div.innerHTML = `<strong>Bl ${e.bloco} - Ap ${e.apto}</strong> (${e.nome})<br>${e.descricao}<br><button class="btn-danger" style="margin-top:8px;" onclick="abrirModal('${e.id}')">✅ Entregar</button>`;
             l.appendChild(div);
         });
     }
 
     function renderizarRelatorio() {
-        const t = document.getElementById("relMorador").value.toLowerCase(), b = document.getElementById("relBloco").value, a = document.getElementById("relApto").value, s = document.getElementById("relStatus").value;
-        const f = todasAsEncomendasDB.filter(e => (b===""||e.bloco===b) && (a===""||String(e.apto).includes(a)) && (s===""||e.status===s) && (t===""||e.nome.toLowerCase().includes(t)||e.descricao.toLowerCase().includes(t)));
+        const t = document.getElementById("relMorador").value.toLowerCase();
+        const b = document.getElementById("relBloco").value;
+        const a = document.getElementById("relApto").value.toLowerCase();
+        const s = document.getElementById("relStatus").value;
+        
+        const f = todasAsEncomendasDB.filter(e => {
+            const mB = b === "" || e.bloco === b;
+            const mA = a === "" || String(e.apto).toLowerCase().includes(a);
+            const mS = s === "" || e.status === s;
+            const mT = t === "" || e.nome.toLowerCase().includes(t) || e.descricao.toLowerCase().includes(t);
+            return mB && mA && mS && mT;
+        });
+
         document.getElementById("statPend").innerText = f.filter(e => e.status === "Pendente").length;
         document.getElementById("statEntreg").innerText = f.filter(e => e.status !== "Pendente").length;
-        const l = document.getElementById("listaRelatorio"); l.innerHTML = "";
+        
+        const l = document.getElementById("listaRelatorio"); 
+        l.innerHTML = "";
+        
         f.slice().reverse().forEach(e => {
-            const div = document.createElement("div"); div.className = "relatorio-item";
+            const div = document.createElement("div"); 
+            div.className = "relatorio-item"; 
             div.style.borderLeft = (e.status === "Entregue" || e.status === "Arquivado") ? "5px solid var(--success)" : "5px solid var(--primary)";
-            div.innerHTML = `<strong>Bl ${e.bloco} - Ap ${e.apto}</strong> (${e.nome}) - ${e.status}<br><small>${e.descricao} | In: ${e.dataHora}</small>`;
+            let detSaida = (e.status === "Entregue" || e.status === "Arquivado") ? `<br><small>Retirado por: ${e.quemRetirou} em ${e.dataSaida}</small>` : "";
+            div.innerHTML = `<strong>Bl ${e.bloco} - Ap ${e.apto}</strong> (${e.nome}) - <b>${e.status}</b><br><small>Pacote: ${e.descricao} | Entrou: ${e.dataHora}</small>${detSaida}`;
             l.appendChild(div);
         });
     }
 
     function imprimirRelatorio() {
-        const t = document.getElementById("relMorador").value.toLowerCase(), b = document.getElementById("relBloco").value, a = document.getElementById("relApto").value, s = document.getElementById("relStatus").value;
-        const f = todasAsEncomendasDB.filter(e => (b===""||e.bloco===b) && (a===""||String(e.apto).includes(a)) && (s===""||e.status===s) && (t===""||e.nome.toLowerCase().includes(t)||e.descricao.toLowerCase().includes(t)));
-        let h = `<h2 class='print-title'>📊 Relatório Analítico - Suncity</h2><table class='tabela-pdf'><tr><th>BL</th><th>AP</th><th>MORADOR</th><th>PACOTE</th><th>STATUS</th><th>ENTRADA</th><th>RETIROU</th></tr>`;
-        f.forEach(e => h += `<tr><td>${e.bloco}</td><td>${e.apto}</td><td>${e.nome}</td><td>${e.descricao}</td><td>${e.status}</td><td>${e.dataHora}</td><td>${e.quemRetirou||'-'}</td></tr>`);
+        const t = document.getElementById("relMorador").value.toLowerCase();
+        const b = document.getElementById("relBloco").value;
+        const a = document.getElementById("relApto").value.toLowerCase();
+        const s = document.getElementById("relStatus").value;
+        
+        const f = todasAsEncomendasDB.filter(e => {
+            const mB = b === "" || e.bloco === b;
+            const mA = a === "" || String(e.apto).toLowerCase().includes(a);
+            const mS = s === "" || e.status === s;
+            const mT = t === "" || e.nome.toLowerCase().includes(t) || e.descricao.toLowerCase().includes(t);
+            return mB && mA && mS && mT;
+        });
+
+        let h = `<h2 class='print-title'>📊 Relatório Analítico - Suncity</h2>`;
+        h += `<table class='tabela-pdf'><tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>STATUS</th><th>ENTRADA</th><th>SAÍDA</th><th>QUEM RETIROU</th></tr>`;
+        
+        f.forEach(e => {
+            h += `<tr><td>${e.bloco}</td><td>${e.apto}</td><td>${e.nome}</td><td>${e.descricao}</td><td>${e.status}</td><td>${e.dataHora}</td><td>${e.dataSaida || '-'}</td><td>${e.quemRetirou || '-'}</td></tr>`;
+        });
+        
         h += `</table>`;
         document.getElementById("areaImpressao").innerHTML = h;
-        const tOrig = document.title; document.title = "RELATORIO_SUNCITY_" + new Date().toLocaleString();
-        window.print(); document.title = tOrig;
+        
+        const tOrig = document.title; 
+        const agora = new Date();
+        document.title = `RELATORIO_SUNCITY_${agora.toLocaleDateString('pt-BR').replace(/\//g,'-')}_${agora.toLocaleTimeString('pt-BR').substring(0,5).replace(':','h')}`;
+        
+        window.print(); 
+        
+        setTimeout(() => { document.title = tOrig; }, 2000);
     }
 
     async function enviarRelatorioEmail() {
-        const p = { acao: "enviar_relatorio_pdf", fBloco: document.getElementById("relBloco").value, fApto: document.getElementById("relApto").value, fStatus: document.getElementById("relStatus").value, termo: document.getElementById("relMorador").value };
-        await fetch(API_URL, { method: "POST", body: JSON.stringify(p) });
-        alert("Enviado para seu e-mail!");
+        const btnEmail = document.getElementById("btnEmailRel");
+        btnEmail.innerText = "⏳ Gerando...";
+        btnEmail.disabled = true;
+
+        const p = { 
+            acao: "enviar_relatorio_pdf", 
+            termo: document.getElementById("relMorador").value, 
+            fBloco: document.getElementById("relBloco").value, 
+            fApto: document.getElementById("relApto").value, 
+            fStatus: document.getElementById("relStatus").value 
+        };
+
+        try {
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(p), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+            alert("🚀 Relatório enviado com sucesso para o seu e-mail administrativo!");
+        } catch(e) {
+            alert("Erro ao enviar e-mail.");
+        } finally {
+            btnEmail.innerText = "✉️ Enviar para meu E-mail";
+            btnEmail.disabled = false;
+        }
     }
 
-    // CANVAS E MODAL
-    const canvas = document.getElementById('signaturePad'), ctx = canvas.getContext('2d');
+    // Modal e Canvas de Assinatura
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
     let drawing = false;
-    function getP(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches ? e.touches[0].clientX : e.clientX) - r.left, y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top }; }
+
+    function getP(e) { 
+        const r = canvas.getBoundingClientRect(); 
+        return { 
+            x: (e.touches ? e.touches[0].clientX : e.clientX) - r.left, 
+            y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top 
+        }; 
+    }
+
     canvas.addEventListener('mousedown', (e) => { drawing = true; const p = getP(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
     canvas.addEventListener('mousemove', (e) => { if(!drawing) return; const p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
     canvas.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getP(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); });
-    canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+    
+    canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getP(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchend', () => drawing = false);
+
     function limparCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-    function abrirModal(id) { idEmBaixa = id; encSelecionada = pendentesDB.find(e => String(e.id) === String(id)); document.getElementById("modalAssinatura").style.display = "flex"; setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }, 100); }
-    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; }
-    async function confirmarEntregaFinal() {
-        const q = document.getElementById("nomeRetirante").value; if(!q) return alert("Nome?");
-        const dt = new Date().toLocaleString('pt-BR');
-        await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "baixar", id: idEmBaixa, dataHora: dt, porteiroSaida: porteiroLogado, quemRetirou: q }) });
-        window.location.href = `https://wa.me/${encSelecionada.telefone}?text=${encodeURIComponent('✅ *RETIRADO!* ✅\nOlá *'+encSelecionada.nome+'*! Seu pacote foi retirado por '+q+' em '+dt)}`;
-        fecharModal(); buscarPendentes();
+
+    function abrirModal(id) { 
+        idEmBaixa = id; 
+        encSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
+        document.getElementById("nomeRetirante").value = "";
+        document.getElementById("modalAssinatura").style.display = "flex"; 
+        setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }, 100); 
     }
-    function enviarChamado() { window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent('⚠️ CHAMADO: ' + document.getElementById("chamadoJustificativa").value)}`; }
+
+    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; }
+
+    async function confirmarEntregaFinal() {
+        const q = document.getElementById("nomeRetirante").value; 
+        if(!q) return alert("Digite o nome de quem está retirando o pacote!");
+        
+        const dt = new Date().toLocaleString('pt-BR');
+        const btn = document.getElementById("btnConfirmarBaixa");
+        btn.innerText = "Processando...";
+        btn.disabled = true;
+
+        try {
+            await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ acao: "baixar", id: idEmBaixa, dataHora: dt, porteiroSaida: porteiroLogado, quemRetirou: q }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            
+            fecharModal(); 
+            const msgRetirada = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${encSelecionada.nome}*!\nA sua encomenda (${encSelecionada.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${q}\n🕒 *Data/Hora:* ${dt}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✔️ Assinatura coletada na tela e entrega salva no sistema.`;
+            window.location.href = `https://wa.me/${encSelecionada.telefone}?text=${encodeURIComponent(msgRetirada)}`;
+            
+            await buscarPendentes();
+        } catch(e) {
+            alert("Erro ao confirmar entrega.");
+        } finally {
+            btn.innerText = "✅ Confirmar Entrega";
+            btn.disabled = false;
+        }
+    }
+
+    function enviarChamado() { 
+        const bl = document.getElementById("chamadoBloco").value;
+        const ap = document.getElementById("chamadoApto").value;
+        const msg = document.getElementById("chamadoJustificativa").value;
+        if(!bl || !ap || !msg) return alert("Preencha todos os campos do chamado!");
+        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent('⚠️ *CHAMADO SUNCITY:*\nBloco: '+bl+' - Apto: '+ap+'\nSolicitação: ' + msg + '\nPorteiro: '+porteiroLogado)}`; 
+    }
 </script>
 </body>
 </html>
