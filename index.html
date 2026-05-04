@@ -187,9 +187,9 @@
 
 <script>
     // ==========================================
-    // COLE SUA URL AQUI DENTRO DAS ASPAS
+    // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbyrXJ7MzooOS23Ui2wNtrT6Q-M7DWDNPfZAJ67PLerQc_PubfGo5V14eGPHQnyAzH87Lg/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbx-T9P59rYoqwb753xUCGGIXJWEduCuRNauLqHe6t3CD-b6t2X6t8HL0pIREz-cS4Mf7A/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [];
@@ -216,13 +216,21 @@
     };
 
     async function fazerLogin() {
-        const login = document.getElementById("loginUser").value, senha = document.getElementById("loginSenha").value;
+        const login = document.getElementById("loginUser").value;
+        const senha = document.getElementById("loginSenha").value;
         if(!login || !senha) return;
+        
         document.getElementById("msgLogin").style.display = "none";
         document.getElementById("loginContainer").style.opacity = "0.5";
+        
         try {
-            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login: login, senha: senha }), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+            const res = await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ acao: "login", login: login, senha: senha }), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
             const data = await res.json();
+            
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
                 localStorage.setItem("suncityUser", porteiroLogado); 
@@ -231,17 +239,24 @@
                 document.getElementById("msgLogin").innerText = data.erro;
                 document.getElementById("msgLogin").style.display = "block";
             }
-        } catch(e) { alert("Erro de rede ao logar."); } 
-        finally { document.getElementById("loginContainer").style.opacity = "1"; }
+        } catch(e) { 
+            alert("Erro de rede ao logar. Verifique a internet e o link."); 
+        } finally { 
+            document.getElementById("loginContainer").style.opacity = "1"; 
+        }
     }
 
-    function fazerLogout() { localStorage.removeItem("suncityUser"); location.reload(); }
+    function fazerLogout() { 
+        localStorage.removeItem("suncityUser"); 
+        location.reload(); 
+    }
 
     async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
         ultimaAtividade = Date.now(); 
+        
         await carregarMoradores();
         await buscarPendentes();
     }
@@ -274,12 +289,13 @@
     }
 
     function atualizarAptos() {
-        const b = document.getElementById("blocoSelect").value, s = document.getElementById("aptoSelect");
+        const b = document.getElementById("blocoSelect").value;
+        const s = document.getElementById("aptoSelect");
         s.innerHTML = '<option value="">Apto...</option>';
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
-    // LISTA DE MESES ELEGANTE: Converte "05/2026" em "Mai/2026"
+    // LISTA DE MESES ELEGANTE E RESILIENTE (Ignora zeros e lê por barras)
     function popularFiltroMeses() {
         const selectMes = document.getElementById("relMes");
         selectMes.innerHTML = '<option value="">Todos os Meses</option>';
@@ -291,10 +307,15 @@
         };
         
         const mesesSet = new Set();
+        
         todasAsEncomendasDB.forEach(enc => {
             if(enc.dataHora && typeof enc.dataHora === 'string') {
-                const mesAnoStr = enc.dataHora.substring(3, 10); 
-                if(mesAnoStr.length === 7) mesesSet.add(mesAnoStr);
+                const partes = enc.dataHora.split(' ')[0].split('/');
+                if(partes.length === 3) {
+                    const mes = partes[1].padStart(2, '0');
+                    const ano = partes[2];
+                    mesesSet.add(mes + '/' + ano);
+                }
             }
         });
 
@@ -306,7 +327,7 @@
             const numMes = m.substring(0,2);
             const ano = m.substring(3);
             const nomeElegante = mesesNomes[numMes] + "/" + ano;
-            selectMes.add(new Option(nomeElegante, m)); // m é o valor (Ex: 05/2026)
+            selectMes.add(new Option(nomeElegante, m)); 
         });
     }
 
@@ -330,7 +351,10 @@
     }
 
     async function registrarEncomenda() {
-        const bloco = document.getElementById("blocoSelect").value, apto = document.getElementById("aptoSelect").value, desc = document.getElementById("descInput").value;
+        const bloco = document.getElementById("blocoSelect").value;
+        const apto = document.getElementById("aptoSelect").value;
+        const desc = document.getElementById("descInput").value;
+        
         if (!bloco || !apto || !desc) { alert("Preencha bloco, apto e a descrição!"); return; }
 
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
@@ -342,22 +366,35 @@
 
         document.getElementById("loading").style.display = "block";
         try {
-            await fetch(API_URL, { method: "POST", body: JSON.stringify(dados), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+            await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify(dados), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
+            
             document.getElementById("descInput").value = "";
             await buscarPendentes(); 
+            
             if(confirm("Entrada Registrada no Sistema!\n\n(E-mail de aviso disparado).\n\nDeseja enviar aviso por WhatsApp agora?")) {
                 enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
             }
-        } catch (e) { alert("Erro ao salvar."); }
+        } catch (e) { alert("Erro ao salvar a encomenda."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
     function aplicarFiltro() {
-        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase(), blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
+        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
+        const blocoSelecionado = document.getElementById("filtroBlocoBusca").value;
+        
         let filtrados = pendentesDB.filter(enc => {
-            return (blocoSelecionado === "" || enc.bloco === blocoSelecionado) && 
-                   (termoBusca === "" || enc.nome.toLowerCase().includes(termoBusca) || enc.descricao.toLowerCase().includes(termoBusca) || String(enc.apto).includes(termoBusca));
+            const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
+            const matchTexto = termoBusca === "" || 
+                               enc.nome.toLowerCase().includes(termoBusca) || 
+                               enc.descricao.toLowerCase().includes(termoBusca) || 
+                               String(enc.apto).includes(termoBusca);
+            return matchBloco && matchTexto;
         });
+        
         renderizarLista(filtrados);
     }
 
@@ -379,7 +416,17 @@
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
             const matchStatus = fStatus === "" || enc.status === fStatus;
-            const matchMes = fMes === "" || (enc.dataHora && enc.dataHora.includes(fMes));
+            
+            let matchMes = true;
+            if (fMes !== "") {
+                if (enc.dataHora && typeof enc.dataHora === 'string') {
+                    const partes = enc.dataHora.split(' ')[0].split('/');
+                    if (partes.length === 3) {
+                        const mesAnoStr = partes[1].padStart(2, '0') + '/' + partes[2];
+                        if (mesAnoStr !== fMes) matchMes = false;
+                    } else { matchMes = false; }
+                } else { matchMes = false; }
+            }
             
             return matchBloco && matchApto && matchNome && matchStatus && matchMes;
         });
@@ -411,7 +458,6 @@
         const fApto = document.getElementById("relApto").value.toLowerCase();
         const fStatus = document.getElementById("relStatus").value;
         
-        // Pega o texto bonito do Mês
         const fMesSelect = document.getElementById("relMes");
         const fMes = fMesSelect.value;
         const fMesTexto = fMesSelect.options[fMesSelect.selectedIndex].text;
@@ -421,7 +467,17 @@
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
             const matchStatus = fStatus === "" || enc.status === fStatus;
-            const matchMes = fMes === "" || (enc.dataHora && enc.dataHora.includes(fMes));
+            
+            let matchMes = true;
+            if (fMes !== "") {
+                if (enc.dataHora && typeof enc.dataHora === 'string') {
+                    const partes = enc.dataHora.split(' ')[0].split('/');
+                    if (partes.length === 3) {
+                        const mesAnoStr = partes[1].padStart(2, '0') + '/' + partes[2];
+                        if (mesAnoStr !== fMes) matchMes = false;
+                    } else { matchMes = false; }
+                } else { matchMes = false; }
+            }
             
             return matchBloco && matchApto && matchNome && matchStatus && matchMes;
         });
@@ -479,7 +535,6 @@
         const fApto = document.getElementById("relApto").value;
         const fStatus = document.getElementById("relStatus").value;
         
-        // Pega o Mês e envia
         const fMesSelect = document.getElementById("relMes");
         const fMes = fMesSelect.value;
         const fMesTexto = fMesSelect.options[fMesSelect.selectedIndex].text;
@@ -492,7 +547,7 @@
                 fApto: fApto,
                 fStatus: fStatus,
                 fMes: fMes,
-                fMesTexto: fMesTexto // Passa o nome bonito pro servidor também
+                fMesTexto: fMesTexto 
             };
 
             await fetch(API_URL, { 
@@ -510,37 +565,69 @@
         }
     }
 
-    const canvas = document.getElementById('signaturePad'), ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
     let isDrawing = false;
-    function getPos(e) { var rect = canvas.getBoundingClientRect(); if (e.changedTouches) return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top }; return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+
+    function getPos(e) {
+        var rect = canvas.getBoundingClientRect();
+        if (e.changedTouches) return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top };
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
     function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
     function desenhar(e) { if (!isDrawing) return; e.preventDefault(); let pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
     function pararDesenho(e) { e.preventDefault(); isDrawing = false; resetarTimer(); }
     
-    canvas.addEventListener('mousedown', iniciarDesenho); canvas.addEventListener('mousemove', desenhar); canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false}); canvas.addEventListener('touchmove', desenhar, {passive: false}); canvas.addEventListener('touchend', pararDesenho, {passive: false});
+    canvas.addEventListener('mousedown', iniciarDesenho);
+    canvas.addEventListener('mousemove', desenhar);
+    canvas.addEventListener('mouseup', pararDesenho);
+    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
+    canvas.addEventListener('touchmove', desenhar, {passive: false});
+    canvas.addEventListener('touchend', pararDesenho, {passive: false});
+
     function limparCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function abrirModalBaixa(id) {
-        idEmBaixa = id; encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
-        document.getElementById("nomeRetirante").value = ""; document.getElementById("modalAssinatura").style.display = "flex";
+        idEmBaixa = id; 
+        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
+        document.getElementById("nomeRetirante").value = ""; 
+        document.getElementById("modalAssinatura").style.display = "flex";
         setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
     }
-    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
+
+    function fecharModal() { 
+        document.getElementById("modalAssinatura").style.display = "none"; 
+        idEmBaixa = null; 
+        encomendaSelecionada = null; 
+    }
 
     async function confirmarEntregaFinal() {
         const quemRetirou = document.getElementById("nomeRetirante").value;
         if(!quemRetirou) { alert("Digite quem está retirando!"); return; }
 
         const btn = document.getElementById("btnConfirmarBaixa");
-        btn.innerText = "Processando..."; btn.disabled = true;
+        btn.innerText = "Processando..."; 
+        btn.disabled = true;
         
         const dataBaixa = new Date().toLocaleString('pt-BR');
         const pacoteFaturado = encomendaSelecionada;
 
         try {
-            const payload = { acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identificado", quemRetirou: quemRetirou, assinatura: "Sim" };
-            await fetch(API_URL, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+            const payload = { 
+                acao: "baixar", 
+                id: idEmBaixa.toString(), 
+                dataHora: dataBaixa, 
+                porteiroSaida: porteiroLogado || "Não identificado", 
+                quemRetirou: quemRetirou, 
+                assinatura: "Sim" 
+            };
+            
+            await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify(payload), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
             
             fecharModal(); 
             alert("Baixa confirmada!\n\n(Recibo enviado por e-mail automaticamente).");
@@ -550,14 +637,19 @@
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
             await buscarPendentes(); 
-        } catch (error) { alert("Erro da rede: " + error.message); } 
-        finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
+        } catch (error) { 
+            alert("Erro da rede: " + error.message); 
+        } finally { 
+            btn.innerText = "✅ Confirmar Entrega"; 
+            btn.disabled = false; 
+        }
     }
 
     function renderizarLista(encomendas) {
         const lista = document.getElementById("listaPendentes");
         lista.innerHTML = "";
         document.getElementById("contador").innerText = encomendas.length;
+        
         encomendas.forEach(enc => {
             const div = document.createElement("div");
             div.className = "encomenda-item";
@@ -574,9 +666,14 @@
     }
 
     function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value, apto = document.getElementById("chamadoApto").value, just = document.getElementById("chamadoJustificativa").value;
+        const bloco = document.getElementById("chamadoBloco").value;
+        const apto = document.getElementById("chamadoApto").value;
+        const just = document.getElementById("chamadoJustificativa").value;
+        
         if (!bloco || !apto || !just) { alert("Preencha tudo!"); return; }
-        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`)}`;
+        
+        const texto = `⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`;
+        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(texto)}`;
     }
 </script>
 </body>
