@@ -136,6 +136,7 @@
                     <select id="histApto" onchange="aplicarFiltroHistorico()"><option value="">Todos os Aptos</option></select>
                 </div>
                 <input type="text" id="buscaHistorico" placeholder="Nome ou pacote..." onkeyup="aplicarFiltroHistorico()" style="margin-top:8px;">
+                <button class="btn-secondary" onclick="limparFiltroHistorico()" style="margin-top:8px;">Limpar Filtros</button>
             </div>
 
             <div id="listaHistorico"></div>
@@ -482,11 +483,18 @@
         renderizarLista(filtrados);
     }
 
-    function limparFiltro() {
+   function limparFiltro() {
         document.getElementById("buscaGeral").value = "";
         if(document.getElementById("pendBloco")) document.getElementById("pendBloco").value = "";
         if(document.getElementById("pendApto")) document.getElementById("pendApto").innerHTML = '<option value="">Todos os Aptos</option>';
         renderizarLista(pendentesDB);
+    }
+
+    function limparFiltroHistorico() {
+        document.getElementById("buscaHistorico").value = "";
+        if(document.getElementById("histBloco")) document.getElementById("histBloco").value = "";
+        if(document.getElementById("histApto")) document.getElementById("histApto").innerHTML = '<option value="">Todos os Aptos</option>';
+        aplicarFiltroHistorico(); // Recarrega a lista sem filtros
     }
 
     function aplicarFiltroHistorico() {
