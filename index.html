@@ -598,12 +598,19 @@
             const div = document.createElement("div");
             div.className = "encomenda-item";
             div.style.borderLeftColor = "var(--success)"; 
+           // Verifica se a assinatura salva no banco de dados é um Link do Google Drive
+            let botaoAssinatura = "";
+            if (enc.assinatura && enc.assinatura.includes("http")) {
+                botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="window.open('${enc.assinatura}', '_blank')">🖋️ Ver Assinatura</button>`;
+            }
+
             div.innerHTML = `
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small style="color:#666;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#25D366; font-weight:bold;">Entregue a: ${enc.quemRetirou}</small><br>
                 <small style="color:#666;">Saída: ${enc.dataSaida} (${enc.porteiroSaida || 'Sistema'})</small>
+                ${botaoAssinatura}
             `;
             lista.appendChild(div);
         });
@@ -835,14 +842,19 @@
         const pacoteFaturado = encomendaSelecionada;
 
         try {
-            const payload = { 
-                acao: "baixar", 
-                id: idEmBaixa.toString(), 
-                dataHora: dataBaixa, 
-                porteiroSaida: porteiroLogado || "Não identificado", 
-                quemRetirou: quemRetirou, 
-                assinatura: "Sim" 
-            };
+            
+// Tira uma "foto" do Canvas e transforma em base64 (texto que o banco de dados consegue ler)
+        const imagemAssinatura = document.getElementById('signaturePad').toDataURL("image/png");
+
+        const payload = { 
+            acao: "baixar", 
+            id: idEmBaixa.toString(), 
+            dataHora: dataBaixa, 
+            porteiroSaida: porteiroLogado || "Não identificado", 
+            quemRetirou: quemRetirou, 
+            assinatura: "Sim",
+            imagemBase64: imagemAssinatura // NOVO: Envia a imagem desenhada
+        };
             
             await fetch(API_URL, { 
                 method: "POST", 
