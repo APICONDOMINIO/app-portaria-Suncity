@@ -225,6 +225,17 @@
     </div>
 </div>
 
+<!-- NOVO POPUP PARA VER A FOTO DA ASSINATURA -->
+<div id="modalVerAssinatura" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1005; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="text-align: center;">
+        <h3 style="margin-top:0;">Comprovante</h3>
+        <div style="min-height: 100px; display: flex; justify-content: center; align-items: center;">
+            <img id="imgAssinaturaPreview" src="" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px;">
+        </div>
+        <button class="btn-danger" onclick="fecharModalVis()">Fechar Visualização</button>
+    </div>
+</div>
+
 <script>
     // ==========================================
     // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
@@ -276,7 +287,24 @@
             icone.innerText = "👁️";
         }
     }
+// CONVERTE O LINK DO DRIVE EM IMAGEM DIRETA E ABRE O POPUP
+    function visualizarAssinatura(url) {
+        let urlDireta = url;
+        // Pega o ID do arquivo do Google Drive e cria um link de imagem puro
+        if (url.includes("/file/d/")) {
+            let idPart = url.split("/file/d/")[1];
+            let fileId = idPart.split("/")[0];
+            urlDireta = "https://drive.google.com/uc?export=view&id=" + fileId;
+        }
+        
+        document.getElementById('imgAssinaturaPreview').src = urlDireta;
+        document.getElementById('modalVerAssinatura').style.display = 'flex';
+    }
 
+    function fecharModalVis() {
+        document.getElementById('modalVerAssinatura').style.display = 'none';
+        document.getElementById('imgAssinaturaPreview').src = ""; // Limpa a foto
+    }
     
     async function fazerLogin() {
         const login = document.getElementById("loginUser").value;
@@ -601,7 +629,7 @@
            // Verifica se a assinatura salva no banco de dados é um Link do Google Drive
             let botaoAssinatura = "";
             if (enc.assinatura && enc.assinatura.includes("http")) {
-                botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="window.open('${enc.assinatura}', '_blank')">🖋️ Ver Assinatura</button>`;
+                botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="visualizarAssinatura('${enc.assinatura}')">🖋️ Ver Assinatura</button>`;
             }
 
             div.innerHTML = `
