@@ -29,12 +29,12 @@
         
         .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .nav-buttons button { margin: 0; padding: 12px; font-size: 14px; }
-        /* ESTILO APP NATIVO - BOTTOM NAV */
-        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 999; }
-        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; }
+       /* ESTILO APP NATIVO - BOTTOM NAV (BOTÕES MAIORES) */
+        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; padding: 14px 0; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); z-index: 999; }
+        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; }
         .nav-item.active { color: white; font-weight: bold; }
-        .nav-item i { font-size: 20px; margin-bottom: 3px; }
-        body { padding-bottom: 80px; } /* Espaço para a barra não cobrir o conteúdo */
+        .nav-item span { font-size: 22px; margin-bottom: 4px; } /* Aumenta os Emojis/Ícones */
+        body { padding-bottom: 95px; } /* Aumenta o espaço do rodapé para a tela não cortar o fim */
         .admin-only { display: none; } /* Esconde abas de adm por padrão */
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
         .user-bar span { font-weight: bold; color: var(--primary); }
@@ -80,9 +80,10 @@
             <button class="btn-danger" style="width:auto; padding:5px 10px;" onclick="fazerLogout()">Sair</button>
         </div>
 
-       <div class="nav-bottom">
+      <div class="nav-bottom">
             <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
             <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
+            <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico</span></button>
             <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📊<span>Relatórios</span></button>
             <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
         </div>
@@ -119,10 +120,18 @@
                         <option value="">Todos os Blocos</option>
                     </select>
                     <button class="btn-secondary" onclick="limparFiltro()">Limpar</button>
-                </div>
+              <div id="listaPendentes"></div>
+        </div>
+
+        <!-- ABA HISTÓRICO (Visível para o Zelador) -->
+        <div id="tabHistorico" class="card tab-content">
+            <h3>Pacotes Entregues (Recentes)</h3>
+            
+            <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <input type="text" id="buscaHistorico" placeholder="Procurar por nome, apto ou pacote..." onkeyup="aplicarFiltroHistorico()">
             </div>
 
-            <div id="listaPendentes"></div>
+            <div id="listaHistorico"></div>
         </div>
 
         <!-- ABA RELATÓRIOS -->
@@ -355,6 +364,7 @@
             pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
             
             aplicarFiltro(); 
+            aplicarFiltroHistorico(); // Adicione esta linha aqui para o histórico carregar junto!
             renderizarRelatorio();
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
@@ -456,7 +466,37 @@
         document.getElementById("filtroBlocoBusca").value = "";
         renderizarLista(pendentesDB);
     }
-
+function aplicarFiltroHistorico() {
+        const termoBusca = document.getElementById("buscaHistorico").value.toLowerCase();
+        
+        // Pega apenas as encomendas marcadas como "Entregue" nos últimos 30 dias (antes de irem pro arquivo morto)
+        let entreguesRecentes = todasAsEncomendasDB.filter(enc => enc.status === "Entregue");
+        
+        if (termoBusca !== "") {
+            entreguesRecentes = entreguesRecentes.filter(enc => 
+                enc.nome.toLowerCase().includes(termoBusca) || 
+                enc.descricao.toLowerCase().includes(termoBusca) || 
+                String(enc.apto).includes(termoBusca)
+            );
+        }
+        
+        const lista = document.getElementById("listaHistorico");
+        lista.innerHTML = "";
+        
+        entreguesRecentes.slice().reverse().forEach(enc => {
+            const div = document.createElement("div");
+            div.className = "encomenda-item";
+            div.style.borderLeftColor = "var(--success)"; // Muda a borda para verde
+            div.innerHTML = `
+                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
+                <strong>Pacote:</strong> ${enc.descricao} <br>
+                <small style="color:#666;">Entrada: ${enc.dataHora}</small><br>
+                <small style="color:#25D366; font-weight:bold;">Entregue a: ${enc.quemRetirou}</small><br>
+                <small style="color:#666;">Saída: ${enc.dataSaida} (${enc.porteiroSaida || 'Sistema'})</small>
+            `;
+            lista.appendChild(div);
+        });
+    }
     function renderizarLista(encomendas) {
         const lista = document.getElementById("listaPendentes");
         lista.innerHTML = "";
