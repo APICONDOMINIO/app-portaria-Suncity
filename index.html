@@ -29,7 +29,13 @@
         
         .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .nav-buttons button { margin: 0; padding: 12px; font-size: 14px; }
-        
+        /* ESTILO APP NATIVO - BOTTOM NAV */
+        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 999; }
+        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; }
+        .nav-item.active { color: white; font-weight: bold; }
+        .nav-item i { font-size: 20px; margin-bottom: 3px; }
+        body { padding-bottom: 80px; } /* Espaço para a barra não cobrir o conteúdo */
+        .admin-only { display: none; } /* Esconde abas de adm por padrão */
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
         .user-bar span { font-weight: bold; color: var(--primary); }
 
@@ -74,11 +80,11 @@
             <button class="btn-danger" style="width:auto; padding:5px 10px;" onclick="fazerLogout()">Sair</button>
         </div>
 
-        <div class="nav-buttons">
-            <button class="btn-primary" onclick="mudarAba('tabReceber')">📥 Receber</button>
-            <button class="btn-primary" onclick="mudarAba('tabPendentes')">📋 Pendentes</button>
-            <button class="btn-secondary" onclick="mudarAba('tabRelatorio')">📊 Relatórios</button>
-            <button class="btn-secondary" onclick="mudarAba('tabChamado')">📝 Chamados</button>
+       <div class="nav-bottom">
+            <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
+            <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
+            <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📊<span>Relatórios</span></button>
+            <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
         </div>
 
         <p id="loading">Sincronizando... ⏳</p>
@@ -247,6 +253,7 @@
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
                 localStorage.setItem("suncityUser", porteiroLogado); 
+                localStorage.setItem("suncityNivel", data.nivel);
                 iniciarSistema();
             } else {
                 document.getElementById("msgLogin").innerText = data.erro;
@@ -257,11 +264,14 @@
         } finally { 
             document.getElementById("loginContainer").style.opacity = "1"; 
         }
-    }
+    } // <--- ESTA É A CHAVE QUE FALTAVA!
 
     function fazerLogout() { 
-        localStorage.removeItem("suncityUser"); 
-        location.reload(); 
+        if(confirm("Deseja realmente encerrar a sessão e sair do app?")) {
+            localStorage.removeItem("suncityUser"); 
+            localStorage.removeItem("suncityNivel");
+            location.reload(); 
+        }
     }
 
     async function iniciarSistema() {
@@ -269,14 +279,32 @@
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
         ultimaAtividade = Date.now(); 
+
+        // Controle de Nível de Acesso (Esconde Relatórios se for Zelador)
+        const nivel = localStorage.getItem("suncityNivel");
+        if(nivel === "Admin") {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
+        } else {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
         
         await carregarMoradores();
         await buscarPendentes();
     }
 
-    function mudarAba(abaId) {
+    function mudarAba(id, btn) {
+        // Esconde todas as abas e mostra a nova
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(abaId).classList.add('active');
+        document.getElementById(id).classList.add('active');
+
+        // Remove a cor de "ativo" de todos os botões e coloca no que foi clicado agora
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if(btn) {
+            btn.classList.add('active');
+        } else {
+            // Caso a função seja chamada sem o botão (no início), marca o primeiro como ativo
+            document.querySelector('.nav-item').classList.add('active');
+        }
     }
 
     async function carregarMoradores() {
