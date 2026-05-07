@@ -29,12 +29,12 @@
         
         .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .nav-buttons button { margin: 0; padding: 12px; font-size: 14px; }
-       /* ESTILO APP NATIVO - BOTTOM NAV (BOTÕES MAIORES) */
-        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; padding: 14px 0; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); z-index: 999; }
-        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; }
+       /* ESTILO APP NATIVO - BOTTOM NAV (RESPONSIVA) */
+        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); z-index: 999; box-sizing: border-box; }
+        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: none; background: none; flex: 1; padding: 5px 0; word-break: break-word; line-height: 1.2; text-align: center; }
         .nav-item.active { color: white; font-weight: bold; }
-        .nav-item span { font-size: 22px; margin-bottom: 4px; } /* Aumenta os Emojis/Ícones */
-        body { padding-bottom: 95px; } /* Aumenta o espaço do rodapé para a tela não cortar o fim */
+        .nav-item span { font-size: 22px; margin-bottom: 2px; display: block; }
+        body { padding-bottom: 85px; }
         .admin-only { display: none; } /* Esconde abas de adm por padrão */
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
         .user-bar span { font-weight: bold; color: var(--primary); }
