@@ -47,7 +47,7 @@
 
         #modalAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
-        canvas { border: 2px dashed #ccc; width: 100%; height: 200px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
+        canvas { border: 2px dashed #ccc; width: 100%; height: 100px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
 
         #areaImpressao { display: none; }
         @media print {
@@ -843,8 +843,30 @@
 
         try {
             
-// Tira uma "foto" do Canvas e transforma em base64 (texto que o banco de dados consegue ler)
-        const imagemAssinatura = document.getElementById('signaturePad').toDataURL("image/png");
+// Criação de uma imagem combinada (Nome + Data + Assinatura)
+        const canvasOriginal = document.getElementById('signaturePad');
+        const canvasMesclado = document.createElement('canvas');
+        canvasMesclado.width = canvasOriginal.width;
+        canvasMesclado.height = canvasOriginal.height + 40; // Aumenta 40px para caber o cabeçalho
+        const ctxMesclado = canvasMesclado.getContext('2d');
+        
+        // Pinta o fundo de branco
+        ctxMesclado.fillStyle = "#ffffff";
+        ctxMesclado.fillRect(0, 0, canvasMesclado.width, canvasMesclado.height);
+        
+        // Carimba o Nome e a Data no topo da imagem
+        ctxMesclado.font = "bold 14px Arial";
+        ctxMesclado.fillStyle = "#1d3557";
+        ctxMesclado.fillText("Retirado por: " + quemRetirou, 10, 20);
+        ctxMesclado.font = "10px Arial";
+        ctxMesclado.fillStyle = "#666666";
+        ctxMesclado.fillText("Data: " + dataBaixa, 10, 35);
+        
+        // Cola o desenho da assinatura original logo abaixo do texto
+        ctxMesclado.drawImage(canvasOriginal, 0, 40);
+
+        // Gera a foto final oficial
+        const imagemAssinatura = canvasMesclado.toDataURL("image/png");
 
         const payload = { 
             acao: "baixar", 
@@ -853,7 +875,7 @@
             porteiroSaida: porteiroLogado || "Não identificado", 
             quemRetirou: quemRetirou, 
             assinatura: "Sim",
-            imagemBase64: imagemAssinatura // NOVO: Envia a imagem desenhada
+            imagemBase64: imagemAssinatura
         };
             
             await fetch(API_URL, { 
