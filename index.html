@@ -298,9 +298,11 @@
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
         ultimaAtividade = Date.now(); 
 
-        // Controle de Nível de Acesso (Esconde Relatórios se for Zelador)
-        const nivel = localStorage.getItem("suncityNivel");
-        if(nivel === "Admin") {
+       // Controle de Nível de Acesso (Flexível para adm, Admin, Administrador)
+        const nivel = localStorage.getItem("suncityNivel") || "";
+        const textoNivel = nivel.toLowerCase(); // Converte tudo para minúsculo para comparar
+        
+        if(textoNivel.includes("adm") || textoNivel.includes("gerente")) {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
         } else {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
