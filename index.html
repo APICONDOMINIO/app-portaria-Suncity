@@ -7,6 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>Express Suncity Pro</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
@@ -100,7 +101,7 @@
                 <select id="blocoSelect" onchange="atualizarAptos()"><option value="">Bloco...</option></select>
                 <select id="aptoSelect"><option value="">Apto...</option></select>
             </div>
-            <select id="descInput">
+           <select id="descInput">
                 <option value="">Tipo de pacote...</option>
                 <option value="Mercado Livre">Mercado Livre</option>
                 <option value="Shopee">Shopee</option>
@@ -108,6 +109,15 @@
                 <option value="Detran">Detran</option>
                 <option value="Outros">Outros</option>
             </select>
+            
+            <div class="row">
+                <input type="text" id="codigoRastreio" placeholder="Identificador / Cód. Rastreio (Opcional)">
+                <button class="btn-secondary" style="width: 60px; padding: 0; font-size: 22px; display: flex; align-items: center; justify-content: center;" onclick="abrirCamera()">📷</button>
+            </div>
+            
+            <div id="areaCamera" style="display:none; width: 100%; border: 2px dashed var(--primary); border-radius: 6px; overflow: hidden; margin: 8px 0;"></div>
+            <button class="btn-danger" id="btnFecharCamera" style="display:none; margin-bottom: 10px;" onclick="fecharCamera()">❌ Cancelar Leitura</button>
+
             <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
         </div>
 
@@ -395,6 +405,49 @@
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
+    // ==========================================
+    // LEITOR DE CÓDIGO DE BARRAS E QR CODE
+    // ==========================================
+    let leitorCamera = null;
+
+    function abrirCamera() {
+        const area = document.getElementById("areaCamera");
+        const btnFechar = document.getElementById("btnFecharCamera");
+        
+        area.style.display = "block";
+        btnFechar.style.display = "block";
+
+        if (!leitorCamera) {
+            leitorCamera = new Html5Qrcode("areaCamera");
+        }
+
+        leitorCamera.start(
+            { facingMode: "environment" }, // Abre a câmera traseira
+            { fps: 10, qrbox: { width: 250, height: 100 } }, // Foco retangular para código de barras
+            (textoDecodificado) => {
+                // SUCESSO: Leu o código!
+                document.getElementById("codigoRastreio").value = textoDecodificado;
+                alert("✅ Código Lindo: " + textoDecodificado); // Aviso visual rápido
+                fecharCamera();
+            },
+            (erroDeLeitura) => {
+                // Ignora falhas contínuas de foco
+            }
+        ).catch(err => {
+            alert("Erro ao acessar a câmera. Verifique as permissões do seu celular.");
+            fecharCamera();
+        });
+    }
+
+    function fecharCamera() {
+        if (leitorCamera) {
+            leitorCamera.stop().then(() => {
+                document.getElementById("areaCamera").style.display = "none";
+                document.getElementById("btnFecharCamera").style.display = "none";
+            }).catch(err => console.log("Erro ao fechar câmera: ", err));
+        }
+    }
+
     async function buscarPendentes() {
         document.getElementById("loading").style.display = "block";
         try {
@@ -416,9 +469,13 @@
     async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
-        const desc = document.getElementById("descInput").value;
+        const tipoPacote = document.getElementById("descInput").value;
+        const rastreio = document.getElementById("codigoRastreio").value;
         
-        if (!bloco || !apto || !desc) { alert("Preencha bloco, apto e a descrição!"); return; }
+        if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
+
+        // Junta o tipo do pacote com o código de rastreio (se houver)
+        const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
 
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
         const dados = {
@@ -442,6 +499,7 @@
             });
             
             document.getElementById("descInput").value = "";
+            document.getElementById("codigoRastreio").value = "";
             await buscarPendentes(); 
             
             if(confirm("Entrada Registrada no Sistema!\n\n(E-mail de aviso disparado).\n\nDeseja enviar aviso por WhatsApp agora?")) {
