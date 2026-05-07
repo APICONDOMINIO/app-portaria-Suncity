@@ -119,8 +119,11 @@
                     <select id="filtroBlocoBusca" onchange="aplicarFiltro()">
                         <option value="">Todos os Blocos</option>
                     </select>
-                    <button class="btn-secondary" onclick="limparFiltro()">Limpar</button>
-              <div id="listaPendentes"></div>
+                 <button class="btn-secondary" onclick="limparFiltro()">Limpar</button>
+                </div>
+            </div>
+
+            <div id="listaPendentes"></div>
         </div>
 
         <!-- ABA HISTÓRICO (Visível para o Zelador) -->
@@ -226,10 +229,12 @@
     window.addEventListener('scroll', resetarTimer);
     window.addEventListener('keypress', resetarTimer);
 
-    setInterval(() => {
+   setInterval(() => {
         if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) {
             alert("A sessão expirou por inatividade de 5 minutos.");
-            fazerLogout();
+            localStorage.removeItem("suncityUser"); 
+            localStorage.removeItem("suncityNivel");
+            location.reload(); 
         }
     }, 60000); 
 
