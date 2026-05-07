@@ -240,7 +240,7 @@
     // ==========================================
     // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbzb2TaObpn9Y1TS2HdC-imnEvSHPuic9B6hv9ggITbFONAkcQkSlSzAgPZmyfeivb8uQQ/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyopitKqEeabiRyTkzwzNOViUHrdq_tTcoIj-cFlK3si2IHcvZyuYLDZ5Y4_KD9O8wrlw/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = [];
@@ -288,19 +288,43 @@
         }
     }
 // CONVERTE O LINK DO DRIVE EM IMAGEM DIRETA E ABRE O POPUP
-    function visualizarAssinatura(url) {
-        let urlDireta = url;
-        // Pega o ID do arquivo do Google Drive e cria um link de imagem puro
-        if (url.includes("/file/d/")) {
-            let idPart = url.split("/file/d/")[1];
-            let fileId = idPart.split("/")[0];
-            urlDireta = "https://drive.google.com/uc?export=view&id=" + fileId;
-        }
+    async function visualizarAssinatura(url) {
+        const preview = document.getElementById('imgAssinaturaPreview');
+        const modal = document.getElementById('modalVerAssinatura');
         
-        document.getElementById('imgAssinaturaPreview').src = urlDireta;
-        document.getElementById('modalVerAssinatura').style.display = 'flex';
-    }
+        // 1. Abre o modal e mostra um "Carregando"
+        preview.src = ""; 
+        preview.alt = "Carregando assinatura... ⏳";
+        modal.style.display = 'flex';
 
+        try {
+            // 2. Extrai o ID do arquivo do link do Drive
+            let fileId = "";
+            if (url.includes("/file/d/")) {
+                fileId = url.split("/file/d/")[1].split("/")[0];
+            } else if (url.includes("id=")) {
+                fileId = url.split("id=")[1].split("&")[0];
+            }
+
+            if (!fileId) throw new Error("ID não encontrado");
+
+            // 3. Chama o Cérebro para pegar a imagem pura (Base64)
+            const response = await fetch(API_URL + "?acao=get_assinatura&id=" + fileId);
+            const base64Data = await response.text();
+
+            if (base64Data.startsWith("Erro")) {
+                alert("Não foi possível carregar a imagem. Verifique se o arquivo ainda existe no Drive.");
+                fecharModalVis();
+            } else {
+                // 4. Exibe a imagem com sucesso
+                preview.src = "data:image/png;base64," + base64Data;
+                preview.alt = "Assinatura";
+            }
+        } catch (err) {
+            alert("Erro ao conectar com o servidor para buscar a foto.");
+            fecharModalVis();
+        }
+    }
     function fecharModalVis() {
         document.getElementById('modalVerAssinatura').style.display = 'none';
         document.getElementById('imgAssinaturaPreview').src = ""; // Limpa a foto
