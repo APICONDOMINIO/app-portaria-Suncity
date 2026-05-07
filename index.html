@@ -69,7 +69,10 @@
     <div id="loginContainer" class="card">
         <h3 style="text-align:center;">Acesso Portaria</h3>
         <input type="text" id="loginUser" placeholder="Usuário">
-        <input type="password" id="loginSenha" placeholder="Senha">
+        <div style="position: relative;">
+            <input type="password" id="loginSenha" placeholder="Senha" style="padding-right: 40px;">
+            <span id="toggleSenha" onclick="mostrarSenha()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px;">👁️</span>
+        </div>
         <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
         <p id="msgLogin" style="color:red; text-align:center; display:none;"></p>
     </div>
@@ -252,6 +255,19 @@
         }
     };
 
+    function mostrarSenha() {
+        const input = document.getElementById("loginSenha");
+        const icone = document.getElementById("toggleSenha");
+        if (input.type === "password") {
+            input.type = "text";
+            icone.innerText = "🙈"; // Muda o ícone quando a senha está visível
+        } else {
+            input.type = "password";
+            icone.innerText = "👁️";
+        }
+    }
+
+    
     async function fazerLogin() {
         const login = document.getElementById("loginUser").value;
         const senha = document.getElementById("loginSenha").value;
