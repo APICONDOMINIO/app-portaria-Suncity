@@ -221,28 +221,51 @@
             <textarea id="chamadoJustificativa" placeholder="O que deve ser alterado e por que?" rows="3"></textarea>
             <button class="btn-whats" onclick="enviarChamado()">Enviar para Administração</button>
         </div>
-        <!-- ABA CONFIGURAÇÃO (ENGENHARIA E USUÁRIOS) -->
-<div id="tabConfig" class="card tab-content">
+        <!-- ABA CONFIGURAÇÃO (ENGENHARIA E USUÁRIOS) --><div id="tabConfig" class="card tab-content">
             <h3 style="color: var(--primary); text-align: center;">⚙️ Gestão Administrativa</h3>
             
-            <!-- CADASTRO INDIVIDUAL -->
+            <!-- SEÇÃO: EDITAR/NOVO MORADOR -->
             <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
-                <h4 style="margin-top:0; color: var(--primary);">👥 Novo/Editar Morador</h4>
+                <h4 style="margin-top:0; color: var(--primary);">👥 Moradores</h4>
                 <div class="row">
-                    <input type="text" id="newMoradorBloco" placeholder="Bloco">
-                    <input type="text" id="newMoradorApto" placeholder="Apto">
+                    <!-- Menu suspenso para blocos existentes -->
+                    <select id="newMoradorBloco" onchange="atualizarAptosConfig()"><option value="">Bloco...</option></select>
+                    <!-- Menu suspenso para aptos existentes -->
+                    <select id="newMoradorApto" onchange="puxarDadosMorador()"><option value="">Apto...</option></select>
                 </div>
+                
+                <!-- Campos de entrada -->
                 <input type="text" id="newMoradorNome" placeholder="Nome Completo">
-                <input type="tel" id="newMoradorTel" placeholder="WhatsApp (Ex: 5571...)">
+                <input type="tel" id="newMoradorTel" placeholder="WhatsApp (55...)">
                 <input type="email" id="newMoradorEmail" placeholder="E-mail">
-                <button class="btn-primary" onclick="salvarNovoMorador()">💾 Salvar Morador</button>
+                
+                <div class="row">
+                    <button class="btn-primary" onclick="salvarNovoMorador()">💾 Salvar</button>
+                    <button class="btn-secondary" onclick="resetarFormMorador()" style="width: auto;">➕ Novo</button>
+                </div>
             </div>
 
-            <!-- GERADOR EM MASSA -->
-            <div style="border: 2px dashed #457b9d; padding: 15px; border-radius: 8px; background: #eef2f3; margin-bottom: 20px;">
+            <!-- SEÇÃO: USUÁRIOS (PORTARIA) -->
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f8f9fa; margin-bottom: 20px;">
+                <h4 style="margin-top:0; color: var(--primary);">🔑 Usuários / Acessos</h4>
+                <!-- Menu para escolher usuário existente -->
+                <select id="userSelect" onchange="puxarDadosUsuario()"><option value="novo">➕ Criar Novo Usuário</option></select>
+                
+                <input type="text" id="newUserLogin" placeholder="Login (Usuário)">
+                <input type="text" id="newUserSenha" placeholder="Senha">
+                <input type="text" id="newUserNome" placeholder="Nome Completo">
+                <select id="newUserNivel">
+                    <option value="Porteiro">Nível: Porteiro</option>
+                    <option value="Admin">Nível: Administrador</option>
+                </select>
+                <button class="btn-primary" id="btnSalvarUser" onclick="salvarNovoUsuario()">💾 Salvar Usuário</button>
+            </div>
+
+            <!-- SEÇÃO: GERADOR EM MASSA -->
+            <div style="border: 2px dashed #457b9d; padding: 15px; border-radius: 8px; background: #eef2f3;">
                 <h4 style="margin-top:0; color: #1d3557; display: flex; justify-content: space-between; align-items: center;">
                     🚀 Gerador Automático 
-                    <button onclick="alert('DICA: Para importar nomes via Excel, abra sua Planilha Google no PC e cole os dados nas colunas C (Nome) e D (Telefone).')" style="width:auto; margin:0; padding:5px; background:none; border:none; font-size:20px;">💡</button>
+                    <button onclick="alert('DICA: Para importar nomes via Excel, abra sua Planilha Google no PC e cole: Nomes na Coluna C, Telefones na D e E-mails na E.')" style="width:auto; margin:0; padding:5px; background:none; border:none; font-size:20px;">💡</button>
                 </h4>
                 <input type="text" id="genBlocos" placeholder="Blocos (Ex: A, B, C)">
                 <div class="row">
@@ -252,6 +275,7 @@
                 <input type="password" id="genSenhaAdm" placeholder="Senha de ADM para confirmar" style="border: 2px solid var(--primary);">
                 <button class="btn-primary" style="background: #457b9d;" onclick="gerarCondominioMassa()">⚡ Gerar Unidades</button>
             </div>
+        </div>
 
             <!-- CADASTRO DE USUÁRIOS -->
             <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f8f9fa;">
@@ -300,7 +324,7 @@
     // ==========================================
     // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
     // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbzf4uNwSRRHM1IUzwDfd8FGPWU3pKp-CyGFwKXmSFKO8tnqUGHAbGi27QsOdtFfDFRyHw/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbypZnD1QduPPn2ao4boEvEi8bOyLOndg0O7S03aUjYDcWKwMqo29fjLfZaM1aYnxuZT7Q/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = [];
@@ -431,15 +455,14 @@
         }
     }
 
-    async function iniciarSistema() {
+async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
         ultimaAtividade = Date.now(); 
 
-       // Controle de Nível de Acesso (Flexível para adm, Admin, Administrador)
         const nivel = localStorage.getItem("suncityNivel") || "";
-        const textoNivel = nivel.toLowerCase(); // Converte tudo para minúsculo para comparar
+        const textoNivel = nivel.toLowerCase();
         
         if(textoNivel.includes("adm") || textoNivel.includes("gerente")) {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
@@ -449,73 +472,85 @@
         
         await carregarMoradores();
         await buscarPendentes();
+        await carregarUsuariosParaEdicao(); // Carrega a lista de porteiros na aba Config
+        popularFiltrosConfig(); // Preenche o menu de Blocos da aba Config
     }
 
-    function mudarAba(id, btn) {
-        // Esconde todas as abas e mostra a nova
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+    // Preenche o menu de Blocos na aba Configuração
+    function popularFiltrosConfig() {
+        const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+        const s = document.getElementById("newMoradorBloco");
+        s.innerHTML = '<option value="">Bloco...</option>';
+        blocos.forEach(b => s.add(new Option(`Bloco ${b}`, b)));
+    }
 
-        // Remove a cor de "ativo" de todos os botões e coloca no que foi clicado agora
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        if(btn) {
-            btn.classList.add('active');
-        } else {
-            // Caso a função seja chamada sem o botão (no início), marca o primeiro como ativo
-            document.querySelector('.nav-item').classList.add('active');
+    // Atualiza os aptos na aba Config quando muda o bloco
+    function atualizarAptosConfig() {
+        const b = document.getElementById("newMoradorBloco").value;
+        const s = document.getElementById("newMoradorApto");
+        s.innerHTML = '<option value="">Apto...</option>';
+        if(b) {
+            moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(m.apto, m.apto)));
+            s.add(new Option("➕ Criar Novo Apto", "novo"));
         }
     }
 
-    async function carregarMoradores() {
+    // Puxa nome, tel e email quando seleciona o apto na Config
+    function puxarDadosMorador() {
+        const bloco = document.getElementById("newMoradorBloco").value;
+        const apto = document.getElementById("newMoradorApto").value;
+        
+        if(apto === "novo") {
+            const novoApto = prompt("Digite o número do novo apartamento:");
+            if(novoApto) {
+                const s = document.getElementById("newMoradorApto");
+                s.add(new Option(novoApto, novoApto), s.options[s.options.length - 1]);
+                s.value = novoApto;
+                document.querySelectorAll('#newMoradorNome, #newMoradorTel, #newMoradorEmail').forEach(i => i.value = "");
+            }
+            return;
+        }
+
+        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
+        if(morador) {
+            document.getElementById("newMoradorNome").value = morador.nome || "";
+            document.getElementById("newMoradorTel").value = morador.telefone || "";
+            // Nota: Se o seu carregarMoradores() ainda não puxar email, ele ficará vazio até salvar a primeira vez
+            document.getElementById("newMoradorEmail").value = morador.email || "";
+        }
+    }
+
+    // Carrega usuários existentes para o menu de edição
+    async function carregarUsuariosParaEdicao() {
         try {
-            const response = await fetch(API_URL + "?acao=getMoradores");
-            moradoresDB = await response.json();
-            const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
-            
-            const s = document.getElementById("blocoSelect");
-            const relBloco = document.getElementById("relBloco");
-            const arqBloco = document.getElementById("arqBloco"); 
-            const pendB = document.getElementById("pendBloco"); // Novo filtro Pendentes
-            const histB = document.getElementById("histBloco"); // Novo filtro Historico
-            
-            s.innerHTML = '<option value="">Bloco...</option>';
-            relBloco.innerHTML = '<option value="">Todos Blocos</option>';
-            if(arqBloco) arqBloco.innerHTML = '<option value="">Bloco...</option>'; 
-            if(pendB) pendB.innerHTML = '<option value="">Todos os Blocos</option>';
-            if(histB) histB.innerHTML = '<option value="">Todos os Blocos</option>';
-
-            blocos.forEach(b => {
-                s.add(new Option(`Bloco ${b}`, b));
-                relBloco.add(new Option(`Bloco ${b}`, b));
-                if(arqBloco) arqBloco.add(new Option(`Bloco ${b}`, b)); 
-                if(pendB) pendB.add(new Option(`Bloco ${b}`, b));
-                if(histB) histB.add(new Option(`Bloco ${b}`, b));
-            });
-        } catch (e) { console.error(e); }
+            const res = await fetch(API_URL + "?acao=getUsuarios");
+            const usuarios = await res.json();
+            const s = document.getElementById("userSelect");
+            s.innerHTML = '<option value="novo">➕ Criar Novo Usuário</option>';
+            usuarios.forEach(u => s.add(new Option(`Editar: ${u.nome} (${u.login})`, JSON.stringify(u))));
+        } catch(e) { console.log("Erro ao carregar usuários"); }
     }
 
-    function atualizarAptos() {
-        const b = document.getElementById("blocoSelect").value;
-        const s = document.getElementById("aptoSelect");
-        s.innerHTML = '<option value="">Apto...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
-    }
-
-    // NOVA FUNÇÃO: Cascata Universal para os Filtros
-    function atualizarAptosFiltro(idBloco, idApto) {
-        const b = document.getElementById(idBloco).value;
-        const s = document.getElementById(idApto);
-        s.innerHTML = '<option value="">Todos os Aptos</option>';
-        if (b) {
-            moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+    // Preenche os campos do porteiro ao selecionar no menu
+    function puxarDadosUsuario() {
+        const val = document.getElementById("userSelect").value;
+        if(val === "novo") {
+            document.querySelectorAll('#newUserLogin, #newUserSenha, #newUserNome').forEach(i => i.value = "");
+            document.getElementById("newUserNivel").value = "Porteiro";
+            return;
         }
+        const u = JSON.parse(val);
+        document.getElementById("newUserLogin").value = u.login;
+        document.getElementById("newUserSenha").value = u.senha;
+        document.getElementById("newUserNome").value = u.nome;
+        document.getElementById("newUserNivel").value = u.nivel;
     }
-    // NOVA FUNÇÃO: Cascata do Arquivo Morto
-    function atualizarAptosArq() {
-        const b = document.getElementById("arqBloco").value;
-        const s = document.getElementById("arqApto");
-        s.innerHTML = '<option value="">Apto...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+
+    function resetarFormMorador() {
+        document.querySelectorAll('#newMoradorNome, #newMoradorTel, #newMoradorEmail').forEach(i => i.value = "");
+        document.getElementById("newMoradorBloco").value = "";
+        document.getElementById("newMoradorApto").innerHTML = '<option value="">Apto...</option>';
+        alert("Modo de criação manual ativado.");
     }
 
     // ==========================================
