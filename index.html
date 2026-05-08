@@ -10,113 +10,78 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; padding-bottom: 85px; }
         .container { max-width: 500px; margin: 0 auto; }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
         .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
         .row { display: flex; gap: 10px; }
         button.btn-primary { background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%); color: white; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 3px 6px rgba(29, 53, 87, 0.2); transition: 0.3s; }
         button.btn-primary:active { transform: scale(0.98); }
-        
         button.btn-secondary { background-color: #f1faee; color: #1d3557; border: 1px solid #1d3557; font-weight: bold; cursor: pointer; }
-        
         button.btn-danger { background-color: #e63946; color: white; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 3px 6px rgba(230, 57, 70, 0.2); }
-
-        .encomenda-item { border-left: 6px solid var(--primary); padding: 15px; background: #ffffff; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .btn-whats { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; display: flex; justify-content: center; gap: 8px; }
-        
+        .encomenda-item { border-left: 6px solid var(--primary); padding: 15px; background: #ffffff; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         #loading { text-align: center; font-weight: bold; color: var(--primary); display: none; padding: 10px; }
-        
         #appContainer { display: none; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
-        .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .nav-buttons button { margin: 0; padding: 12px; font-size: 14px; }
-      /* ESTILO APP NATIVO - BOTTOM NAV (CORRIGIDA E DUPLA LINHA) */
-        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; align-items: flex-end; padding: 8px 2px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); z-index: 999; box-sizing: border-box; }
-        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 22px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; padding: 0; letter-spacing: -0.3px; }
+        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; align-items: flex-end; padding: 8px 2px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); z-index: 999; }
+        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 22px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; padding: 0; }
         .nav-item.active { color: white; font-weight: bold; }
-        .nav-item span { font-size: 10px; line-height: 1.1; margin-top: 4px; text-align: center; display: block; }
-        body { padding-bottom: 85px; }
-        .admin-only { display: none; } /* Esconde abas de adm por padrão */
+        .nav-item span { font-size: 10px; margin-top: 4px; display: block; }
+        .admin-only { display: none; }
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
-        .user-bar span { font-weight: bold; color: var(--primary); }
-
         .stats-box { display: flex; justify-content: space-around; margin-bottom: 15px; text-align: center; }
         .stat { background: var(--primary); color: white; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; }
         .stat span { display: block; font-size: 20px; font-weight: bold; }
-        .relatorio-item { border-left: 5px solid #ccc; padding: 12px; background: #fafafa; margin-bottom: 8px; border-radius: 4px; font-size: 13px;}
-
-        #modalAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        #modalAssinatura, #modalVerAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
-        canvas { border: 2px dashed #ccc; width: 100%; height: 100px; background: #fdfdfd; border-radius: 5px; touch-action: none; margin-bottom: 10px; }
-
-        #areaImpressao { display: none; }
-        @media print {
-            body { background: white; margin: 0; padding: 0; }
-            .container, #modalAssinatura { display: none !important; }
-            #areaImpressao { display: block !important; width: 100%; }
-            @page { size: landscape; margin: 10mm; }
-            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-top: 15px;}
-            .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 5px; text-align: left; }
-            .tabela-pdf th { background: #f2f2f2; }
-            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 5px; }
-        }
+        canvas { border: 2px dashed #ccc; width: 100%; height: 120px; background: #fdfdfd; touch-action: none; margin: 10px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- CABEÇALHO PREMIUM COM LOGO -->
+    <!-- CABEÇALHO -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-left: 5px solid var(--primary);">
         <div style="width: 65px; height: 65px; border: 2px solid #eee; border-radius: 10px; overflow: hidden; background: #f9f9f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <!-- Quando tiver sua logo oficial, é só trocar este link abaixo -->
-            <img id="logoCondominio" src="https://cdn-icons-png.flaticon.com/512/3075/3075908.png" style="width: 85%; height: auto;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3075/3075908.png" style="width: 85%; height: auto;">
         </div>
         <div style="text-align: right; flex-grow: 1; padding-left: 15px;">
-            <h2 style="margin: 0; font-size: 1.2rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">Express Suncity</h2>
-            <span style="font-size: 0.7rem; color: #666; font-weight: bold; display: block; margin-top: 2px;">GESTÃO DE ENCOMENDAS</span>
+            <h2 style="margin: 0; font-size: 1.2rem; color: var(--primary); text-transform: uppercase;">Express Suncity</h2>
+            <span style="font-size: 0.7rem; color: #666; font-weight: bold;">GESTÃO DE ENCOMENDAS</span>
         </div>
     </div>
 
+    <!-- LOGIN -->
     <div id="loginContainer" class="card">
         <h3 style="text-align:center;">Acesso Portaria</h3>
         <input type="text" id="loginUser" placeholder="Usuário">
         <div style="position: relative;">
-            <input type="password" id="loginSenha" placeholder="Senha" style="padding-right: 40px;">
-            <span id="toggleSenha" onclick="mostrarSenha()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px;">👁️</span>
+            <input type="password" id="loginSenha" placeholder="Senha">
+            <span onclick="mostrarSenha()" style="position: absolute; right: 12px; top: 15px; cursor: pointer; font-size: 20px;">👁️</span>
         </div>
         <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
         <p id="msgLogin" style="color:red; text-align:center; display:none;"></p>
     </div>
 
+    <!-- APP CONTAINER -->
     <div id="appContainer">
         <div class="user-bar">
             <div>Porteiro: <span id="nomePorteiroAtivo"></span></div>
             <button class="btn-danger" style="width:auto; padding:5px 10px;" onclick="fazerLogout()">Sair</button>
         </div>
 
-      <div class="nav-bottom">
-            <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
-            <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
-            <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
-            <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📊<span>Relatórios</span></button>
-            <button class="nav-item admin-only" onclick="mudarAba('tabConfig', this)">⚙️<span>Config</span></button>
-            <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
-        </div>
-
         <p id="loading">Sincronizando... ⏳</p>
 
         <!-- ABA RECEBER -->
         <div id="tabReceber" class="card tab-content active">
-            <h3>Nova Encomenda</h3>
+            <h3>📥 Nova Encomenda</h3>
             <div class="row">
                 <select id="blocoSelect" onchange="atualizarAptos()"><option value="">Bloco...</option></select>
                 <select id="aptoSelect"><option value="">Apto...</option></select>
             </div>
-           <select id="descInput">
+            <select id="descInput">
                 <option value="">Tipo de pacote...</option>
                 <option value="Mercado Livre">Mercado Livre</option>
                 <option value="Shopee">Shopee</option>
@@ -124,207 +89,124 @@
                 <option value="Detran">Detran</option>
                 <option value="Outros">Outros</option>
             </select>
-            
             <div class="row">
-                <input type="text" id="codigoRastreio" placeholder="Identificador / Cód. Rastreio (Opcional)">
-                <button class="btn-secondary" style="width: 60px; padding: 0; font-size: 22px; display: flex; align-items: center; justify-content: center;" onclick="abrirCamera()">📷</button>
+                <input type="text" id="codigoRastreio" placeholder="Cód. Rastreio (Opcional)">
+                <button class="btn-secondary" style="width: 60px;" onclick="abrirCamera()">📷</button>
             </div>
-            
-            <div id="areaCamera" style="display:none; width: 100%; border: 2px dashed var(--primary); border-radius: 6px; overflow: hidden; margin: 8px 0;"></div>
-            <button class="btn-danger" id="btnFecharCamera" style="display:none; margin-bottom: 10px;" onclick="fecharCamera()">❌ Cancelar Leitura</button>
-
+            <div id="areaCamera" style="display:none; width: 100%; border: 2px dashed var(--primary); border-radius: 6px; overflow: hidden; margin-bottom: 10px;"></div>
             <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
         </div>
 
-       <!-- ABA PENDENTES -->
+        <!-- ABA PENDENTES -->
         <div id="tabPendentes" class="card tab-content">
-            <h3>A Entregar (<span id="contador">0</span>)</h3>
-            
-            <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtro Dinâmico</p>
-                <div class="row">
-                    <select id="pendBloco" onchange="atualizarAptosFiltro('pendBloco', 'pendApto'); aplicarFiltro()"><option value="">Todos os Blocos</option></select>
-                    <select id="pendApto" onchange="aplicarFiltro()"><option value="">Todos os Aptos</option></select>
-                </div>
-                <input type="text" id="buscaGeral" placeholder="Nome ou pacote..." onkeyup="aplicarFiltro()" style="margin-top:8px;">
-                <button class="btn-secondary" onclick="limparFiltro()">Limpar Filtros</button>
+            <h3>📋 A Entregar (<span id="contador">0</span>)</h3>
+            <div style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <input type="text" id="buscaGeral" placeholder="Filtrar por nome ou pacote..." onkeyup="aplicarFiltro()">
             </div>
-
             <div id="listaPendentes"></div>
         </div>
 
-        <!-- ABA HISTÓRICO (Visível para o Zelador) -->
+        <!-- ABA HISTÓRICO -->
         <div id="tabHistorico" class="card tab-content">
-            <h3>Histórico de Entregas</h3>
-            
-            <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtrar Histórico</p>
-                <div class="row">
-                    <select id="histBloco" onchange="atualizarAptosFiltro('histBloco', 'histApto'); aplicarFiltroHistorico()"><option value="">Todos os Blocos</option></select>
-                    <select id="histApto" onchange="aplicarFiltroHistorico()"><option value="">Todos os Aptos</option></select>
-                </div>
-                <input type="text" id="buscaHistorico" placeholder="Nome ou pacote..." onkeyup="aplicarFiltroHistorico()" style="margin-top:8px;">
-                <button class="btn-secondary" onclick="limparFiltroHistorico()" style="margin-top:8px;">Limpar Filtros</button>
-            </div>
-
+            <h3>📦 Histórico de Entregas</h3>
             <div id="listaHistorico"></div>
         </div>
+
         <!-- ABA RELATÓRIOS -->
         <div id="tabRelatorio" class="card tab-content">
-            <h3>Visão Analítica</h3>
+            <h3>📊 Relatórios</h3>
             <div class="stats-box">
-                <div class="stat">Pendentes <span id="statPend">0</span></div>
-                <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
+                <div class="stat">Pendente <span id="statPend">0</span></div>
+                <div class="stat" style="background:#25D366;">Entregue <span id="statEntreg">0</span></div>
             </div>
-            
-            <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">Filtros de Relatório</p>
-                
-                <select id="relStatus" onchange="renderizarRelatorio()">
-                    <option value="">Status: Todos</option>
-                    <option value="Pendente">Pendentes</option>
-                    <option value="Entregue">Entregues</option>
-                </select>
-
-                <div class="row">
-                    <select id="relBloco" onchange="renderizarRelatorio()"><option value="">Todos Blocos</option></select>
-                    <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
-                </div>
-                <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
-            </div>
-
-            <!-- NOVA CAIXA: BUSCA NO ARQUIVO MORTO COM BLOCO E APTO -->
-            <div style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cbd5e1;">
-                <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1d3557;">🔍 Pesquisar em Histórico Antigo (Arquivo Morto):</p>
-                <div class="row">
-                    <select id="arqBloco" onchange="atualizarAptosArq()"><option value="">Bloco...</option></select>
-                    <select id="arqApto"><option value="">Apto...</option></select>
-                </div>
-                <div class="row">
-                    <input type="text" id="arqNome" placeholder="Nome ou Pacote...">
-                    <button class="btn-primary" style="width:40%;" onclick="pesquisarNoArquivo()">Buscar</button>
-                </div>
-            </div>
-            
-            <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Gerar PDF da Tela</button>
-            <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
-            
-            <div id="listaRelatorio" style="margin-top:15px;"></div>
+            <button class="btn-secondary" onclick="window.print()">🖨️ Imprimir Tela</button>
+            <div id="listaRelatorio"></div>
         </div>
 
-        <div id="tabChamado" class="card tab-content">
-            <h3>Atualizar Cadastro</h3>
-            <div class="row">
-                <input type="number" id="chamadoBloco" placeholder="Bloco">
-                <input type="text" id="chamadoApto" placeholder="Apto">
-            </div>
-            <textarea id="chamadoJustificativa" placeholder="O que deve ser alterado e por que?" rows="3"></textarea>
-            <button class="btn-whats" onclick="enviarChamado()">Enviar para Administração</button>
-        </div>
-        <!-- ABA CONFIGURAÇÃO (ENGENHARIA E USUÁRIOS) --><div id="tabConfig" class="card tab-content">
-            <h3 style="color: var(--primary); text-align: center;">⚙️ Gestão Administrativa</h3>
+        <!-- ABA CONFIG -->
+        <div id="tabConfig" class="card tab-content">
+            <h3 style="text-align: center;">⚙️ Painel Administrativo</h3>
             
-            <!-- SEÇÃO: EDITAR/NOVO MORADOR -->
+            <!-- EDITAR MORADOR -->
             <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
-                <h4 style="margin-top:0; color: var(--primary);">👥 Moradores</h4>
+                <h4 style="margin:0; color: var(--primary);">👥 Gestão de Moradores</h4>
                 <div class="row">
-                    <!-- Menu suspenso para blocos existentes -->
                     <select id="newMoradorBloco" onchange="atualizarAptosConfig()"><option value="">Bloco...</option></select>
-                    <!-- Menu suspenso para aptos existentes -->
                     <select id="newMoradorApto" onchange="puxarDadosMorador()"><option value="">Apto...</option></select>
                 </div>
-                
-                <!-- Campos de entrada -->
                 <input type="text" id="newMoradorNome" placeholder="Nome Completo">
-                <input type="tel" id="newMoradorTel" placeholder="WhatsApp (55...)">
+                <input type="tel" id="newMoradorTel" placeholder="WhatsApp (Ex: 5571...)">
                 <input type="email" id="newMoradorEmail" placeholder="E-mail">
-                
                 <div class="row">
                     <button class="btn-primary" onclick="salvarNovoMorador()">💾 Salvar</button>
-                    <button class="btn-secondary" onclick="resetarFormMorador()" style="width: auto;">➕ Novo</button>
+                    <button class="btn-secondary" onclick="resetarFormMorador()" style="width: auto;">➕ Limpar</button>
                 </div>
             </div>
 
-            <!-- SEÇÃO: USUÁRIOS (PORTARIA) -->
+            <!-- GESTÃO DE USUÁRIOS -->
             <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f8f9fa; margin-bottom: 20px;">
-                <h4 style="margin-top:0; color: var(--primary);">🔑 Usuários / Acessos</h4>
-                <!-- Menu para escolher usuário existente -->
-                <select id="userSelect" onchange="puxarDadosUsuario()"><option value="novo">➕ Criar Novo Usuário</option></select>
-                
-                <input type="text" id="newUserLogin" placeholder="Login (Usuário)">
+                <h4 style="margin:0; color: var(--primary);">🔑 Acessos Portaria</h4>
+                <select id="userSelect" onchange="puxarDadosUsuario()"><option value="novo">➕ Novo Usuário</option></select>
+                <input type="text" id="newUserLogin" placeholder="Login">
                 <input type="text" id="newUserSenha" placeholder="Senha">
                 <input type="text" id="newUserNome" placeholder="Nome Completo">
                 <select id="newUserNivel">
-                    <option value="Porteiro">Nível: Porteiro</option>
-                    <option value="Admin">Nível: Administrador</option>
+                    <option value="Porteiro">Porteiro</option>
+                    <option value="Admin">Administrador</option>
                 </select>
-                <button class="btn-primary" id="btnSalvarUser" onclick="salvarNovoUsuario()">💾 Salvar Usuário</button>
+                <button class="btn-primary" onclick="salvarNovoUsuario()">💾 Salvar Usuário</button>
             </div>
 
-            <!-- SEÇÃO: GERADOR EM MASSA -->
+            <!-- GERADOR EM MASSA -->
             <div style="border: 2px dashed #457b9d; padding: 15px; border-radius: 8px; background: #eef2f3;">
-                <h4 style="margin-top:0; color: #1d3557; display: flex; justify-content: space-between; align-items: center;">
-                    🚀 Gerador Automático 
-                    <button onclick="alert('DICA: Para importar nomes via Excel, abra sua Planilha Google no PC e cole: Nomes na Coluna C, Telefones na D e E-mails na E.')" style="width:auto; margin:0; padding:5px; background:none; border:none; font-size:20px;">💡</button>
+                <h4 style="margin:0; color: #1d3557; display: flex; justify-content: space-between;">
+                    🚀 Engenharia <button onclick="alert('DICA: Use o PC para colar dados em massa diretamente no Google Sheets.')" style="width:auto; margin:0; background:none; border:none; font-size:18px;">💡</button>
                 </h4>
                 <input type="text" id="genBlocos" placeholder="Blocos (Ex: A, B, C)">
                 <div class="row">
                     <input type="number" id="genAptoInicial" placeholder="Apto Inicial">
                     <input type="number" id="genQtdPorBloco" placeholder="Qtd por Bloco">
                 </div>
-                <input type="password" id="genSenhaAdm" placeholder="Senha de ADM para confirmar" style="border: 2px solid var(--primary);">
-                <button class="btn-primary" style="background: #457b9d;" onclick="gerarCondominioMassa()">⚡ Gerar Unidades</button>
+                <input type="password" id="genSenhaAdm" placeholder="Senha ADM para autorizar">
+                <button class="btn-primary" style="background: #457b9d;" onclick="gerarCondominioMassa()">⚡ Criar Estrutura</button>
             </div>
         </div>
 
-            <!-- CADASTRO DE USUÁRIOS -->
-            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f8f9fa;">
-                <h4 style="margin-top:0; color: var(--primary);">🔑 Novo Acesso (Portaria)</h4>
-                <input type="text" id="newUserLogin" placeholder="Login">
-                <input type="text" id="newUserSenha" placeholder="Senha">
-                <input type="text" id="newUserNome" placeholder="Nome do Porteiro">
-                <select id="newUserNivel">
-                    <option value="Porteiro">Porteiro</option>
-                    <option value="Admin">Administrador</option>
-                </select>
-                <button class="btn-secondary" onclick="salvarNovoUsuario()">➕ Criar Acesso</button>
-            </div>
+        <!-- ABA AJUDA -->
+        <div id="tabChamado" class="card tab-content">
+            <h3>📝 Suporte / Cadastro</h3>
+            <textarea id="chamadoJustificativa" placeholder="Descreva o que precisa ser alterado..."></textarea>
+            <button class="btn-whats" onclick="enviarChamado()">Enviar para Central</button>
+        </div>
+
+        <!-- MENU INFERIOR -->
+        <div class="nav-bottom">
+            <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
+            <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
+            <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico</span></button>
+            <button class="nav-item admin-only" onclick="mudarAba('tabRelatorio', this)">📊<span>Relat.</span></button>
+            <button class="nav-item admin-only" onclick="mudarAba('tabConfig', this)">⚙️<span>Config</span></button>
+            <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Ajuda</span></button>
         </div>
     </div>
 </div>
 
-<div id="areaImpressao"></div>
-
+<!-- MODAL ASSINATURA -->
 <div id="modalAssinatura">
     <div class="modal-content">
-        <h3 style="margin-top:0;">Confirmar Retirada</h3>
-        <input type="text" id="nomeRetirante" placeholder="Nome de quem está retirando">
-        <p style="margin-bottom:5px; font-size:14px; font-weight:bold;">Assinatura na Tela:</p>
+        <h3 style="margin:0;">Confirmar Retirada</h3>
+        <input type="text" id="nomeRetirante" placeholder="Nome do Retirante">
         <canvas id="signaturePad"></canvas>
         <div class="row">
             <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
             <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
         </div>
-        <button id="btnConfirmarBaixa" class="btn-primary" style="background:#25D366; margin-top:10px;" onclick="confirmarEntregaFinal()">✅ Confirmar Entrega</button>
-    </div>
-</div>
-
-<!-- NOVO POPUP PARA VER A FOTO DA ASSINATURA -->
-<div id="modalVerAssinatura" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1005; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
-    <div class="modal-content" style="text-align: center;">
-        <h3 style="margin-top:0;">Comprovante</h3>
-        <div style="min-height: 100px; display: flex; justify-content: center; align-items: center;">
-            <img id="imgAssinaturaPreview" src="" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px;">
-        </div>
-        <button class="btn-danger" onclick="fecharModalVis()">Fechar Visualização</button>
+        <button class="btn-primary" style="background:#25D366; margin-top:10px;" onclick="confirmarEntregaFinal()">✅ Confirmar</button>
     </div>
 </div>
 
 <script>
-    // ==========================================
-    // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
-    // ==========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbypZnD1QduPPn2ao4boEvEi8bOyLOndg0O7S03aUjYDcWKwMqo29fjLfZaM1aYnxuZT7Q/exec"; 
+    const API_URL = "SUA_URL_AQUI"; // <--- ATUALIZE AQUI!
     const SEU_WHATSAPP = "5571982282769";
 
     let moradoresDB = [];
@@ -332,151 +214,81 @@
     let pendentesDB = [];
     let porteiroLogado = "";
     let idEmBaixa = null;
-    let encomendaSelecionada = null; 
-
     let ultimaAtividade = Date.now();
-    const resetarTimer = () => { ultimaAtividade = Date.now(); };
-    window.addEventListener('touchstart', resetarTimer);
-    window.addEventListener('click', resetarTimer);
-    window.addEventListener('scroll', resetarTimer);
-    window.addEventListener('keypress', resetarTimer);
+    let leitorCamera = null;
 
-   setInterval(() => {
+    // --- SEGURANÇA E LOGIN ---
+    setInterval(() => {
         if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) {
-            alert("A sessão expirou por inatividade de 5 minutos.");
-            localStorage.removeItem("suncityUser"); 
-            localStorage.removeItem("suncityNivel");
-            location.reload(); 
+            alert("Sessão expirada."); localStorage.clear(); location.reload();
         }
-    }, 60000); 
+    }, 60000);
 
     window.onload = () => {
         let salvo = localStorage.getItem("suncityUser");
-        if(salvo) { 
-            porteiroLogado = salvo; 
-            iniciarSistema(); 
-        } else { 
-            document.getElementById("loginContainer").style.display = "block"; 
-        }
+        if(salvo) { porteiroLogado = salvo; iniciarSistema(); }
+        else { document.getElementById("loginContainer").style.display = "block"; }
     };
 
     function mostrarSenha() {
         const input = document.getElementById("loginSenha");
-        const icone = document.getElementById("toggleSenha");
-        if (input.type === "password") {
-            input.type = "text";
-            icone.innerText = "🙈"; // Muda o ícone quando a senha está visível
-        } else {
-            input.type = "password";
-            icone.innerText = "👁️";
-        }
+        input.type = input.type === "password" ? "text" : "password";
     }
-// CONVERTE O LINK DO DRIVE EM IMAGEM DIRETA E ABRE O POPUP
-    async function visualizarAssinatura(url) {
-        const preview = document.getElementById('imgAssinaturaPreview');
-        const modal = document.getElementById('modalVerAssinatura');
-        
-        // 1. Abre o modal e mostra um "Carregando"
-        preview.src = ""; 
-        preview.alt = "Carregando assinatura... ⏳";
-        modal.style.display = 'flex';
 
-        try {
-            // 2. Extrai o ID do arquivo do link do Drive
-            let fileId = "";
-            if (url.includes("/file/d/")) {
-                fileId = url.split("/file/d/")[1].split("/")[0];
-            } else if (url.includes("id=")) {
-                fileId = url.split("id=")[1].split("&")[0];
-            }
-
-            if (!fileId) throw new Error("ID não encontrado");
-
-            // 3. Chama o Cérebro para pegar a imagem pura (Base64)
-            const response = await fetch(API_URL + "?acao=get_assinatura&id=" + fileId);
-            const base64Data = await response.text();
-
-            if (base64Data.startsWith("Erro")) {
-                alert("Não foi possível carregar a imagem. Verifique se o arquivo ainda existe no Drive.");
-                fecharModalVis();
-            } else {
-                // 4. Exibe a imagem com sucesso
-                preview.src = "data:image/png;base64," + base64Data;
-                preview.alt = "Assinatura";
-            }
-        } catch (err) {
-            alert("Erro ao conectar com o servidor para buscar a foto.");
-            fecharModalVis();
-        }
-    }
-    function fecharModalVis() {
-        document.getElementById('modalVerAssinatura').style.display = 'none';
-        document.getElementById('imgAssinaturaPreview').src = ""; // Limpa a foto
-    }
-    
     async function fazerLogin() {
         const login = document.getElementById("loginUser").value;
         const senha = document.getElementById("loginSenha").value;
-        if(!login || !senha) return;
+        if(!login || !senha) return alert("Dados incompletos!");
         
-        document.getElementById("msgLogin").style.display = "none";
-        document.getElementById("loginContainer").style.opacity = "0.5";
-        
+        document.getElementById("loading").style.display = "block";
         try {
             const res = await fetch(API_URL, { 
                 method: "POST", 
-                body: JSON.stringify({ acao: "login", login: login, senha: senha }), 
+                body: JSON.stringify({ acao: "login", login, senha }), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             const data = await res.json();
-            
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
-                localStorage.setItem("suncityUser", porteiroLogado); 
+                localStorage.setItem("suncityUser", data.nome); 
                 localStorage.setItem("suncityNivel", data.nivel);
                 localStorage.setItem("suncityUserLogin", login);
                 iniciarSistema();
-            } else {
-                document.getElementById("msgLogin").innerText = data.erro;
-                document.getElementById("msgLogin").style.display = "block";
-            }
-        } catch(e) { 
-            alert("Erro de rede ao logar. Verifique a internet e o link da API."); 
-        } finally { 
-            document.getElementById("loginContainer").style.opacity = "1"; 
-        }
-    } // <--- ESTA É A CHAVE QUE FALTAVA!
-
-    function fazerLogout() { 
-        if(confirm("Deseja realmente encerrar a sessão e sair do app?")) {
-            localStorage.removeItem("suncityUser"); 
-            localStorage.removeItem("suncityNivel");
-            location.reload(); 
-        }
+            } else { alert(data.erro); }
+        } catch(e) { alert("Erro de conexão."); }
+        finally { document.getElementById("loading").style.display = "none"; }
     }
 
-async function iniciarSistema() {
+    function fazerLogout() { localStorage.clear(); location.reload(); }
+
+    async function iniciarSistema() {
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
-        ultimaAtividade = Date.now(); 
-
-        const nivel = localStorage.getItem("suncityNivel") || "";
-        const textoNivel = nivel.toLowerCase();
         
-        if(textoNivel.includes("adm") || textoNivel.includes("gerente")) {
+        const nivel = (localStorage.getItem("suncityNivel") || "").toLowerCase();
+        if(nivel.includes("adm")) {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
-        } else {
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         }
         
         await carregarMoradores();
         await buscarPendentes();
-        await carregarUsuariosParaEdicao(); // Carrega a lista de porteiros na aba Config
-        popularFiltrosConfig(); // Preenche o menu de Blocos da aba Config
+        await carregarUsuariosParaEdicao();
+        popularFiltrosConfig();
     }
 
-    // Preenche o menu de Blocos na aba Configuração
+    // --- GESTÃO DE DADOS ---
+    async function carregarMoradores() {
+        try {
+            const res = await fetch(API_URL + "?acao=getMoradores");
+            moradoresDB = await res.json();
+            const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+            const s = document.getElementById("blocoSelect");
+            s.innerHTML = '<option value="">Bloco...</option>';
+            blocos.forEach(b => s.add(new Option(`Bloco ${b}`, b)));
+        } catch(e) {}
+    }
+
     function popularFiltrosConfig() {
         const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
         const s = document.getElementById("newMoradorBloco");
@@ -484,59 +296,112 @@ async function iniciarSistema() {
         blocos.forEach(b => s.add(new Option(`Bloco ${b}`, b)));
     }
 
-    // Atualiza os aptos na aba Config quando muda o bloco
+    function atualizarAptos() {
+        const b = document.getElementById("blocoSelect").value;
+        const s = document.getElementById("aptoSelect");
+        s.innerHTML = '<option value="">Apto...</option>';
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+    }
+
     function atualizarAptosConfig() {
         const b = document.getElementById("newMoradorBloco").value;
         const s = document.getElementById("newMoradorApto");
         s.innerHTML = '<option value="">Apto...</option>';
         if(b) {
             moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(m.apto, m.apto)));
-            s.add(new Option("➕ Criar Novo Apto", "novo"));
+            s.add(new Option("➕ Criar Novo", "novo"));
         }
     }
 
-    // Puxa nome, tel e email quando seleciona o apto na Config
     function puxarDadosMorador() {
-        const bloco = document.getElementById("newMoradorBloco").value;
-        const apto = document.getElementById("newMoradorApto").value;
-        
-        if(apto === "novo") {
-            const novoApto = prompt("Digite o número do novo apartamento:");
-            if(novoApto) {
+        const b = document.getElementById("newMoradorBloco").value;
+        const a = document.getElementById("newMoradorApto").value;
+        if(a === "novo") {
+            const n = prompt("Número do novo apto:");
+            if(n) {
                 const s = document.getElementById("newMoradorApto");
-                s.add(new Option(novoApto, novoApto), s.options[s.options.length - 1]);
-                s.value = novoApto;
-                document.querySelectorAll('#newMoradorNome, #newMoradorTel, #newMoradorEmail').forEach(i => i.value = "");
+                s.add(new Option(n, n), s.options[s.options.length-1]);
+                s.value = n;
             }
             return;
         }
-
-        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
-        if(morador) {
-            document.getElementById("newMoradorNome").value = morador.nome || "";
-            document.getElementById("newMoradorTel").value = morador.telefone || "";
-            // Nota: Se o seu carregarMoradores() ainda não puxar email, ele ficará vazio até salvar a primeira vez
-            document.getElementById("newMoradorEmail").value = morador.email || "";
+        const m = moradoresDB.find(x => x.bloco === b && String(x.apto) === String(a));
+        if(m) {
+            document.getElementById("newMoradorNome").value = m.nome;
+            document.getElementById("newMoradorTel").value = m.telefone;
+            document.getElementById("newMoradorEmail").value = m.email || "";
         }
     }
 
-    // Carrega usuários existentes para o menu de edição
+    // --- OPERAÇÕES ---
+    async function registrarEncomenda() {
+        const b = document.getElementById("blocoSelect").value;
+        const a = document.getElementById("aptoSelect").value;
+        const d = document.getElementById("descInput").value;
+        const r = document.getElementById("codigoRastreio").value;
+        if(!b || !a || !d) return alert("Preencha os campos!");
+
+        const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(a));
+        const payload = {
+            acao: "nova_encomenda", id: Date.now().toString(), bloco: b, apto: a,
+            nome: morador.nome, telefone: morador.telefone, descricao: r ? `${d} (${r})` : d,
+            dataHora: new Date().toLocaleString('pt-BR'), porteiroEntrada: porteiroLogado
+        };
+        
+        await executarAcaoAdm(payload, "Encomenda Registrada!");
+        buscarPendentes();
+    }
+
+    async function confirmarEntregaFinal() {
+        const q = document.getElementById("nomeRetirante").value;
+        if(!q) return alert("Digite o nome!");
+        
+        const canvas = document.getElementById('signaturePad');
+        const img = canvas.toDataURL("image/png");
+        
+        const payload = { 
+            acao: "baixar", id: idEmBaixa, dataHora: new Date().toLocaleString('pt-BR'), 
+            porteiroSaida: porteiroLogado, quemRetirou: q, imagemBase64: img 
+        };
+        
+        await executarAcaoAdm(payload, "Entrega Finalizada!");
+        fecharModal();
+        buscarPendentes();
+    }
+
+    async function salvarNovoMorador(confirmado = false) {
+        const payload = {
+            acao: "cadastrar_morador", confirmado,
+            bloco: document.getElementById("newMoradorBloco").value,
+            apto: document.getElementById("newMoradorApto").value,
+            nome: document.getElementById("newMoradorNome").value,
+            telefone: document.getElementById("newMoradorTel").value,
+            email: document.getElementById("newMoradorEmail").value
+        };
+
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        const data = await res.json();
+        if(data.status === "aviso") {
+            if(confirm(data.msg + "\nDeseja sobreescrever?")) salvarNovoMorador(true);
+        } else {
+            alert(data.msg || "Sucesso!"); await carregarMoradores(); popularFiltrosConfig();
+        }
+    }
+
     async function carregarUsuariosParaEdicao() {
         try {
             const res = await fetch(API_URL + "?acao=getUsuarios");
-            const usuarios = await res.json();
+            const users = await res.json();
             const s = document.getElementById("userSelect");
-            s.innerHTML = '<option value="novo">➕ Criar Novo Usuário</option>';
-            usuarios.forEach(u => s.add(new Option(`Editar: ${u.nome} (${u.login})`, JSON.stringify(u))));
-        } catch(e) { console.log("Erro ao carregar usuários"); }
+            s.innerHTML = '<option value="novo">➕ Novo Usuário</option>';
+            users.forEach(u => s.add(new Option(`Editar: ${u.nome}`, JSON.stringify(u))));
+        } catch(e) {}
     }
 
-    // Preenche os campos do porteiro ao selecionar no menu
     function puxarDadosUsuario() {
         const val = document.getElementById("userSelect").value;
         if(val === "novo") {
             document.querySelectorAll('#newUserLogin, #newUserSenha, #newUserNome').forEach(i => i.value = "");
-            document.getElementById("newUserNivel").value = "Porteiro";
             return;
         }
         const u = JSON.parse(val);
@@ -546,622 +411,134 @@ async function iniciarSistema() {
         document.getElementById("newUserNivel").value = u.nivel;
     }
 
-    function resetarFormMorador() {
-        document.querySelectorAll('#newMoradorNome, #newMoradorTel, #newMoradorEmail').forEach(i => i.value = "");
-        document.getElementById("newMoradorBloco").value = "";
-        document.getElementById("newMoradorApto").innerHTML = '<option value="">Apto...</option>';
-        alert("Modo de criação manual ativado.");
-    }
-
-    // ==========================================
-    // LEITOR DE CÓDIGO DE BARRAS E QR CODE
-    // ==========================================
-    let leitorCamera = null;
-
-    function abrirCamera() {
-        const area = document.getElementById("areaCamera");
-        const btnFechar = document.getElementById("btnFecharCamera");
-        
-        area.style.display = "block";
-        btnFechar.style.display = "block";
-
-        if (!leitorCamera) {
-            leitorCamera = new Html5Qrcode("areaCamera");
-        }
-
-        leitorCamera.start(
-            { facingMode: "environment" }, // Abre a câmera traseira
-            { fps: 10, qrbox: { width: 250, height: 100 } }, // Foco retangular para código de barras
-            (textoDecodificado) => {
-                // SUCESSO: Leu o código!
-                document.getElementById("codigoRastreio").value = textoDecodificado;
-                alert("✅ Código Lindo: " + textoDecodificado); // Aviso visual rápido
-                fecharCamera();
-            },
-            (erroDeLeitura) => {
-                // Ignora falhas contínuas de foco
-            }
-        ).catch(err => {
-            alert("Erro ao acessar a câmera. Verifique as permissões do seu celular.");
-            fecharCamera();
-        });
-    }
-
-    function fecharCamera() {
-        if (leitorCamera) {
-            leitorCamera.stop().then(() => {
-                document.getElementById("areaCamera").style.display = "none";
-                document.getElementById("btnFecharCamera").style.display = "none";
-            }).catch(err => console.log("Erro ao fechar câmera: ", err));
-        }
-    }
-
-    async function buscarPendentes() {
-        document.getElementById("loading").style.display = "block";
-        try {
-            const response = await fetch(API_URL);
-            todasAsEncomendasDB = await response.json();
-            pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
-            
-            aplicarFiltro(); 
-            aplicarFiltroHistorico(); // Carrega o histórico junto
-            renderizarRelatorio();
-        } catch (e) { console.error(e); } 
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-    function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
-        const mensagem = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${descricao}\n🏢 *Local:* Bloco ${bloco} - Apto ${apto}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
-        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-    }
-
-    async function registrarEncomenda() {
-        const bloco = document.getElementById("blocoSelect").value;
-        const apto = document.getElementById("aptoSelect").value;
-        const tipoPacote = document.getElementById("descInput").value;
-        const rastreio = document.getElementById("codigoRastreio").value;
-        
-        if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
-
-        // Junta o tipo do pacote com o código de rastreio (se houver)
-        const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
-
-        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
-        const dados = {
-            acao: "nova_encomenda", 
-            id: Date.now().toString(),
-            bloco: bloco, 
-            apto: apto, 
-            nome: morador.nome, 
-            telefone: morador.telefone,
-            descricao: desc, 
-            dataHora: new Date().toLocaleString('pt-BR'), 
-            porteiroEntrada: porteiroLogado
-        };
-
-        document.getElementById("loading").style.display = "block";
-        try {
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(dados), 
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
-            
-            document.getElementById("descInput").value = "";
-            document.getElementById("codigoRastreio").value = "";
-            await buscarPendentes(); 
-            
-            if(confirm("Entrada Registrada no Sistema!\n\n(E-mail de aviso disparado).\n\nDeseja enviar aviso por WhatsApp agora?")) {
-                enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
-            }
-        } catch (e) { alert("Erro ao salvar a encomenda."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
-    // NOVA INTELIGÊNCIA: Buscar no Arquivo Morto usando os Dropdowns
-    async function pesquisarNoArquivo() {
-        const b = document.getElementById("arqBloco").value;
-        const a = document.getElementById("arqApto").value;
-        const t = document.getElementById("arqNome").value;
-        
-        if(!b && !a && !t) return alert("Preencha pelo menos um campo (Bloco, Apto ou Nome) para buscar no histórico.");
-        
-        document.getElementById("loading").style.display = "block";
-        
-        try {
-            const res = await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify({ acao: "buscar_arquivo", bloco: b, apto: a, termo: t }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            const dadosArquivo = await res.json();
-            
-            if(dadosArquivo.length === 0) {
-                alert("Nenhum registro antigo encontrado com esses filtros.");
-            } else {
-                todasAsEncomendasDB = dadosArquivo; 
-                renderizarRelatorio();
-                alert(`Encontrado! Exibindo ${dadosArquivo.length} registros do Arquivo Morto. Para voltar aos registros atuais, recarregue a página (F5).`);
-            }
-        } catch(e) {
-            alert("Erro ao buscar no arquivo.");
-        } finally {
-            document.getElementById("loading").style.display = "none";
-        }
-    }
-
-   function aplicarFiltro() {
-        const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
-        const blocoSelecionado = document.getElementById("pendBloco") ? document.getElementById("pendBloco").value : "";
-        const aptoSelecionado = document.getElementById("pendApto") ? document.getElementById("pendApto").value : "";
-        
-        let filtrados = pendentesDB.filter(enc => {
-            const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
-            const matchApto = aptoSelecionado === "" || String(enc.apto) === String(aptoSelecionado);
-            const matchTexto = termoBusca === "" || 
-                               enc.nome.toLowerCase().includes(termoBusca) || 
-                               enc.descricao.toLowerCase().includes(termoBusca) ||
-                               String(enc.apto).includes(termoBusca);
-            return matchBloco && matchApto && matchTexto;
-        });
-        
-        renderizarLista(filtrados);
-    }
-
-   function limparFiltro() {
-        document.getElementById("buscaGeral").value = "";
-        if(document.getElementById("pendBloco")) document.getElementById("pendBloco").value = "";
-        if(document.getElementById("pendApto")) document.getElementById("pendApto").innerHTML = '<option value="">Todos os Aptos</option>';
-        renderizarLista(pendentesDB);
-    }
-
-    function limparFiltroHistorico() {
-        document.getElementById("buscaHistorico").value = "";
-        if(document.getElementById("histBloco")) document.getElementById("histBloco").value = "";
-        if(document.getElementById("histApto")) document.getElementById("histApto").innerHTML = '<option value="">Todos os Aptos</option>';
-        aplicarFiltroHistorico(); // Recarrega a lista sem filtros
-    }
-
-    function aplicarFiltroHistorico() {
-        const termoBusca = document.getElementById("buscaHistorico").value.toLowerCase();
-        const blocoSelecionado = document.getElementById("histBloco") ? document.getElementById("histBloco").value : "";
-        const aptoSelecionado = document.getElementById("histApto") ? document.getElementById("histApto").value : "";
-        
-        let entreguesRecentes = todasAsEncomendasDB.filter(enc => enc.status === "Entregue");
-        
-        let filtrados = entreguesRecentes.filter(enc => {
-            const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
-            const matchApto = aptoSelecionado === "" || String(enc.apto) === String(aptoSelecionado);
-            const matchTexto = termoBusca === "" || 
-                               enc.nome.toLowerCase().includes(termoBusca) || 
-                               enc.descricao.toLowerCase().includes(termoBusca) ||
-                               String(enc.apto).includes(termoBusca);
-            return matchBloco && matchApto && matchTexto;
-        });
-        
-        const lista = document.getElementById("listaHistorico");
-        if(!lista) return;
-        lista.innerHTML = "";
-        
-        filtrados.slice().reverse().forEach(enc => {
-            const div = document.createElement("div");
-            div.className = "encomenda-item";
-            div.style.borderLeftColor = "var(--success)"; 
-           // Verifica se a assinatura salva no banco de dados é um Link do Google Drive
-            let botaoAssinatura = "";
-            if (enc.assinatura && enc.assinatura.includes("http")) {
-                botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="visualizarAssinatura('${enc.assinatura}')">🖋️ Ver Assinatura</button>`;
-            }
-
-            div.innerHTML = `
-                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
-                <strong>Pacote:</strong> ${enc.descricao} <br>
-                <small style="color:#666;">Entrada: ${enc.dataHora}</small><br>
-                <small style="color:#25D366; font-weight:bold;">Entregue a: ${enc.quemRetirou}</small><br>
-                <small style="color:#666;">Saída: ${enc.dataSaida} (${enc.porteiroSaida || 'Sistema'})</small>
-                ${botaoAssinatura}
-            `;
-            lista.appendChild(div);
-        });
-    }    function renderizarLista(encomendas) {
-        const lista = document.getElementById("listaPendentes");
-        lista.innerHTML = "";
-        document.getElementById("contador").innerText = encomendas.length;
-        
-        encomendas.forEach(enc => {
-            const div = document.createElement("div");
-            div.className = "encomenda-item";
-            div.innerHTML = `
-                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
-                <strong>Pacote:</strong> ${enc.descricao} <br>
-                <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
-                <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
-                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">Avisar no WhatsApp</button>
-                <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">✅ Entregar / Assinar</button>
-            `;
-            lista.appendChild(div);
-        });
-    }
-
-    function renderizarRelatorio() {
-        const termo = document.getElementById("relMorador").value.toLowerCase();
-        const fBloco = document.getElementById("relBloco").value;
-        const fApto = document.getElementById("relApto").value.toLowerCase();
-        const fStatus = document.getElementById("relStatus").value;
-
-        const filtradas = todasAsEncomendasDB.filter(enc => {
-            const matchBloco = fBloco === "" || enc.bloco === fBloco;
-            const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
-            const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
-            const matchStatus = fStatus === "" || enc.status === fStatus;
-            
-            return matchBloco && matchApto && matchNome && matchStatus;
-        });
-
-        document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
-        document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length; 
-
-        const lista = document.getElementById("listaRelatorio");
-        lista.innerHTML = "";
-
-        filtradas.slice().reverse().forEach(enc => {
-            const div = document.createElement("div");
-            div.className = "relatorio-item " + (enc.status === "Pendente" ? "status-pendente" : "status-entregue");
-            
-            let infoSaida = (enc.status === "Entregue" || enc.status === "Arquivado") ? `<br><strong>Retirado por:</strong> ${enc.quemRetirou} <br><small>Saída: ${enc.dataSaida} (${enc.porteiroSaida || 'Sistema'})</small>` : ``;
-            
-            div.innerHTML = `
-                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
-                <strong>Status:</strong> ${enc.status}<br>
-                <strong>Pacote:</strong> ${enc.descricao} <br>
-                <small>Entrada: ${enc.dataHora} (${enc.porteiroEntrada || 'Sistema'})</small>
-                ${infoSaida}
-            `;
-            lista.appendChild(div);
-        });
-    }
-
-    function imprimirRelatorio() {
-        const termo = document.getElementById("relMorador").value.toLowerCase();
-        const fBloco = document.getElementById("relBloco").value;
-        const fApto = document.getElementById("relApto").value.toLowerCase();
-        const fStatus = document.getElementById("relStatus").value;
-
-        const filtradas = todasAsEncomendasDB.filter(enc => {
-            const matchBloco = fBloco === "" || enc.bloco === fBloco;
-            const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
-            const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
-            const matchStatus = fStatus === "" || enc.status === fStatus;
-            
-            return matchBloco && matchApto && matchNome && matchStatus;
-        });
-
-        const pendentes = filtradas.filter(e => e.status === "Pendente");
-        const entregues = filtradas.filter(e => e.status !== "Pendente"); 
-
-        let htmlPDF = `<h2 class="print-title">📊 Relatório Analítico - Express Suncity</h2>`;
-        htmlPDF += `<p style="text-align:center; font-family:Arial, sans-serif; font-size:12px; margin-bottom:20px;">Filtros: Status (${fStatus||"Todos"})</p>`;
-
-        if(pendentes.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${pendentes.length})</h3>
-            <table class="tabela-pdf">
-            <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr>`;
-            pendentes.forEach(p => {
-                htmlPDF += `<tr><td>${p.bloco}</td><td>${p.apto}</td><td>${p.nome}</td><td>${p.descricao}</td><td>${p.dataHora}</td><td>${p.porteiroEntrada || '-'}</td></tr>`;
-            });
-            htmlPDF += `</table>`;
-        }
-
-        if(entregues.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🟢 ENTREGUES / HISTÓRICO (${entregues.length})</h3>
-            <table class="tabela-pdf">
-            <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA ENTRADA</th><th>DATA SAÍDA</th><th>QUEM RETIROU</th><th>PORTEIRO OUT</th></tr>`;
-            entregues.forEach(e => {
-                htmlPDF += `<tr><td>${e.bloco}</td><td>${e.apto}</td><td>${e.nome}</td><td>${e.descricao}</td><td>${e.dataHora}</td><td>${e.dataSaida || '-'}</td><td>${e.quemRetirou || '-'}</td><td>${e.porteiroSaida || '-'}</td></tr>`;
-            });
-            htmlPDF += `</table>`;
-        }
-
-        if(pendentes.length === 0 && entregues.length === 0) {
-            htmlPDF += `<p style="font-family:Arial, sans-serif;">Nenhuma encomenda encontrada para este filtro.</p>`;
-        }
-
-        document.getElementById("areaImpressao").innerHTML = htmlPDF;
-
-        const tituloOriginal = document.title;
-        const agora = new Date();
-        const strData = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
-        const strHora = agora.toLocaleTimeString('pt-BR').substring(0, 5).replace(':', 'h') + 'm';
-        document.title = `RELATÓRIO_SUNCITY_${strData}_${strHora}`;
-
-        window.print();
-
-        setTimeout(() => { document.title = tituloOriginal; }, 2000);
-    }
-
-    async function enviarRelatorioEmail() {
-        const btnEmail = document.getElementById("btnEmailRel");
-        btnEmail.innerText = "⏳ Gerando e Enviando...";
-        btnEmail.disabled = true;
-
-        const termo = document.getElementById("relMorador").value;
-        const fBloco = document.getElementById("relBloco").value;
-        const fApto = document.getElementById("relApto").value;
-        const fStatus = document.getElementById("relStatus").value;
-
-        try {
-            const payload = { 
-                acao: "enviar_relatorio_pdf", 
-                termo: termo, 
-                fBloco: fBloco, 
-                fApto: fApto,
-                fStatus: fStatus
-            };
-
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(payload), 
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
-            
-            alert("🚀 Relatório em PDF gerado e enviado para o seu e-mail administrativo com sucesso!");
-        } catch (error) { 
-            alert("Erro ao enviar e-mail: " + error.message); 
-        } finally { 
-            btnEmail.innerText = "✉️ Enviar para meu E-mail";
-            btnEmail.disabled = false;
-        }
-    }
-
-    // LÓGICA DE ASSINATURA NA TELA (CANVAS)
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-
-    function getPos(e) {
-        var rect = canvas.getBoundingClientRect();
-        if (e.changedTouches) {
-            return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top };
-        }
-        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    }
-
-    function iniciarDesenho(e) { 
-        e.preventDefault(); 
-        isDrawing = true; 
-        let pos = getPos(e); 
-        ctx.beginPath(); 
-        ctx.moveTo(pos.x, pos.y); 
-    }
-    
-    function desenhar(e) { 
-        if (!isDrawing) return; 
-        e.preventDefault(); 
-        let pos = getPos(e); 
-        ctx.lineWidth = 2; 
-        ctx.lineCap = 'round'; 
-        ctx.lineTo(pos.x, pos.y); 
-        ctx.stroke(); 
-    }
-    
-    function pararDesenho(e) { 
-        e.preventDefault(); 
-        isDrawing = false; 
-        resetarTimer(); 
-    }
-    
-    canvas.addEventListener('mousedown', iniciarDesenho);
-    canvas.addEventListener('mousemove', desenhar);
-    canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
-    canvas.addEventListener('touchmove', desenhar, {passive: false});
-    canvas.addEventListener('touchend', pararDesenho, {passive: false});
-
-    function limparCanvas() { 
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-    }
-
-    function abrirModalBaixa(id) {
-        idEmBaixa = id; 
-        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
-        document.getElementById("nomeRetirante").value = ""; 
-        document.getElementById("modalAssinatura").style.display = "flex";
-        setTimeout(() => { 
-            canvas.width = canvas.offsetWidth; 
-            canvas.height = canvas.offsetHeight; 
-            limparCanvas(); 
-        }, 100);
-    }
-
-    function fecharModal() { 
-        document.getElementById("modalAssinatura").style.display = "none"; 
-        idEmBaixa = null; 
-        encomendaSelecionada = null; 
-    }
-
-    async function confirmarEntregaFinal() {
-        const quemRetirou = document.getElementById("nomeRetirante").value;
-        if(!quemRetirou) { alert("Digite o nome de quem está retirando o pacote!"); return; }
-
-        const btn = document.getElementById("btnConfirmarBaixa");
-        btn.innerText = "Processando..."; 
-        btn.disabled = true;
-        
-        const dataBaixa = new Date().toLocaleString('pt-BR');
-        const pacoteFaturado = encomendaSelecionada;
-
-        try {
-            
-// Criação de uma imagem combinada (Nome + Data + Assinatura)
-        const canvasOriginal = document.getElementById('signaturePad');
-        const canvasMesclado = document.createElement('canvas');
-        canvasMesclado.width = canvasOriginal.width;
-        canvasMesclado.height = canvasOriginal.height + 40; // Aumenta 40px para caber o cabeçalho
-        const ctxMesclado = canvasMesclado.getContext('2d');
-        
-        // Pinta o fundo de branco
-        ctxMesclado.fillStyle = "#ffffff";
-        ctxMesclado.fillRect(0, 0, canvasMesclado.width, canvasMesclado.height);
-        
-        // Carimba o Nome e a Data no topo da imagem
-        ctxMesclado.font = "bold 14px Arial";
-        ctxMesclado.fillStyle = "#1d3557";
-        ctxMesclado.fillText("Retirado por: " + quemRetirou, 10, 20);
-        ctxMesclado.font = "10px Arial";
-        ctxMesclado.fillStyle = "#666666";
-        ctxMesclado.fillText("Data: " + dataBaixa, 10, 35);
-        
-        // Cola o desenho da assinatura original logo abaixo do texto
-        ctxMesclado.drawImage(canvasOriginal, 0, 40);
-
-        // Gera a foto final oficial
-        const imagemAssinatura = canvasMesclado.toDataURL("image/png");
-
-        const payload = { 
-            acao: "baixar", 
-            id: idEmBaixa.toString(), 
-            dataHora: dataBaixa, 
-            porteiroSaida: porteiroLogado || "Não identificado", 
-            quemRetirou: quemRetirou, 
-            assinatura: "Sim",
-            imagemBase64: imagemAssinatura
-        };
-            
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify(payload), 
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
-            
-            fecharModal(); 
-            alert("Baixa confirmada!\n\n(Recibo enviado por e-mail automaticamente).");
-            
-            if(pacoteFaturado) {
-                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✔️ Assinatura coletada na tela e entrega salva no sistema.`;
-                window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
-            }
-            await buscarPendentes(); 
-        } catch (error) { 
-            alert("Erro da rede: " + error.message); 
-        } finally { 
-            btn.innerText = "✅ Confirmar Entrega"; 
-            btn.disabled = false; 
-        }
-    }
-
-    function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value;
-        const apto = document.getElementById("chamadoApto").value;
-        const just = document.getElementById("chamadoJustificativa").value;
-        
-        if (!bloco || !apto || !just) { alert("Preencha todos os campos do chamado!"); return; }
-        
-        const texto = `⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`;
-        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(texto)}`;
-    }
-async function salvarNovoMorador(confirmado = false) {
-        const bloco = document.getElementById("newMoradorBloco").value;
-        const apto = document.getElementById("newMoradorApto").value;
-        const nome = document.getElementById("newMoradorNome").value;
-        const tel = document.getElementById("newMoradorTel").value;
-        const email = document.getElementById("newMoradorEmail").value;
-
-        if(!bloco || !apto || !nome) return alert("Preencha Bloco, Apto e Nome!");
-
-        const dados = {
-            acao: "cadastrar_morador",
-            bloco: bloco, 
-            apto: apto, 
-            nome: nome, 
-            telefone: tel, 
-            email: email,
-            confirmado: confirmado
-        };
-
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(dados),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            const data = await res.json();
-            if(data.status === "aviso") {
-                if(confirm(data.msg + "\n\nDeseja SOBREESCREVER os dados atuais?")) {
-                    salvarNovoMorador(true);
-                }
-            } else {
-                alert(data.msg || "Sucesso!");
-                document.querySelectorAll('#tabConfig input').forEach(i => i.value = "");
-                carregarMoradores();
-            }
-        } catch(e) { alert("Erro na conexão."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
     async function salvarNovoUsuario() {
-        const dados = {
+        const p = {
             acao: "cadastrar_usuario",
             login: document.getElementById("newUserLogin").value,
             senha: document.getElementById("newUserSenha").value,
             nome: document.getElementById("newUserNome").value,
             nivel: document.getElementById("newUserNivel").value
         };
-        if(!dados.login || !dados.senha || !dados.nome) return alert("Preencha todos os campos do usuário!");
-        
-        await executarAcaoAdm(dados, "Novo usuário criado com sucesso!");
+        await executarAcaoAdm(p, "Usuário Atualizado!");
+        carregarUsuariosParaEdicao();
     }
 
     async function gerarCondominioMassa() {
-        const blocosRaw = document.getElementById("genBlocos").value;
-        const aptoInicial = parseInt(document.getElementById("genAptoInicial").value);
-        const qtd = parseInt(document.getElementById("genQtdPorBloco").value);
         const senha = document.getElementById("genSenhaAdm").value;
-
-        if(!blocosRaw || isNaN(aptoInicial) || !senha) return alert("Preencha tudo e digite a senha!");
-
-        const blocos = blocosRaw.split(',').map(b => b.trim());
-        const listaGerada = [];
+        if(!senha) return alert("Senha necessária!");
+        const blocos = document.getElementById("genBlocos").value.split(',');
+        const inicial = parseInt(document.getElementById("genAptoInicial").value);
+        const qtd = parseInt(document.getElementById("genQtdPorBloco").value);
+        
+        const lista = [];
         blocos.forEach(b => {
-            for(let i = 0; i < qtd; i++) {
-                listaGerada.push({ bloco: b, apto: (aptoInicial + i).toString() });
-            }
+            for(let i=0; i<qtd; i++) lista.push({ bloco: b.trim(), apto: (inicial + i).toString() });
         });
 
+        const p = { acao: "gerar_condominio_massa", login: localStorage.getItem("suncityUserLogin"), senha, lista };
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(p) });
+        const data = await res.json();
+        alert(data.mensagem || data.erro);
+        await carregarMoradores(); popularFiltrosConfig();
+    }
+
+    // --- AUXILIARES ---
+    function mudarAba(id, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        ultimaAtividade = Date.now();
+    }
+
+    async function buscarPendentes() {
+        const res = await fetch(API_URL);
+        todasAsEncomendasDB = await res.json();
+        pendentesDB = todasAsEncomendasDB.filter(e => e.status === "Pendente");
+        renderizarListas();
+    }
+
+    function renderizarListas() {
+        const listaP = document.getElementById("listaPendentes");
+        const listaH = document.getElementById("listaHistorico");
+        const listaR = document.getElementById("listaRelatorio");
+        listaP.innerHTML = ""; listaH.innerHTML = ""; listaR.innerHTML = "";
+        
+        document.getElementById("contador").innerText = pendentesDB.length;
+        document.getElementById("statPend").innerText = pendentesDB.length;
+        document.getElementById("statEntreg").innerText = todasAsEncomendasDB.length - pendentesDB.length;
+
+        todasAsEncomendasDB.slice().reverse().forEach(enc => {
+            const div = document.createElement("div");
+            div.className = "encomenda-item";
+            const html = `<strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br><small>${enc.descricao}</small>`;
+            
+            if(enc.status === "Pendente") {
+                div.innerHTML = html + `<br><button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}','${enc.nome}','${enc.descricao}','${enc.bloco}','${enc.apto}')">Avisar</button>
+                <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">Entregar</button>`;
+                listaP.appendChild(div);
+            } else {
+                div.style.borderLeftColor = "var(--success)";
+                div.innerHTML = html + `<br><small style="color:green">Entregue a: ${enc.quemRetirou}</small>`;
+                listaH.appendChild(div);
+            }
+            
+            const relDiv = div.cloneNode(true);
+            listaR.appendChild(relDiv);
+        });
+    }
+
+    function abrirCamera() {
+        const area = document.getElementById("areaCamera");
+        area.style.display = "block";
+        if (!leitorCamera) leitorCamera = new Html5Qrcode("areaCamera");
+        leitorCamera.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+        (txt) => { document.getElementById("codigoRastreio").value = txt; fecharCamera(); });
+    }
+
+    function fecharCamera() {
+        if(leitorCamera) leitorCamera.stop().then(() => { document.getElementById("areaCamera").style.display = "none"; });
+    }
+
+    function abrirModalBaixa(id) {
+        idEmBaixa = id;
+        document.getElementById("modalAssinatura").style.display = "flex";
+        const c = document.getElementById("signaturePad");
+        c.width = c.offsetWidth; c.height = c.offsetHeight;
+        resetarTimer();
+    }
+    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; }
+    function limparCanvas() { const c = document.getElementById("signaturePad"); c.getContext('2d').clearRect(0,0,c.width,c.height); }
+
+    function enviarWhatsApp(tel, nome, desc, bl, ap) {
+        const msg = `Olá ${nome}! Encomenda (${desc}) na portaria. Bl ${bl} Ap ${ap}.`;
+        window.location.href = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    }
+
+    async function executarAcaoAdm(p, msg) {
         document.getElementById("loading").style.display = "block";
         try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ 
-                    acao: "gerar_condominio_massa", 
-                    login: localStorage.getItem("suncityUserLogin"),
-                    senha: senha,
-                    lista: listaGerada 
-                }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(p) });
             const data = await res.json();
-            if(data.status === "ok") { alert(data.mensagem); carregarMoradores(); }
-            else { alert(data.erro); }
-        } catch(e) { alert("Erro ao gerar."); }
+            if(data.status === "ok" || data.status === "Sucesso") alert(msg);
+        } catch(e) { alert("Erro na operação."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    async function executarAcaoAdm(payload, msgSucesso) {
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(payload),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            const data = await res.json();
-            if(data.status === "ok") {
-                alert(msgSucesso);
-                document.querySelectorAll('#tabConfig input').forEach(i => i.value = "");
-            }
-        } catch(e) { alert("Erro ao processar."); }
-        finally { document.getElementById("loading").style.display = "none"; }
+    function resetarFormMorador() {
+        document.querySelectorAll('#tabConfig input').forEach(i => i.value = "");
+        alert("Campos limpos.");
     }
+    
+    function aplicarFiltro() {
+        const termo = document.getElementById("buscaGeral").value.toLowerCase();
+        document.querySelectorAll('#listaPendentes .encomenda-item').forEach(el => {
+            el.style.display = el.innerText.toLowerCase().includes(termo) ? "block" : "none";
+        });
+    }
+
+    const resetarTimer = () => { ultimaAtividade = Date.now(); };
+    window.addEventListener('click', resetarTimer);
 </script>
 </body>
 </html>
