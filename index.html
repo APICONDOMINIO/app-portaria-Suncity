@@ -3,553 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <title>Express Suncity Pro v5</title>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
-        :root { --primary: #1d3557; --success: #25D366; --bg: #f1faee; --card: #ffffff; --danger: #e63946; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; padding-bottom: 95px; }
-        .container { max-width: 500px; margin: 0 auto; }
-        .card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; border-left: 5px solid var(--primary); }
-        input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
-        .row { display: flex; gap: 8px; align-items: center; }
-        button.btn-primary { background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button.btn-primary:active { transform: scale(0.98); }
-        button.btn-secondary { background-color: #f8f9fa; color: #1d3557; border: 1px solid #1d3557; font-weight: bold; }
-        button.btn-danger { background-color: var(--danger); color: white; border: none; font-weight: bold; }
-        .btn-whats { background-color: var(--success); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; display: flex; justify-content: center; gap: 8px; margin-top: 5px; text-decoration: none; align-items: center; }
-        .encomenda-item { border-left: 6px solid var(--primary); padding: 15px; background: #ffffff; margin-bottom: 12px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; padding: 10px 0; z-index: 999; box-shadow: 0 -3px 10px rgba(0,0,0,0.2); }
-        .nav-item { color: #a5a5a5; text-decoration: none; font-size: 20px; display: flex; flex-direction: column; align-items: center; background: none; border: none; flex: 1; cursor: pointer; }
-        .nav-item.active { color: white; font-weight: bold; }
-        .nav-item span { font-size: 10px; margin-top: 4px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .stats-box { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .stat { background: var(--primary); color: white; padding: 12px; border-radius: 10px; flex: 1; margin: 0 5px; text-align: center; }
-        .stat span { display: block; font-size: 22px; font-weight: bold; }
-        #modalAssinatura, #modalVerAssinatura { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 92%; max-width: 400px; }
-        canvas { border: 2px dashed #bbb; width: 100%; height: 140px; background: #fff; border-radius: 8px; touch-action: none; cursor: crosshair; }
+        :root { --p: #1d3557; --s: #25D366; --bg: #f1faee; --c: #ffffff; --d: #e63946; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px 15px 90px 15px; }
+        .card { background: var(--c); padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        input, select, textarea, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        .row { display: flex; gap: 8px; }
+        button { cursor: pointer; font-weight: bold; border: none; }
+        .btn-p { background: var(--p); color: white; }
+        .btn-d { background: var(--d); color: white; }
+        .btn-s { background: var(--s); color: white; }
+        .encomenda-item { border-left: 5px solid var(--p); padding: 10px; background: #fff; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--p); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .nav-item { color: #a5a5a5; font-size: 10px; text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; }
+        .nav-item.active { color: white; }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        canvas { border: 1px solid #000; background: #fff; width: 100%; height: 150px; touch-action: none; }
         .admin-only { display: none; }
-        #areaCamera { display:none; width: 100%; border: 3px solid var(--primary); border-radius: 12px; overflow: hidden; margin-bottom: 10px; background: #000; }
-        .pass-wrapper { position: relative; }
-        .eye-btn { position: absolute; right: 12px; top: 18px; cursor: pointer; font-size: 20px; z-index: 5; }
+        #areaCamera { display:none; width: 100%; height: 250px; background: #000; margin: 10px 0; }
     </style>
 </head>
 <body>
-<div class="container">
-    <!-- LOGIN -->
-    <div id="loginContainer" class="card" style="border-left: none;">
-        <h2 style="text-align:center; color: var(--primary);">📦 Express Suncity</h2>
-        <input type="text" id="loginUser" placeholder="Usuário">
-        <div class="pass-wrapper">
-            <input type="password" id="loginSenha" placeholder="Senha">
-            <span class="eye-btn" onclick="togglePass('loginSenha')">👁️</span>
-        </div>
-        <button class="btn-primary" onclick="fazerLogin()">Entrar no Sistema</button>
-        <p id="msgLogin" style="color:red; text-align:center; display:none;"></p>
+    <div id="login" class="card">
+        <h2 style="text-align:center; color: var(--p);">📦 Express Suncity</h2>
+        <input type="text" id="u" placeholder="Usuário">
+        <input type="password" id="s" placeholder="Senha">
+        <button class="btn-p" onclick="fLogin()">Entrar</button>
     </div>
 
-    <div id="appContainer" style="display:none;">
-        <div class="row" style="justify-content: space-between; background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-            <span style="font-size:14px;">Logado: <b id="nomePorteiroAtivo"></b></span>
-            <button onclick="fazerLogout()" style="width:auto; padding:5px 12px; margin:0;" class="btn-danger">SAIR</button>
+    <div id="app" style="display:none;">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 10px;">
+            <small>Olá, <b id="pNome"></b></small>
+            <button onclick="fLogout()" style="width:auto; padding:2px 10px;" class="btn-d">SAIR</button>
         </div>
 
-        <!-- ABA RECEBER -->
-        <div id="tabReceber" class="card tab-content active">
-            <h3>📥 Nova Encomenda</h3>
+        <div id="tReceber" class="tab-content active">
+            <h3>📥 Entrada</h3>
             <div class="row">
-                <select id="blocoSelect" onchange="atualizarAptos('blocoSelect', 'aptoSelect')"><option value="">Bloco...</option></select>
-                <select id="aptoSelect"><option value="">Apto...</option></select>
+                <select id="bSel" onchange="uAptos('bSel','aSel')"><option value="">Bloco...</option></select>
+                <select id="aSel"><option value="">Apto...</option></select>
             </div>
-            <select id="descInput">
-                <option value="">Tipo de pacote...</option>
-                <option value="Mercado Livre">📦 Mercado Livre</option>
-                <option value="Shopee">🛍️ Shopee</option>
-                <option value="Envelopes">📩 Envelopes</option>
-                <option value="Detran">🚗 Detran</option>
-                <option value="Outros">Outros</option>
-            </select>
-            <div class="row">
-                <input type="text" id="codigoRastreio" placeholder="Identificador / Rastreio">
-                <button class="btn-secondary" style="width:60px;" onclick="abrirCamera()">📷</button>
-            </div>
+            <select id="desc"><option value="M. Livre">Mercado Livre</option><option value="Shopee">Shopee</option><option value="Doc">Envelopes</option><option value="Outros">Outros</option></select>
+            <div class="row"><input type="text" id="rast" placeholder="Rastreio"><button onclick="aCam()" style="width:50px;">📷</button></div>
             <div id="areaCamera"></div>
-            <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
+            <button class="btn-p" onclick="rEnc()">Salvar</button>
         </div>
 
-        <!-- ABA PENDENTES -->
-        <div id="tabPendentes" class="card tab-content">
-            <h3>📋 A Entregar (<span id="contador">0</span>)</h3>
-            <div class="row" style="background:#eee; padding:8px; border-radius:8px;">
-                <select id="pendBloco" onchange="atualizarAptosFiltro('pendBloco', 'pendApto'); filtrarPendentes()"><option value="">Todos Blocos</option></select>
-                <select id="pendApto" onchange="filtrarPendentes()"><option value="">Aptos...</option></select>
-            </div>
-            <div id="listaPendentes" style="margin-top:15px;"></div>
-        </div>
-
-        <!-- ABA HISTORICO -->
-        <div id="tabHistorico" class="card tab-content">
-            <h3>📦 Histórico de Entregas</h3>
-            <div class="row" style="background:#eee; padding:8px; border-radius:8px;">
-                <select id="histBloco" onchange="atualizarAptosFiltro('histBloco', 'histApto'); filtrarHistorico()"><option value="">Filtrar Bloco...</option></select>
-                <select id="histApto" onchange="filtrarHistorico()"><option value="">Apto...</option></select>
-            </div>
-            <div id="listaHistorico"></div>
-        </div>
-
-        <!-- ABA RELATORIO -->
-        <div id="tabRelatorio" class="card tab-content">
-            <h3>📊 Relatórios e Arquivo</h3>
-            <div class="stats-box">
-                <div class="stat">Pendente <span id="statPend">0</span></div>
-                <div class="stat" style="background:var(--success);">Entregue <span id="statEntreg">0</span></div>
-            </div>
-            <div style="background:#f1f1f1; padding:10px; border-radius:8px; margin-bottom:15px;">
-                <select id="relStatus" onchange="renderizarRelatorio()"><option value="">Status: Todos</option><option value="Pendente">Pendentes</option><option value="Entregue">Entregues</option></select>
-                <input type="text" id="relBusca" placeholder="Pesquisar por nome ou pacote..." onkeyup="renderizarRelatorio()">
-            </div>
-            <div style="background:#cfe2ff; padding:15px; border-radius:8px; border: 1px solid #b6d4fe; margin-bottom:15px;">
-                <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px;">🔍 Arquivo Morto (Histórico Antigo):</p>
-                <input type="text" id="arqBusca" placeholder="Apto ou Nome...">
-                <button class="btn-primary" style="margin:0;" onclick="pesquisarNoArquivo()">Buscar no Arquivo</button>
-            </div>
+        <div id="tPend" class="tab-content">
+            <h3>📋 Pendentes (<span id="cont">0</span>)</h3>
             <div class="row">
-                <button class="btn-secondary" onclick="window.print()">🖨️ PDF</button>
-                <button class="btn-primary" onclick="enviarRelatorioEmail()">✉️ E-mail</button>
+                <select id="fB" onchange="uAptosF('fB','fA'); fP()"><option value="">Todos Blocos</option></select>
+                <select id="fA" onchange="fP()"><option value="">Aptos...</option></select>
             </div>
-            <div id="listaRelatorio" style="margin-top:10px;"></div>
+            <div id="lP" style="margin-top:10px;"></div>
         </div>
 
-        <!-- ABA CONFIG -->
-        <div id="tabConfig" class="card tab-content">
-            <h3 style="text-align: center;">⚙️ Painel de Engenharia</h3>
-            <div style="background:#fff; padding:15px; border:1px solid #ddd; border-radius:10px; margin-bottom:15px;">
-                <h4 style="margin:0 0 10px 0;">Gestão de Moradores</h4>
-                <div class="row">
-                    <select id="newMoradorBloco" onchange="checkNovoBloco(this.value)"><option value="">Bloco...</option><option value="NOVO">➕ Novo Bloco</option></select>
-                    <select id="newMoradorApto" onchange="puxarDadosMorador()"><option value="">Apto...</option></select>
-                </div>
-                <input type="text" id="newMoradorNome" placeholder="Nome Completo">
-                <input type="tel" id="newMoradorTel" placeholder="WhatsApp">
-                <input type="email" id="newMoradorEmail" placeholder="E-mail">
-                <button class="btn-primary" onclick="salvarNovoMorador()">💾 Salvar/Editar</button>
+        <div id="tHist" class="tab-content">
+            <h3>📦 Histórico</h3>
+            <div id="lH"></div>
+        </div>
+
+        <div id="tRel" class="tab-content">
+            <h3>📊 Relatórios</h3>
+            <div class="row"><button onclick="window.print()">🖨️ PDF</button><button onclick="eRel()">✉️ E-mail</button></div>
+            <div id="lR" style="margin-top:10px;"></div>
+        </div>
+
+        <div id="tConf" class="tab-content">
+            <h3>⚙️ Config</h3>
+            <div class="card">
+                <h4>Moradores</h4>
+                <select id="nB" onchange="uAptosC()"><option value="">Bloco...</option><option value="N">➕ Novo Bloco</option></select>
+                <select id="nA" onchange="pMorador()"><option value="">Apto...</option></select>
+                <input type="text" id="nN" placeholder="Nome">
+                <input type="text" id="nT" placeholder="Tel">
+                <button class="btn-p" onclick="sMorador()">Salvar</button>
             </div>
-            <div style="background:#f8f9fa; padding:15px; border:1px solid #ddd; border-radius:10px; margin-bottom:15px;">
-                <h4>Acessos (Usuários)</h4>
-                <select id="userSelect" onchange="puxarDadosUsuario()"><option value="novo">➕ Criar Novo Usuário</option></select>
-                <input type="text" id="newUserLogin" placeholder="Login">
-                <input type="text" id="newUserSenha" placeholder="Senha">
-                <input type="text" id="newUserNome" placeholder="Nome do Porteiro">
-                <select id="newUserNivel"><option value="Porteiro">Porteiro</option><option value="Admin">Administrador</option></select>
-                <button class="btn-primary" onclick="salvarNovoUsuario()">💾 Salvar Usuário</button>
-            </div>
-            <div style="background:#eef2f3; border:2px dashed #457b9d; padding:15px; border-radius:10px;">
-                <h4>Criação em Massa</h4>
-                <input type="text" id="genBlocos" placeholder="Blocos (Ex: A, B, C)">
-                <div class="row"><input type="number" id="genAptoInicial" placeholder="Apto Inicial"><input type="number" id="genQtd" placeholder="Qtd por Bloco"></div>
-                <div class="pass-wrapper">
-                    <input type="password" id="genSenhaAdm" placeholder="Senha ADM">
-                    <span class="eye-btn" onclick="togglePass('genSenhaAdm')">👁️</span>
-                </div>
-                <button class="btn-primary" onclick="gerarCondominioMassa()">⚡ Gerar Estrutura</button>
+            <div class="card">
+                <h4>Usuários</h4>
+                <select id="uSel" onchange="pUser()"><option value="novo">➕ Novo Usuário</option></select>
+                <input type="text" id="uL" placeholder="Login">
+                <input type="text" id="uS" placeholder="Senha">
+                <input type="text" id="uN" placeholder="Nome">
+                <select id="uNi"><option value="Porteiro">Porteiro</option><option value="Admin">Admin</option></select>
+                <button class="btn-p" onclick="sUser()">Salvar Usuário</button>
             </div>
         </div>
 
-        <!-- ABA AJUDA -->
-        <div id="tabChamado" class="card tab-content">
-            <h3>📝 Suporte Suncity</h3>
-            <textarea id="chamadoJustificativa" rows="4" placeholder="O que deseja alterar? (Ex: mudar telefone do apto 102...)"></textarea>
-            <button class="btn-whats" onclick="enviarChamado()">✉️ Enviar para ADM</button>
-        </div>
-
-        <!-- NAV -->
-        <div class="nav-bottom">
-            <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
-            <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
-            <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico</span></button>
-            <button class="nav-item admin-only" onclick="mudarAba('tabRelatorio', this)">📊<span>Relat.</span></button>
-            <button class="nav-item admin-only" onclick="mudarAba('tabConfig', this)">⚙️<span>Config</span></button>
-            <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Ajuda</span></button>
+        <div class="nav">
+            <button class="nav-item active" onclick="mAba('tReceber',this)">📥<span>Receber</span></button>
+            <button class="nav-item" onclick="mAba('tPend',this)">📋<span>Pendentes</span></button>
+            <button class="nav-item" onclick="mAba('tHist',this)">📦<span>Histórico</span></button>
+            <button class="nav-item admin-only" onclick="mAba('tRel',this)">📊<span>Relat.</span></button>
+            <button class="nav-item admin-only" onclick="mAba('tConf',this)">⚙️<span>Config</span></button>
         </div>
     </div>
-</div>
-<!-- MODAL ASSINATURA -->
-<div id="modalAssinatura">
-    <div class="modal-content">
-        <h3 style="margin:0 0 10px 0;">Assinatura de Retirada</h3>
-        <input type="text" id="nomeRetirante" placeholder="Nome de quem retira">
-        <canvas id="signaturePad"></canvas>
-        <div class="row">
-            <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
-            <button class="btn-danger" onclick="fecharModal()">Sair</button>
+
+    <div id="modal">
+        <div class="modal-content card">
+            <h3>Assinatura</h3>
+            <input type="text" id="retirante" placeholder="Quem retirou?">
+            <canvas id="pad"></canvas>
+            <div class="row"><button onclick="lPad()">Limpar</button><button onclick="fModal()" class="btn-d">Sair</button></div>
+            <button class="btn-s" style="margin-top:10px;" onclick="cBaixa()">Confirmar</button>
         </div>
-        <button class="btn-primary" style="background:var(--success); margin-top:12px;" onclick="confirmarEntregaFinal()">✅ Confirmar e Finalizar</button>
     </div>
-</div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwT_2_fDshjOspcNaqus6hmjACwkSXN58LnqzXs3JvMQHEYorSZAaWe2HaECns8SKDdHg/exec"; // <-- LEMBRE DE COLAR SUA URL DO GOOGLE AQUI DEPOIS
-    const SEU_WHATSAPP = "5571982282769";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwT_2_fDshjOspcNaqus6hmjACwkSXN58LnqzXs3JvMQHEYorSZAaWe2HaECns8SKDdHg/exec"; 
+    let mDB = [], tDB = [], pLogado = "", idB = null, cam = null;
 
-    let moradoresDB = [], todasAsEncomendasDB = [], pendentesDB = [];
-    let porteiroLogado = "", idEmBaixa = null, leitorCamera = null, ultimaAtividade = Date.now();
-
-    // 1. LOGIN E SESSÃO
-   async function fazerLogin() {
-        const login = document.getElementById("loginUser").value;
-        const senha = document.getElementById("loginSenha").value;
-        if(!login || !senha) return alert("Preencha todos os campos!");
-        
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify({ acao: "login", login: login, senha: senha }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
-            const data = await res.json();
-            if(data.status === "ok") {
-                porteiroLogado = data.nome;
-                localStorage.setItem("suncityUser", data.nome);
-                localStorage.setItem("suncityNivel", data.nivel);
-                localStorage.setItem("suncityUserLogin", login);
-                iniciarSistema();
-            } else { alert(data.erro); }
-        } catch(e) { 
-            alert("Erro de conexão: Verifique a URL da API."); 
-            console.error(e);
-        }
-        finally { document.getElementById("loading").style.display = "none"; }
+    async function fLogin() {
+        const user = document.getElementById("u").value, pass = document.getElementById("s").value;
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login:user, senha:pass }) });
+        const d = await res.json();
+        if(d.status === "ok") {
+            pLogado = d.nome;
+            localStorage.setItem("sUser", d.nome); localStorage.setItem("sNivel", d.nivel);
+            iApp();
+        } else alert(d.erro);
     }
 
-    function iniciarSistema() {
-        document.getElementById("loginContainer").style.display = "none";
-        document.getElementById("appContainer").style.display = "block";
-        document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
-        
-        const n = (localStorage.getItem("suncityNivel") || "").toLowerCase();
-        if(n.includes("adm") || n.includes("gerente")) {
-            document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'flex');
-        }
-        
-        carregarDadosIniciais();
-        setInterval(verificarInatividade, 60000);
+    function iApp() {
+        document.getElementById("login").style.display="none"; document.getElementById("app").style.display="block";
+        document.getElementById("pNome").innerText = pLogado;
+        if(localStorage.getItem("sNivel").toLowerCase().includes("adm")) document.querySelectorAll('.admin-only').forEach(e=>e.style.display='flex');
+        sync();
     }
 
-    async function carregarDadosIniciais() {
-        await carregarMoradores();
-        await buscarPendentes();
-        await carregarUsuariosParaEdicao();
-        popularDropdownsIniciais();
+    async function sync() {
+        const rM = await fetch(API_URL + "?acao=getMoradores"); mDB = await rM.json();
+        const rE = await fetch(API_URL); tDB = await rE.json();
+        pDropdowns(); fP(); fH();
+        const rU = await fetch(API_URL + "?acao=getUsuarios");
+        const users = await rU.json();
+        const s = document.getElementById("uSel"); s.innerHTML = '<option value="novo">➕ Novo Usuário</option>';
+        users.forEach(u => s.add(new Option(u.nome, JSON.stringify(u))));
     }
 
-    function fazerLogout() {
-        if(confirm("Deseja realmente sair?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
-
-    function verificarInatividade() {
-        if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) {
-            alert("Sessão encerrada por inatividade.");
-            fazerLogout();
-        }
-    }
-
-    // 2. GESTÃO DE MORADORES E DROPDOWNS
-    async function carregarMoradores() {
-        try {
-            const res = await fetch(API_URL + "?acao=getMoradores");
-            moradoresDB = await res.json();
-        } catch(e) { console.error("Erro ao carregar moradores"); }
-    }
-
-    function popularDropdownsIniciais() {
-        const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
-        ['blocoSelect', 'pendBloco', 'histBloco', 'newMoradorBloco'].forEach(id => {
-            const s = document.getElementById(id); if(!s) return;
-            s.innerHTML = id === 'newMoradorBloco' ? '<option value="">Bloco...</option><option value="NOVO">➕ Criar Novo Bloco</option>' : '<option value="">Filtrar Bloco...</option>';
+    function pDropdowns() {
+        const blocos = [...new Set(mDB.map(m => m.bloco))].sort();
+        ['bSel', 'fB', 'nB'].forEach(id => {
+            const s = document.getElementById(id);
+            const opt = id==='nB' ? '<option value="">Bloco...</option><option value="N">➕ Novo</option>' : '<option value="">Bloco...</option>';
+            s.innerHTML = opt;
             blocos.forEach(b => s.add(new Option(`Bloco ${b}`, b)));
         });
     }
 
-    function atualizarAptos(idB, idA) {
-        const b = document.getElementById(idB).value;
-        const s = document.getElementById(idA);
+    function uAptos(ib, ia) {
+        const b = document.getElementById(ib).value, s = document.getElementById(ia);
         s.innerHTML = '<option value="">Apto...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+        mDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
-    function atualizarAptosFiltro(idB, idA) {
-        const b = document.getElementById(idB).value;
-        const s = document.getElementById(idA);
+    function uAptosF(ib, ia) {
+        const b = document.getElementById(ib).value, s = document.getElementById(ia);
         s.innerHTML = '<option value="">Todos Aptos</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(m.apto, m.apto)));
+        mDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(m.apto, m.apto)));
     }
 
-    function atualizarAptosConfig() {
-        const b = document.getElementById("newMoradorBloco").value;
-        const s = document.getElementById("newMoradorApto");
+    function uAptosC() {
+        const b = document.getElementById("nB").value, s = document.getElementById("nA");
+        if(b==='N') { const n = prompt("Novo Bloco:"); if(n) { const o = new Option(n,n); document.getElementById("nB").add(o,1); document.getElementById("nB").value=n; } }
         s.innerHTML = '<option value="">Apto...</option>';
-        if(b && b !== "NOVO") {
-            moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(m.apto, m.apto)));
-            s.add(new Option("➕ Criar Novo Apto", "novo_apto"));
-        }
+        mDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(m.apto, m.apto)));
+        s.add(new Option("➕ Novo Apto", "novo_a"));
     }
 
-    function checkNovoBloco(val) {
-        if(val === "NOVO") {
-            const n = prompt("Digite o nome ou número do novo bloco:");
-            if(n) {
-                const s = document.getElementById("newMoradorBloco");
-                const opt = new Option(n, n);
-                s.add(opt, s.options[1]); 
-                s.value = n;
-            } else { document.getElementById("newMoradorBloco").value = ""; }
-        }
-        atualizarAptosConfig();
-    }
-function puxarDadosMorador() {
-        const b = document.getElementById("newMoradorBloco").value, a = document.getElementById("newMoradorApto").value;
-        if(a === "novo_apto") {
-            const num = prompt("Número do novo Apto:");
-            if(num) {
-                const s = document.getElementById("newMoradorApto");
-                const opt = new Option(num, num);
-                s.add(opt, s.options[s.options.length-1]);
-                s.value = num;
-            }
-            return;
-        }
-        const m = moradoresDB.find(x => x.bloco === b && String(x.apto) === String(a));
-        if(m) {
-            document.getElementById("newMoradorNome").value = m.nome || "";
-            document.getElementById("newMoradorTel").value = m.telefone || "";
-            document.getElementById("newMoradorEmail").value = m.email || "";
-        }
-    }
-
-    // 3. OPERAÇÕES DE ENCOMENDA
-    async function registrarEncomenda() {
-        const b = document.getElementById("blocoSelect").value;
-        const a = document.getElementById("aptoSelect").value;
-        const d = document.getElementById("descInput").value;
-        const r = document.getElementById("codigoRastreio").value;
-        if(!b || !a || !d) return alert("Faltam dados!");
-        
-        document.getElementById("loading").style.display = "block";
-        const m = moradoresDB.find(x => x.bloco === b && String(x.apto) === String(a));
-        const payload = {
-            acao: "nova_encomenda", id: Date.now().toString(), bloco: b, apto: a,
-            nome: m.nome, telefone: m.telefone, descricao: r ? `${d} (${r})` : d,
-            dataHora: new Date().toLocaleString('pt-BR'), porteiroEntrada: porteiroLogado
-        };
-        
-        try {
-            await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-            alert("Entrada Registrada com Sucesso!");
-            document.getElementById("codigoRastreio").value = "";
-            buscarPendentes();
-        } catch(e) { alert("Erro ao salvar encomenda."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
-    async function buscarPendentes() {
-        try {
-            const res = await fetch(API_URL);
-            todasAsEncomendasDB = await res.json();
-            pendentesDB = todasAsEncomendasDB.filter(e => e.status === "Pendente");
-            filtrarPendentes(); filtrarHistorico(); renderizarRelatorio();
-        } catch(e) { console.log("Erro ao sincronizar."); }
-    }
-
-    function filtrarPendentes() {
-        const b = document.getElementById("pendBloco").value, a = document.getElementById("pendApto").value;
-        const lista = document.getElementById("listaPendentes"); lista.innerHTML = "";
-        const filtrados = pendentesDB.filter(e => (b==="" || e.bloco==b) && (a==="" || String(e.apto)==a));
-        document.getElementById("contador").innerText = filtrados.length;
-        
-        filtrados.forEach(e => {
-            const div = document.createElement("div"); div.className="encomenda-item";
-            div.innerHTML = `<b>Bl ${e.bloco} - Ap ${e.apto}</b> (${e.nome})<br>
-            <div style="font-size:13px; color:#555; margin:5px 0;">📦 ${e.descricao}<br>📅 Chegou: ${e.dataHora}</div>
-            <button class="btn-whats" onclick="enviarWhatsApp('${e.telefone}','${e.nome}','${e.descricao}')">WhatsApp</button>
-            <button class="btn-danger" style="margin-top:8px;" onclick="abrirModalBaixa('${e.id}')">✅ ENTREGAR PACOTE</button>`;
-            lista.appendChild(div);
+    function fP() {
+        const b = document.getElementById("fB").value, a = document.getElementById("fA").value;
+        const list = document.getElementById("lP"); list.innerHTML = "";
+        const p = tDB.filter(e => e.status === "Pendente" && (!b || e.bloco==b) && (!a || e.apto==a));
+        document.getElementById("cont").innerText = p.length;
+        p.forEach(e => {
+            const d = document.createElement("div"); d.className="encomenda-item";
+            d.innerHTML = `<b>Bl ${e.bloco} - Ap ${e.apto}</b> (${e.nome})<br><small>${e.descricao}</small><br>
+            <button class="btn-s" onclick="wapp('${e.telefone}','${e.nome}','${e.descricao}')">Zap</button>
+            <button class="btn-d" onclick="oModal('${e.id}')">ENTREGAR</button>`;
+            list.appendChild(d);
         });
     }
 
-    function filtrarHistorico() {
-        const b = document.getElementById("histBloco").value, a = document.getElementById("histApto").value;
-        const lista = document.getElementById("listaHistorico"); lista.innerHTML = "";
-        todasAsEncomendasDB.filter(e => e.status !== "Pendente" && (b==="" || e.bloco==b) && (a==="" || String(e.apto)==a)).reverse().forEach(e => {
-            const div = document.createElement("div"); div.className="encomenda-item"; div.style.borderLeftColor="var(--success)";
-            div.innerHTML = `<b>Bl ${e.bloco} - Ap ${e.apto}</b> | ${e.nome}<br><small>${e.descricao}</small><br>
-            <small style="color:green; font-weight:bold;">Retirado por: ${e.quemRetirou} em ${e.dataSaida}</small>`;
-            lista.appendChild(div);
+    function fH() {
+        const list = document.getElementById("lH"); list.innerHTML = "";
+        tDB.filter(e => e.status !== "Pendente").reverse().forEach(e => {
+            const d = document.createElement("div"); d.className="encomenda-item"; d.style.borderLeftColor="var(--s)";
+            d.innerHTML = `<b>Bl ${e.bloco} - Ap ${e.apto}</b><br><small>${e.descricao} - Entregue a: ${e.quemRetirou}</small>`;
+            list.appendChild(d);
         });
     }
 
-    // 4. ASSINATURA E BAIXA
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
-    let desenhando = false;
+    const cv = document.getElementById('pad'), cx = cv.getContext('2d'); let draw = false;
+    cv.addEventListener('touchstart', (e)=>{ draw=true; cx.beginPath(); const t=e.touches[0]; cx.moveTo(t.clientX-cv.getBoundingClientRect().left, t.clientY-cv.getBoundingClientRect().top); e.preventDefault(); });
+    cv.addEventListener('touchmove', (e)=>{ if(!draw)return; const t=e.touches[0]; cx.lineTo(t.clientX-cv.getBoundingClientRect().left, t.clientY-cv.getBoundingClientRect().top); cx.stroke(); e.preventDefault(); });
+    cv.addEventListener('touchend', ()=>draw=false);
 
-    function getMousePos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
-    }
-    const iniciarDraw = (e) => { desenhando = true; ctx.beginPath(); const pos = getMousePos(e); ctx.moveTo(pos.x, pos.y); e.preventDefault(); };
-    const moverDraw = (e) => { if(!desenhando) return; const pos = getMousePos(e); ctx.lineTo(pos.x, pos.y); ctx.lineWidth=2; ctx.strokeStyle="#1d3557"; ctx.stroke(); e.preventDefault(); };
-    canvas.addEventListener('mousedown', iniciarDraw); canvas.addEventListener('mousemove', moverDraw); canvas.addEventListener('mouseup', () => desenhando=false);
-    canvas.addEventListener('touchstart', iniciarDraw, {passive:false}); canvas.addEventListener('touchmove', moverDraw, {passive:false}); canvas.addEventListener('touchend', () => desenhando=false);
+    function oModal(id) { idB = id; document.getElementById("modal").style.display="flex"; cv.width = cv.offsetWidth; }
+    function fModal() { document.getElementById("modal").style.display="none"; }
+    function lPad() { cx.clearRect(0,0,cv.width,cv.height); }
 
-    function abrirModalBaixa(id) { 
-        idEmBaixa = id; 
-        document.getElementById("modalAssinatura").style.display="flex"; 
-        setTimeout(()=>{ canvas.width = canvas.offsetWidth; limparCanvas(); },200); 
-    }
-    function fecharModal() { document.getElementById("modalAssinatura").style.display="none"; }
-    function limparCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-
-    async function confirmarEntregaFinal() {
-        const q = document.getElementById("nomeRetirante").value;
-        if(!q) return alert("Por favor, informe quem está retirando!");
-        
-        const tempC = document.createElement('canvas'); tempC.width=canvas.width; tempC.height=canvas.height+40;
-        const tCtx = tempC.getContext('2d'); tCtx.fillStyle="white"; tCtx.fillRect(0,0,tempC.width,tempC.height);
-        tCtx.fillStyle="black"; tCtx.font="bold 14px Arial"; tCtx.fillText("Retirado por: "+q, 10, 20); 
-        tCtx.font="10px Arial"; tCtx.fillText("Data: "+new Date().toLocaleString(), 10, 35);
-        tCtx.drawImage(canvas, 0, 40);
-
-        document.getElementById("loading").style.display = "block";
-        const payload = { acao: "baixar", id: idEmBaixa, dataHora: new Date().toLocaleString('pt-BR'), porteiroSaida: porteiroLogado, quemRetirou: q, imagemBase64: tempC.toDataURL() };
-        
-        try {
-            await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-            alert("Entrega finalizada!");
-            fecharModal(); buscarPendentes();
-        } catch(e) { alert("Erro na baixa."); }
-        finally { document.getElementById("loading").style.display = "none"; }
+    async function cBaixa() {
+        const q = document.getElementById("retirante").value; if(!q) return alert("Quem retirou?");
+        await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "baixar", id: idB, dataHora: new Date().toLocaleString(), porteiroSaida: pLogado, quemRetirou: q, imagemBase64: cv.toDataURL() }) });
+        fModal(); sync();
     }
 
-    // 5. RELATÓRIOS E ARQUIVO
-    function renderizarRelatorio() {
-        const status = document.getElementById("relStatus").value;
-        const busca = document.getElementById("relBusca").value.toLowerCase();
-        const lista = document.getElementById("listaRelatorio"); lista.innerHTML = "";
-        const filtradas = todasAsEncomendasDB.filter(e => {
-            const mStatus = status === "" || e.status === status;
-            const mBusca = busca === "" || e.nome.toLowerCase().includes(busca) || e.descricao.toLowerCase().includes(busca);
-            return mStatus && mBusca;
-        });
-        document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
-        document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length;
-        filtradas.slice().reverse().forEach(e => {
-            const div = document.createElement("div"); div.className="encomenda-item";
-            if(e.status !== "Pendente") div.style.borderLeftColor = "var(--success)";
-            div.innerHTML = `<b>Bl ${e.bloco} - Ap ${e.apto}</b> | ${e.nome}<br><small>${e.descricao} (${e.status})</small>`;
-            lista.appendChild(div);
-        });
+    function aCam() {
+        const a = document.getElementById("areaCamera"); a.style.display="block";
+        if(!cam) cam = new Html5Qrcode("areaCamera");
+        cam.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (t)=>{ document.getElementById("rast").value=t; cam.stop(); a.style.display="none"; });
     }
 
-    async function pesquisarNoArquivo() {
-        const t = document.getElementById("arqBusca").value;
-        if(!t) return alert("Digite algo para buscar!");
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "buscar_arquivo", termo: t }) });
-            const dados = await res.json();
-            if(dados.length === 0) alert("Nada encontrado.");
-            else { todasAsEncomendasDB = dados; renderizarRelatorio(); alert("Exibindo dados do arquivo morto!"); }
-        } catch(e) { alert("Erro na busca."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
-    // 6. CONFIGURAÇÕES E USUÁRIOS
-    async function salvarNovoMorador(confirmado = false) {
-        const payload = {
-            acao: "cadastrar_morador", confirmado,
-            bloco: document.getElementById("newMoradorBloco").value,
-            apto: document.getElementById("newMoradorApto").value,
-            nome: document.getElementById("newMoradorNome").value,
-            telefone: document.getElementById("newMoradorTel").value,
-            email: document.getElementById("newMoradorEmail").value
-        };
-        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-        const data = await res.json();
-        if(data.status === "aviso") { if(confirm(data.msg + "\nDeseja sobreescrever?")) salvarNovoMorador(true); }
-        else { alert(data.msg || "Sucesso!"); carregarMoradores(); popularDropdownsIniciais(); }
-    }
-
-    async function carregarUsuariosParaEdicao() {
-        try {
-            const res = await fetch(API_URL + "?acao=getUsuarios");
-            const users = await res.json();
-            const s = document.getElementById("userSelect"); s.innerHTML = '<option value="novo">➕ Criar Novo Usuário</option>';
-            users.forEach(u => s.add(new Option(`${u.nivel}: ${u.nome}`, JSON.stringify(u))));
-        } catch(e) {}
-    }
-
-    function puxarDadosUsuario() {
-        const v = document.getElementById("userSelect").value;
-        if(v === "novo") { document.querySelectorAll('#newUserLogin, #newUserSenha, #newUserNome').forEach(i => i.value=""); return; }
-        const u = JSON.parse(v);
-        document.getElementById("newUserLogin").value = u.login; document.getElementById("newUserSenha").value = u.senha;
-        document.getElementById("newUserNome").value = u.nome; document.getElementById("newUserNivel").value = u.nivel;
-    }
-
-    async function salvarNovoUsuario() {
-        const payload = {
-            acao: "cadastrar_usuario",
-            login: document.getElementById("newUserLogin").value,
-            senha: document.getElementById("newUserSenha").value,
-            nome: document.getElementById("newUserNome").value,
-            nivel: document.getElementById("newUserNivel").value
-        };
-        await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-        alert("Usuário atualizado!"); carregarUsuariosParaEdicao();
-    }
-
-    async function gerarCondominioMassa() {
-        const senha = document.getElementById("genSenhaAdm").value;
-        if(!senha) return alert("Senha necessária!");
-        const blocos = document.getElementById("genBlocos").value.split(',');
-        const inicial = parseInt(document.getElementById("genAptoInicial").value);
-        const qtd = parseInt(document.getElementById("genQtd").value);
-        const lista = [];
-        blocos.forEach(b => { for(let i=0; i<qtd; i++) lista.push({ bloco: b.trim(), apto: (inicial + i).toString() }); });
-        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "gerar_condominio_massa", login: localStorage.getItem("suncityUserLogin"), senha, lista }) });
-        const d = await res.json(); alert(d.mensagem || d.erro); carregarMoradores(); popularDropdownsIniciais();
-    }
-
-    // 7. AUXILIARES E CÂMERA
-    function abrirCamera() {
-        const area = document.getElementById("areaCamera"); area.style.display = "block";
-        if (!leitorCamera) leitorCamera = new Html5Qrcode("areaCamera");
-        leitorCamera.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-        (txt) => { document.getElementById("codigoRastreio").value = txt; leitorCamera.stop(); area.style.display="none"; });
-    }
-
-    function mudarAba(id, btn) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    function mAba(id, b) {
+        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        btn.classList.add('active');
-        ultimaAtividade = Date.now();
+        document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+        b.classList.add('active');
     }
-
-    function togglePass(id) { const x = document.getElementById(id); x.type = x.type === "password" ? "text" : "password"; }
-    function enviarWhatsApp(tel, nome, desc) { window.location.href = `https://wa.me/${tel}?text=Olá ${nome}, sua encomenda (${desc}) chegou na portaria!`; }
-    function enviarChamado() { window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=Chamado Suncity: ${document.getElementById("chamadoJustificativa").value}`; }
     
-    window.addEventListener('click', () => { ultimaAtividade = Date.now(); });
+    function fLogout() { localStorage.clear(); location.reload(); }
+    function wapp(t, n, d) { window.location.href=`https://wa.me/${t}?text=Ola ${n}, seu pacote (${d}) chegou!`; }
+    window.onload = () => { if(localStorage.getItem("sUser")) { pLogado=localStorage.getItem("sUser"); iApp(); } };
 </script>
 </body>
 </html>
