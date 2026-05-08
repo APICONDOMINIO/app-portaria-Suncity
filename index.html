@@ -198,14 +198,18 @@
     let porteiroLogado = "", idEmBaixa = null, leitorCamera = null, ultimaAtividade = Date.now();
 
     // 1. LOGIN E SESSÃO
-    async function fazerLogin() {
+   async function fazerLogin() {
         const login = document.getElementById("loginUser").value;
         const senha = document.getElementById("loginSenha").value;
         if(!login || !senha) return alert("Preencha todos os campos!");
         
         document.getElementById("loading").style.display = "block";
         try {
-            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ acao: "login", login, senha }) });
+            const res = await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ acao: "login", login: login, senha: senha }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
             const data = await res.json();
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
@@ -214,7 +218,10 @@
                 localStorage.setItem("suncityUserLogin", login);
                 iniciarSistema();
             } else { alert(data.erro); }
-        } catch(e) { alert("Erro de conexão com o servidor."); }
+        } catch(e) { 
+            alert("Erro de conexão: Verifique a URL da API."); 
+            console.error(e);
+        }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
