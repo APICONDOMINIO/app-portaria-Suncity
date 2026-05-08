@@ -89,6 +89,7 @@
             <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
             <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
             <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📊<span>Relatórios</span></button>
+            <button class="nav-item admin-only" onclick="mudarAba('tabConfig', this)">⚙️<span>Config</span></button>
             <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
         </div>
 
@@ -205,6 +206,36 @@
             </div>
             <textarea id="chamadoJustificativa" placeholder="O que deve ser alterado e por que?" rows="3"></textarea>
             <button class="btn-whats" onclick="enviarChamado()">Enviar para Administração</button>
+        </div>
+        <!-- ABA CONFIGURAÇÃO (ENGENHARIA E USUÁRIOS) -->
+        <div id="tabConfig" class="card tab-content">
+            <h3 style="color: var(--primary); text-align: center;">⚙️ Gestão Administrativa</h3>
+            
+            <!-- SEÇÃO: CADASTRO DE MORADORES -->
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
+                <h4 style="margin-top:0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px;">👥 Novo Morador</h4>
+                <div class="row">
+                    <input type="text" id="newMoradorBloco" placeholder="Bloco">
+                    <input type="text" id="newMoradorApto" placeholder="Apto">
+                </div>
+                <input type="text" id="newMoradorNome" placeholder="Nome Completo">
+                <input type="tel" id="newMoradorTel" placeholder="WhatsApp (Ex: 5571...)">
+                <input type="email" id="newMoradorEmail" placeholder="E-mail">
+                <button class="btn-primary" onclick="salvarNovoMorador()">💾 Salvar Morador</button>
+            </div>
+
+            <!-- SEÇÃO: CADASTRO DE USUÁRIOS (PORTARIA) -->
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f8f9fa;">
+                <h4 style="margin-top:0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px;">🔑 Novo Acesso (Portaria)</h4>
+                <input type="text" id="newUserLogin" placeholder="Login (Usuário)">
+                <input type="text" id="newUserSenha" placeholder="Senha">
+                <input type="text" id="newUserNome" placeholder="Nome do Porteiro">
+                <select id="newUserNivel">
+                    <option value="Porteiro">Nível: Porteiro</option>
+                    <option value="Admin">Nível: Administrador</option>
+                </select>
+                <button class="btn-secondary" style="background: var(--primary);" onclick="salvarNovoUsuario()">➕ Criar Acesso</button>
+            </div>
         </div>
     </div>
 </div>
@@ -961,6 +992,51 @@
         
         const texto = `⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`;
         window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(texto)}`;
+    }
+    async function salvarNovoMorador() {
+        const dados = {
+            acao: "cadastrar_morador",
+            bloco: document.getElementById("newMoradorBloco").value,
+            apto: document.getElementById("newMoradorApto").value,
+            nome: document.getElementById("newMoradorNome").value,
+            telefone: document.getElementById("newMoradorTel").value,
+            email: document.getElementById("newMoradorEmail").value
+        };
+        if(!dados.bloco || !dados.apto || !dados.nome) return alert("Preencha Bloco, Apto e Nome!");
+        
+        await executarAcaoAdm(dados, "Morador cadastrado!");
+        carregarMoradores(); // Atualiza a lista de moradores no app na hora
+    }
+
+    async function salvarNovoUsuario() {
+        const dados = {
+            acao: "cadastrar_usuario",
+            login: document.getElementById("newUserLogin").value,
+            senha: document.getElementById("newUserSenha").value,
+            nome: document.getElementById("newUserNome").value,
+            nivel: document.getElementById("newUserNivel").value
+        };
+        if(!dados.login || !dados.senha || !dados.nome) return alert("Preencha todos os campos do usuário!");
+        
+        await executarAcaoAdm(dados, "Novo usuário criado com sucesso!");
+    }
+
+    async function executarAcaoAdm(payload, msgSucesso) {
+        document.getElementById("loading").style.display = "block";
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await res.json();
+            if(data.status === "ok") {
+                alert(msgSucesso);
+                // Limpa os campos após salvar
+                document.querySelectorAll('#tabConfig input').forEach(i => i.value = "");
+            }
+        } catch(e) { alert("Erro ao processar."); }
+        finally { document.getElementById("loading").style.display = "none"; }
     }
 </script>
 </body>
