@@ -431,7 +431,12 @@ async function abrirCameraRetirada() {
                 let codigoLimpo = String(idLido).trim();
                 
                 // Busca na lista de pendentes
-                const encontrada = pendentesDB.find(enc => String(enc.id).trim() === codigoLimpo);
+// Substitua a linha do const encontrada por esta versão:
+const encontrada = pendentesDB.find(enc => {
+    let idBanco = String(enc.id).replace(/[^0-8]/g, "");
+    let idQr = codigoLimpo.replace(/[^0-8]/g, "");
+    return idBanco.includes(idQr) || idQr.includes(idBanco) || String(enc.id).trim() === codigoLimpo;
+});
                 
                 if (encontrada) {
                     alert(`Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
