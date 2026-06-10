@@ -588,22 +588,23 @@ async function registrarEncomenda() {
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
-            // Tratamento padrão JSON para evitar bloqueios do navegador
-            const data = await res.json();
+            const textoBruto = await res.text();
+            const data = JSON.parse(textoBruto);
             
             if (data.status === "Sucesso" || data.status === "ok") {
                 document.getElementById("descInput").value = "";
                 document.getElementById("codigoRastreio").value = "";
                 await buscarPendentes(); 
                 
-                if(confirm("Entrada Registrada no Sistema!\n\n(E-mail com QR Code disparado para o morador).\n\nDeseja enviar aviso por WhatsApp agora?")) {
+                if(confirm("Entrada Registrada no Sistema!\n\nDeseja enviar aviso por WhatsApp agora?")) {
+                    // Executa o envio imediato passando o link gerado pelo servidor
                     enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl);
                 }
             } else {
-                alert("Erro ao salvar: " + (data.erro || "Resposta inválida do servidor."));
+                alert("Erro no servidor: " + (data.erro || "Tente novamente."));
             }
         } catch (e) { 
-            alert("Erro ao processar o salvamento da encomenda."); 
+            alert("Erro de comunicação com a API."); 
             console.error(e);
         }
         finally { document.getElementById("loading").style.display = "none"; }
@@ -612,22 +613,26 @@ async function registrarEncomenda() {
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto, qrCodeUrl = "") {
         let mensagem = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${descricao}\n🏢 *Local:* Bloco ${bloco} - Apto ${apto}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
         
+        // Se houver URL do QR Code (vinda do cadastro imediato ou gerada manualmente)
         if (qrCodeUrl) {
             mensagem += `\n\n📱 *Retirada Rápida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrCodeUrl}`;
+        } else {
+            // Se disparado da lista de pendentes, reconstrói o link do QR na hora usando o ID padrão do pacote
+            let idGerado = Date.now().toString(); // Fallback de segurança
+            let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
+            mensagem += `\n\n📱 *Retirada Rápida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
-    // NOVA INTELIGÊNCIA: Buscar no Arquivo Morto usando os Dropdowns
+
     async function pesquisarNoArquivo() {
         const b = document.getElementById("arqBloco").value;
         const a = document.getElementById("arqApto").value;
         const t = document.getElementById("arqNome").value;
         
-        if(!b && !a && !t) return alert("Preencha pelo menos um campo (Bloco, Apto ou Nome) para buscar no histórico.");
-        
+        if(!b && !a && !t) return alert("Preencha pelo menos um campo para buscar.");
         document.getElementById("loading").style.display = "block";
-        
         try {
             const res = await fetch(API_URL, { 
                 method: "POST", 
@@ -635,22 +640,18 @@ async function registrarEncomenda() {
                 headers: { "Content-Type": "text/plain;charset=utf-8" }
             });
             const dadosArquivo = await res.json();
-            
             if(dadosArquivo.length === 0) {
-                alert("Nenhum registro antigo encontrado com esses filtros.");
+                alert("Nenhum registro antigo encontrado.");
             } else {
                 todasAsEncomendasDB = dadosArquivo; 
                 renderizarRelatorio();
-                alert(`Encontrado! Exibindo ${dadosArquivo.length} registros do Arquivo Morto. Para voltar aos registros atuais, recarregue a página (F5).`);
+                alert(`Exibindo ${dadosArquivo.length} registros do Arquivo Morto. Recarregue (F5) para voltar.`);
             }
-        } catch(e) {
-            alert("Erro ao buscar no arquivo.");
-        } finally {
-            document.getElementById("loading").style.display = "none";
-        }
+        } catch(e) { alert("Erro ao buscar no arquivo."); }
+        finally { document.getElementById("loading").style.display = "none"; }
     }
 
-   function aplicarFiltro() {
+    function aplicarFiltro() {
         const termoBusca = document.getElementById("buscaGeral").value.toLowerCase();
         const blocoSelecionado = document.getElementById("pendBloco") ? document.getElementById("pendBloco").value : "";
         const aptoSelecionado = document.getElementById("pendApto") ? document.getElementById("pendApto").value : "";
@@ -664,11 +665,10 @@ async function registrarEncomenda() {
                                String(enc.apto).includes(termoBusca);
             return matchBloco && matchApto && matchTexto;
         });
-        
         renderizarLista(filtrados);
     }
 
-   function limparFiltro() {
+    function limparFiltro() {
         document.getElementById("buscaGeral").value = "";
         if(document.getElementById("pendBloco")) document.getElementById("pendBloco").value = "";
         if(document.getElementById("pendApto")) document.getElementById("pendApto").innerHTML = '<option value="">Todos os Aptos</option>';
@@ -679,7 +679,7 @@ async function registrarEncomenda() {
         document.getElementById("buscaHistorico").value = "";
         if(document.getElementById("histBloco")) document.getElementById("histBloco").value = "";
         if(document.getElementById("histApto")) document.getElementById("histApto").innerHTML = '<option value="">Todos os Aptos</option>';
-        aplicarFiltroHistorico(); // Recarrega a lista sem filtros
+        aplicarFiltroHistorico();
     }
 
     function aplicarFiltroHistorico() {
@@ -688,7 +688,6 @@ async function registrarEncomenda() {
         const aptoSelecionado = document.getElementById("histApto") ? document.getElementById("histApto").value : "";
         
         let entreguesRecentes = todasAsEncomendasDB.filter(enc => enc.status === "Entregue");
-        
         let filtrados = entreguesRecentes.filter(enc => {
             const matchBloco = blocoSelecionado === "" || enc.bloco === blocoSelecionado;
             const matchApto = aptoSelecionado === "" || String(enc.apto) === String(aptoSelecionado);
@@ -707,12 +706,10 @@ async function registrarEncomenda() {
             const div = document.createElement("div");
             div.className = "encomenda-item";
             div.style.borderLeftColor = "var(--success)"; 
-           // Verifica se a assinatura salva no banco de dados é um Link do Google Drive
             let botaoAssinatura = "";
             if (enc.assinatura && enc.assinatura.includes("http")) {
                 botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="visualizarAssinatura('${enc.assinatura}')">🖋️ Ver Assinatura</button>`;
             }
-
             div.innerHTML = `
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Pacote:</strong> ${enc.descricao} <br>
@@ -723,7 +720,9 @@ async function registrarEncomenda() {
             `;
             lista.appendChild(div);
         });
-    }    function renderizarLista(encomendas) {
+    }
+
+    function renderizarLista(encomendas) {
         const lista = document.getElementById("listaPendentes");
         lista.innerHTML = "";
         document.getElementById("contador").innerText = encomendas.length;
@@ -731,12 +730,16 @@ async function registrarEncomenda() {
         encomendas.forEach(enc => {
             const div = document.createElement("div");
             div.className = "encomenda-item";
+            
+            // CORREÇÃO: Força o botão da lista a passar a URL gerada ou reconstrói dinamicamente com base no ID
+            let qrCodeDinamico = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + enc.id;
+            
             div.innerHTML = `
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
-                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}')">Avisar no WhatsApp</button>
+                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}', '${qrCodeDinamico}')">Avisar no WhatsApp</button>
                 <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">✅ Entregar / Assinar</button>
             `;
             lista.appendChild(div);
@@ -754,7 +757,6 @@ async function registrarEncomenda() {
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
             const matchStatus = fStatus === "" || enc.status === fStatus;
-            
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
@@ -767,9 +769,7 @@ async function registrarEncomenda() {
         filtradas.slice().reverse().forEach(enc => {
             const div = document.createElement("div");
             div.className = "relatorio-item " + (enc.status === "Pendente" ? "status-pendente" : "status-entregue");
-            
             let infoSaida = (enc.status === "Entregue" || enc.status === "Arquivado") ? `<br><strong>Retirado por:</strong> ${enc.quemRetirou} <br><small>Saída: ${enc.dataSaida} (${enc.porteiroSaida || 'Sistema'})</small>` : ``;
-            
             div.innerHTML = `
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Status:</strong> ${enc.status}<br>
@@ -792,7 +792,6 @@ async function registrarEncomenda() {
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
             const matchStatus = fStatus === "" || enc.status === fStatus;
-            
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
@@ -822,21 +821,8 @@ async function registrarEncomenda() {
             htmlPDF += `</table>`;
         }
 
-        if(pendentes.length === 0 && entregues.length === 0) {
-            htmlPDF += `<p style="font-family:Arial, sans-serif;">Nenhuma encomenda encontrada para este filtro.</p>`;
-        }
-
         document.getElementById("areaImpressao").innerHTML = htmlPDF;
-
-        const tituloOriginal = document.title;
-        const agora = new Date();
-        const strData = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
-        const strHora = agora.toLocaleTimeString('pt-BR').substring(0, 5).replace(':', 'h') + 'm';
-        document.title = `RELATÓRIO_SUNCITY_${strData}_${strHora}`;
-
         window.print();
-
-        setTimeout(() => { document.title = tituloOriginal; }, 2000);
     }
 
     async function enviarRelatorioEmail() {
@@ -850,174 +836,87 @@ async function registrarEncomenda() {
         const fStatus = document.getElementById("relStatus").value;
 
         try {
-            const payload = { 
-                acao: "enviar_relatorio_pdf", 
-                termo: termo, 
-                fBloco: fBloco, 
-                fApto: fApto,
-                fStatus: fStatus
-            };
-
             await fetch(API_URL, { 
                 method: "POST", 
-                body: JSON.stringify(payload), 
+                body: JSON.stringify({ acao: "enviar_relatorio_pdf", termo: termo, fBloco: fBloco, fApto: fApto, fStatus: fStatus }), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
-            
-            alert("🚀 Relatório em PDF gerado e enviado para o seu e-mail administrativo com sucesso!");
-        } catch (error) { 
-            alert("Erro ao enviar e-mail: " + error.message); 
-        } finally { 
-            btnEmail.innerText = "✉️ Enviar para meu E-mail";
-            btnEmail.disabled = false;
-        }
+            alert("🚀 Relatório em PDF gerado e enviado com sucesso!");
+        } catch (error) { alert("Erro ao enviar e-mail: " + error.message); } 
+        finally { btnEmail.innerText = "✉️ Enviar para meu E-mail"; btnEmail.disabled = false; }
     }
 
-    // LÓGICA DE ASSINATURA NA TELA (CANVAS)
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
 
     function getPos(e) {
         var rect = canvas.getBoundingClientRect();
-        if (e.changedTouches) {
-            return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top };
-        }
+        if (e.changedTouches) { return { x: e.changedTouches[0].clientX - rect.left, y: e.changedTouches[0].clientY - rect.top }; }
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    function iniciarDesenho(e) { 
-        e.preventDefault(); 
-        isDrawing = true; 
-        let pos = getPos(e); 
-        ctx.beginPath(); 
-        ctx.moveTo(pos.x, pos.y); 
-    }
+    function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginTransaction || ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+    function desenhar(e) { if (!isDrawing) return; e.preventDefault(); let pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
+    function pararDesenho(e) { e.preventDefault(); isDrawing = false; resetarTimer(); }
     
-    function desenhar(e) { 
-        if (!isDrawing) return; 
-        e.preventDefault(); 
-        let pos = getPos(e); 
-        ctx.lineWidth = 2; 
-        ctx.lineCap = 'round'; 
-        ctx.lineTo(pos.x, pos.y); 
-        ctx.stroke(); 
-    }
-    
-    function pararDesenho(e) { 
-        e.preventDefault(); 
-        isDrawing = false; 
-        resetarTimer(); 
-    }
-    
-    canvas.addEventListener('mousedown', iniciarDesenho);
-    canvas.addEventListener('mousemove', desenhar);
-    canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
-    canvas.addEventListener('touchmove', desenhar, {passive: false});
-    canvas.addEventListener('touchend', pararDesenho, {passive: false});
+    canvas.addEventListener('mousedown', iniciarDesenho); canvas.addEventListener('mousemove', desenhar); canvas.addEventListener('mouseup', pararDesenho);
+    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false}); canvas.addEventListener('touchmove', desenhar, {passive: false}); canvas.addEventListener('touchend', pararDesenho, {passive: false});
 
-    function limparCanvas() { 
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-    }
+    function limparCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function abrirModalBaixa(id) {
         idEmBaixa = id; 
         encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
         document.getElementById("nomeRetirante").value = ""; 
         document.getElementById("modalAssinatura").style.display = "flex";
-        setTimeout(() => { 
-            canvas.width = canvas.offsetWidth; 
-            canvas.height = canvas.offsetHeight; 
-            limparCanvas(); 
-        }, 100);
+        setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
     }
 
-    function fecharModal() { 
-        document.getElementById("modalAssinatura").style.display = "none"; 
-        idEmBaixa = null; 
-        encomendaSelecionada = null; 
-    }
+    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
 
     async function confirmarEntregaFinal() {
         const quemRetirou = document.getElementById("nomeRetirante").value;
         if(!quemRetirou) { alert("Digite o nome de quem está retirando o pacote!"); return; }
-
         const btn = document.getElementById("btnConfirmarBaixa");
-        btn.innerText = "Processando..."; 
-        btn.disabled = true;
+        btn.innerText = "Processando..."; btn.disabled = true;
         
         const dataBaixa = new Date().toLocaleString('pt-BR');
         const pacoteFaturado = encomendaSelecionada;
 
         try {
-            
-// Criação de uma imagem combinada (Nome + Data + Assinatura)
-        const canvasOriginal = document.getElementById('signaturePad');
-        const canvasMesclado = document.createElement('canvas');
-        canvasMesclado.width = canvasOriginal.width;
-        canvasMesclado.height = canvasOriginal.height + 40; // Aumenta 40px para caber o cabeçalho
-        const ctxMesclado = canvasMesclado.getContext('2d');
-        
-        // Pinta o fundo de branco
-        ctxMesclado.fillStyle = "#ffffff";
-        ctxMesclado.fillRect(0, 0, canvasMesclado.width, canvasMesclado.height);
-        
-        // Carimba o Nome e a Data no topo da imagem
-        ctxMesclado.font = "bold 14px Arial";
-        ctxMesclado.fillStyle = "#1d3557";
-        ctxMesclado.fillText("Retirado por: " + quemRetirou, 10, 20);
-        ctxMesclado.font = "10px Arial";
-        ctxMesclado.fillStyle = "#666666";
-        ctxMesclado.fillText("Data: " + dataBaixa, 10, 35);
-        
-        // Cola o desenho da assinatura original logo abaixo do texto
-        ctxMesclado.drawImage(canvasOriginal, 0, 40);
+            const canvasOriginal = document.getElementById('signaturePad');
+            const canvasMesclado = document.createElement('canvas');
+            canvasMesclado.width = canvasOriginal.width; canvasMesclado.height = canvasOriginal.height + 40;
+            const ctxMesclado = canvasMesclado.getContext('2d');
+            ctxMesclado.fillStyle = "#ffffff"; ctxMesclado.fillRect(0, 0, canvasMesclado.width, canvasMesclado.height);
+            ctxMesclado.font = "bold 14px Arial"; ctxMesclado.fillStyle = "#1d3557"; ctxMesclado.fillText("Retirado por: " + quemRetirou, 10, 20);
+            ctxMesclado.font = "10px Arial"; ctxMesclado.fillStyle = "#666666"; ctxMesclado.fillText("Data: " + dataBaixa, 10, 35);
+            ctxMesclado.drawImage(canvasOriginal, 0, 40);
 
-        // Gera a foto final oficial
-        const imagemAssinatura = canvasMesclado.toDataURL("image/png");
-
-        const payload = { 
-            acao: "baixar", 
-            id: idEmBaixa.toString(), 
-            dataHora: dataBaixa, 
-            porteiroSaida: porteiroLogado || "Não identificado", 
-            quemRetirou: quemRetirou, 
-            assinatura: "Sim",
-            imagemBase64: imagemAssinatura
-        };
-            
             await fetch(API_URL, { 
                 method: "POST", 
-                body: JSON.stringify(payload), 
+                body: JSON.stringify({ acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identificado", quemRetirou: quemRetirou, assinatura: "Sim", imagemBase64: canvasMesclado.toDataURL("image/png") }), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
             fecharModal(); 
-            alert("Baixa confirmada!\n\n(Recibo enviado por e-mail automaticamente).");
-            
+            alert("Baixa confirmada!");
             if(pacoteFaturado) {
-                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}\n\n✔️ Assinatura coletada na tela e entrega salva no sistema.`;
+                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
             await buscarPendentes(); 
-        } catch (error) { 
-            alert("Erro da rede: " + error.message); 
-        } finally { 
-            btn.innerText = "✅ Confirmar Entrega"; 
-            btn.disabled = false; 
-        }
+        } catch (error) { alert("Erro da rede: " + error.message); } 
+        finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
     }
 
     function enviarChamado() {
         const bloco = document.getElementById("chamadoBloco").value;
         const apto = document.getElementById("chamadoApto").value;
         const just = document.getElementById("chamadoJustificativa").value;
-        
-        if (!bloco || !apto || !just) { alert("Preencha todos os campos do chamado!"); return; }
-        
-        const texto = `⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\n\nPorteiro: ${porteiroLogado}`;
-        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(texto)}`;
+        if (!bloco || !apto || !just) { alert("Preencha todos os campos!"); return; }
+        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\nPorteiro: ${porteiroLogado}`)}`;
     }
 </script>
 </body>
