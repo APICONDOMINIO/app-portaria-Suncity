@@ -428,7 +428,15 @@ async function abrirCameraRetirada() {
                 let codigoLimpo = String(idLido).trim();
                 
                 // BUSCA DO ALVO: Compara o ID textual exato e singular do pacote
-                const encontrada = pendentesDB.find(enc => String(enc.id).trim() === codigoLimpo);
+                let codigoLimpo = String(idLido).trim();
+                
+                // BUSCA INTELIGENTE POR APROXIMAÇÃO: Compara os primeiros 9 dígitos do ID
+                // Isso ignora qualquer arredondamento científico que o Google Sheets tenha feito!
+                const encontrada = pendentesDB.find(enc => {
+                    let idCortadoBanco = String(enc.id).trim().substring(0, 9);
+                    let idCortadoCamer = codigoLimpo.substring(0, 9);
+                    return idCortadoBanco === idCortadoCamer;
+                });
                 
                 if (encontrada) {
                     alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
