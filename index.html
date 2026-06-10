@@ -588,9 +588,8 @@ async function registrarEncomenda() {
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
-            // CORREÇÃO DO GARGALO: Lemos como texto primeiro para o navegador não bloquear
-            const textoBruto = await res.text();
-            const data = JSON.parse(textoBruto);
+            // Tratamento padrão JSON para evitar bloqueios do navegador
+            const data = await res.json();
             
             if (data.status === "Sucesso" || data.status === "ok") {
                 document.getElementById("descInput").value = "";
@@ -604,7 +603,7 @@ async function registrarEncomenda() {
                 alert("Erro ao salvar: " + (data.erro || "Resposta inválida do servidor."));
             }
         } catch (e) { 
-            alert("Erro ao salvar a encomenda. Certifique-se de que salvou e publicou a última versão do Google Script."); 
+            alert("Erro ao processar o salvamento da encomenda."); 
             console.error(e);
         }
         finally { document.getElementById("loading").style.display = "none"; }
