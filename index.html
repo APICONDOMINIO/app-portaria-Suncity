@@ -395,12 +395,11 @@
 // ==========================================
     // LEITOR DE RETIRADA RÁPIDA POR QR CODE
     // ==========================================
-    function abrirCameraRetirada() {
-        // Usa a mesma área de câmera que você já tem na aba Receber
+function abrirCameraRetirada() {
         const area = document.getElementById("areaCamera");
         const btnFechar = document.getElementById("btnFecharCamera");
         
-        // Força a visualização da aba Receber temporariamente apenas para exibir o leitor
+        // CORREÇÃO: Abre a câmera e mantém o porteiro na aba de pendentes, sem quebrar o menu
         document.getElementById("tabReceber").classList.add("active");
         area.style.display = "block";
         btnFechar.style.display = "block";
@@ -411,24 +410,27 @@
 
         leitorCamera.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 200, height: 200 } }, // Foco quadrado ideal para QR Code
+            { fps: 10, qrbox: { width: 220, height: 220 } },
             (idEncomendaLido) => {
-                // SUCESSO: Leu o QR Code do morador!
                 fecharCamera();
-                // Volta para a aba de pendentes onde o modal vai abrir
-                mudarAba('tabPendentes', document.querySelector("button[onclick*='tabPendentes']"));
                 
-                // Busca a encomenda lida dentro da lista de pendentes ativa
-                const encontrada = pendentesDB.find(enc => String(enc.id) === String(idEncomendaLido));
+                // Força a navegação visual de volta para a aba certa
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.getElementById("tabPendentes").classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
+                
+                // Força a comparação em String pura
+                const encontrada = pendentesDB.find(enc => String(enc.id).trim() === String(idEncomendaLido).trim());
                 
                 if (encontrada) {
                     alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
-                    abrirModalBaixa(encontrada.id); // Abre direto o seu modal de assinatura original!
+                    abrirModalBaixa(encontrada.id);
                 } else {
                     alert("⚠️ Encomenda não encontrada na lista de pendentes (Pode já ter sido entregue ou o código é inválido).");
                 }
             },
-            (erro) => { /* ignora falhas de foco */ }
+            (erro) => { }
         ).catch(err => {
             alert("Erro ao acessar a câmera.");
             fecharCamera();
@@ -597,7 +599,6 @@ async function registrarEncomenda() {
                 await buscarPendentes(); 
                 
                 if(confirm("Entrada Registrada no Sistema!\n\nDeseja enviar aviso por WhatsApp agora?")) {
-                    // Executa o envio imediato passando o link gerado pelo servidor
                     enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl);
                 }
             } else {
@@ -611,16 +612,15 @@ async function registrarEncomenda() {
     }
 
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto, qrCodeUrl = "") {
-        let mensagem = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${descricao}\n🏢 *Local:* Bloco ${bloco} - Apto ${apto}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
+        // Texto limpo em negrito para rodar em qualquer aparelho sem quebrar caracteres
+        let mensagem = `*[ NOTIFICACAO SUNCITY ]*\n\nOlá *${nome}*!\nUma nova encomenda aguarda por você na portaria:\n\n*Pacote:* ${descricao}\n*Local:* Bloco ${bloco} - Apto ${apto}\n\nPor favor, retire assim que possível.\n*Registrado por:* ${porteiroLogado}`;
         
-        // Se houver URL do QR Code (vinda do cadastro imediato ou gerada manualmente)
         if (qrCodeUrl) {
-            mensagem += `\n\n📱 *Retirada Rápida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrCodeUrl}`;
+            mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrCodeUrl}`;
         } else {
-            // Se disparado da lista de pendentes, reconstrói o link do QR na hora usando o ID padrão do pacote
-            let idGerado = Date.now().toString(); // Fallback de segurança
+            let idGerado = Date.now().toString();
             let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
-            mensagem += `\n\n📱 *Retirada Rápida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
+            mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
@@ -707,8 +707,9 @@ async function registrarEncomenda() {
             div.className = "encomenda-item";
             div.style.borderLeftColor = "var(--success)"; 
             let botaoAssinatura = "";
-            if (enc.assinatura && enc.assinatura.includes("http")) {
-                botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="visualizarAssinatura('${enc.assinatura}')">🖋️ Ver Assinatura</button>`;
+            if (enc.signature || (enc.assinatura && enc.assinatura.includes("http"))) {
+                let linkTarget = enc.assinatura || enc.signature;
+                botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="visualizarAssinatura('${linkTarget}')">🖋️ Ver Assinatura</button>`;
             }
             div.innerHTML = `
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
@@ -731,7 +732,6 @@ async function registrarEncomenda() {
             const div = document.createElement("div");
             div.className = "encomenda-item";
             
-            // CORREÇÃO: Força o botão da lista a passar a URL gerada ou reconstrói dinamicamente com base no ID
             let qrCodeDinamico = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + enc.id;
             
             div.innerHTML = `
@@ -856,12 +856,16 @@ async function registrarEncomenda() {
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginTransaction || ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+    document.addEventListener("DOMContentLoaded", () => {
+        if(canvas) {
+            canvas.addEventListener('mousedown', iniciarDesenho); canvas.addEventListener('mousemove', desenhar); canvas.addEventListener('mouseup', pararDesenho);
+            canvas.addEventListener('touchstart', iniciarDesenho, {passive: false}); canvas.addEventListener('touchmove', desenhar, {passive: false}); canvas.addEventListener('touchend', pararDesenho, {passive: false});
+        }
+    });
+
+    function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
     function desenhar(e) { if (!isDrawing) return; e.preventDefault(); let pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
     function pararDesenho(e) { e.preventDefault(); isDrawing = false; resetarTimer(); }
-    
-    canvas.addEventListener('mousedown', iniciarDesenho); canvas.addEventListener('mousemove', desenhar); canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false}); canvas.addEventListener('touchmove', desenhar, {passive: false}); canvas.addEventListener('touchend', pararDesenho, {passive: false});
 
     function limparCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
