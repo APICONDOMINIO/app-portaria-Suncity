@@ -513,12 +513,7 @@
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
-    function enviarWhatsApp(telefone, nome, descricao, bloco, apto) {
-        const mensagem = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${descricao}\n🏢 *Local:* Bloco ${bloco} - Apto ${apto}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
-        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-    }
-
-    async function registrarEncomenda() {
+async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
         const tipoPacote = document.getElementById("descInput").value;
@@ -526,10 +521,9 @@
         
         if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
 
-        // Junta o tipo do pacote com o código de rastreio (se houver)
         const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
-
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
+        
         const dados = {
             acao: "nova_encomenda", 
             id: Date.now().toString(),
@@ -544,23 +538,37 @@
 
         document.getElementById("loading").style.display = "block";
         try {
-            await fetch(API_URL, { 
+            const res = await fetch(API_URL, { 
                 method: "POST", 
                 body: JSON.stringify(dados), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
+            const data = await res.json();
             
-            document.getElementById("descInput").value = "";
-            document.getElementById("codigoRastreio").value = "";
-            await buscarPendentes(); 
-            
-            if(confirm("Entrada Registrada no Sistema!\n\n(E-mail de aviso disparado).\n\nDeseja enviar aviso por WhatsApp agora?")) {
-                enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto);
+            if (data.status === "Sucesso" || data.status === "ok") {
+                document.getElementById("descInput").value = "";
+                document.getElementById("codigoRastreio").value = "";
+                await buscarPendentes(); 
+                
+                if(confirm("Entrada Registrada no Sistema!\n\n(E-mail com QR Code disparado para o morador).\n\nDeseja enviar aviso por WhatsApp agora?")) {
+                    enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl);
+                }
+            } else {
+                alert("Erro ao salvar: " + (data.erro || "Resposta inválida do servidor."));
             }
-        } catch (e) { alert("Erro ao salvar a encomenda."); }
+        } catch (e) { alert("Erro ao salvar a encomenda. Verifique a conexão."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
+    function enviarWhatsApp(telefone, nome, descricao, bloco, apto, qrCodeUrl = "") {
+        let mensagem = `🚨 *CHEGOU ENCOMENDA!* 🚨\n\nOlá *${nome}*! 👋\nUma nova encomenda aguarda por você na portaria:\n\n📦 *Pacote:* ${descricao}\n🏢 *Local:* Bloco ${bloco} - Apto ${apto}\n\n🏃‍♂️ Por favor, retire assim que possível.\n🛡️ *Registrado por:* ${porteiroLogado}`;
+        
+        if (qrCodeUrl) {
+            mensagem += `\n\n📱 *Retirada Rápida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrCodeUrl}`;
+        }
+        
+        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+    }
     // NOVA INTELIGÊNCIA: Buscar no Arquivo Morto usando os Dropdowns
     async function pesquisarNoArquivo() {
         const b = document.getElementById("arqBloco").value;
