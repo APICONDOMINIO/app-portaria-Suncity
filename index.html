@@ -421,7 +421,7 @@ function abrirCameraRetirada() {
                 document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
                 
                 // Força a comparação em String pura
-                const encontrada = pendentesDB.find(enc => String(enc.id).trim() === String(idEncomendaLido).trim());
+                const encontrada = pendentesDB.find(enc => String(enc.id).replace(/\D/g, "") === String(idEncomendaLido).replace(/\D/g, ""));
                 
                 if (encontrada) {
                     alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
