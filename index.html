@@ -395,47 +395,58 @@
 // ==========================================
     // LEITOR DE RETIRADA RÁPIDA POR QR CODE
     // ==========================================
-function abrirCameraRetirada() {
+async function abrirCameraRetirada() {
         const area = document.getElementById("areaCamera");
         const btnFechar = document.getElementById("btnFecharCamera");
         
-        // CORREÇÃO: Abre a câmera e mantém o porteiro na aba de pendentes, sem quebrar o menu
         document.getElementById("tabReceber").classList.add("active");
         area.style.display = "block";
         btnFechar.style.display = "block";
 
-        if (!leitorCamera) {
-            leitorCamera = new Html5Qrcode("areaCamera");
+        // FORÇA BRUTA: Se o leitor já existia, desliga e limpa ele da memória
+        if (leitorCamera) {
+            try { await leitorCamera.stop(); } catch(e){}
+            leitorCamera = null;
         }
+
+        // Cria um leitor totalmente do zero e exclusivo para o QR Code de Retirada
+        leitorCamera = new Html5Qrcode("areaCamera");
 
         leitorCamera.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 220, height: 220 } },
-            (idEncomendaLido) => {
-                fecharCamera();
-                
-                // Força a navegação visual de volta para a aba certa
+            { fps: 15, qrbox: { width: 200, height: 200 } }, // Caixa quadrada para focar no QR
+            (idLido) => {
+                if(leitorCamera) leitorCamera.stop().then(() => {
+                    document.getElementById("areaCamera").style.display = "none";
+                    document.getElementById("btnFecharCamera").style.display = "none";
+                }).catch(e => console.log(e));
+
+                // Volta o visual para a aba certa de Pendentes
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.getElementById("tabPendentes").classList.add('active');
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                 document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
                 
-                // Força a comparação em String pura
-                const encontrada = pendentesDB.find(enc => String(enc.id).replace(/\D/g, "") === String(idEncomendaLido).replace(/\D/g, ""));
+                // Limpa o texto lido tirando espaços
+                let codigoLimpo = String(idLido).trim();
+                
+                // Busca na lista de pendentes
+                const encontrada = pendentesDB.find(enc => String(enc.id).trim() === codigoLimpo);
                 
                 if (encontrada) {
-                    alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
+                    alert(`Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
                     abrirModalBaixa(encontrada.id);
                 } else {
-                    alert("⚠️ Encomenda não encontrada na lista de pendentes (Pode já ter sido entregue ou o código é inválido).");
+                    // DIAGNÓSTICO DO PITCH: Se der erro, ele te avisa o que a câmera leu de verdade
+                    alert(`O leitor leu o texto: "${codigoLimpo}"\nMas esse ID não bate com nenhuma encomenda pendente.`);
                 }
             },
             (erro) => { }
         ).catch(err => {
-            alert("Erro ao acessar a câmera.");
-            fecharCamera();
+            alert("Erro ao iniciar câmera de retirada.");
         });
     }
+    
     function mudarAba(id, btn) {
         // Esconde todas as abas e mostra a nova
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
