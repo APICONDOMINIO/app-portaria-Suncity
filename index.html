@@ -123,7 +123,10 @@
 
        <!-- ABA PENDENTES -->
         <div id="tabPendentes" class="card tab-content">
-            <h3>A Entregar (<span id="contador">0</span>)</h3>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">A Entregar (<span id="contador">0</span>)</h3>
+                <button class="btn-secondary" style="width: auto; margin: 0; padding: 6px 12px; font-size: 14px;" onclick="abrirCameraRetirada()">📷 Retirada QR</button>
+            </div>
             
             <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtro Dinâmico</p>
@@ -389,7 +392,48 @@
         await carregarMoradores();
         await buscarPendentes();
     }
+// ==========================================
+    // LEITOR DE RETIRADA RÁPIDA POR QR CODE
+    // ==========================================
+    function abrirCameraRetirada() {
+        // Usa a mesma área de câmera que você já tem na aba Receber
+        const area = document.getElementById("areaCamera");
+        const btnFechar = document.getElementById("btnFecharCamera");
+        
+        // Força a visualização da aba Receber temporariamente apenas para exibir o leitor
+        document.getElementById("tabReceber").classList.add("active");
+        area.style.display = "block";
+        btnFechar.style.display = "block";
 
+        if (!leitorCamera) {
+            leitorCamera = new Html5Qrcode("areaCamera");
+        }
+
+        leitorCamera.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 200, height: 200 } }, // Foco quadrado ideal para QR Code
+            (idEncomendaLido) => {
+                // SUCESSO: Leu o QR Code do morador!
+                fecharCamera();
+                // Volta para a aba de pendentes onde o modal vai abrir
+                mudarAba('tabPendentes', document.querySelector("button[onclick*='tabPendentes']"));
+                
+                // Busca a encomenda lida dentro da lista de pendentes ativa
+                const encontrada = pendentesDB.find(enc => String(enc.id) === String(idEncomendaLido));
+                
+                if (encontrada) {
+                    alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
+                    abrirModalBaixa(encontrada.id); // Abre direto o seu modal de assinatura original!
+                } else {
+                    alert("⚠️ Encomenda não encontrada na lista de pendentes (Pode já ter sido entregue ou o código é inválido).");
+                }
+            },
+            (erro) => { /* ignora falhas de foco */ }
+        ).catch(err => {
+            alert("Erro ao acessar a câmera.");
+            fecharCamera();
+        });
+    }
     function mudarAba(id, btn) {
         // Esconde todas as abas e mostra a nova
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
