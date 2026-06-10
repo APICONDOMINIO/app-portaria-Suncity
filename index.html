@@ -403,47 +403,38 @@ async function abrirCameraRetirada() {
         area.style.display = "block";
         btnFechar.style.display = "block";
 
-        // FORÇA BRUTA: Se o leitor já existia, desliga e limpa ele da memória
         if (leitorCamera) {
             try { await leitorCamera.stop(); } catch(e){}
             leitorCamera = null;
         }
 
-        // Cria um leitor totalmente do zero e exclusivo para o QR Code de Retirada
         leitorCamera = new Html5Qrcode("areaCamera");
 
         leitorCamera.start(
             { facingMode: "environment" },
-            { fps: 15, qrbox: { width: 200, height: 200 } }, // Caixa quadrada para focar no QR
+            { fps: 15, qrbox: { width: 200, height: 200 } },
             (idLido) => {
                 if(leitorCamera) leitorCamera.stop().then(() => {
                     document.getElementById("areaCamera").style.display = "none";
                     document.getElementById("btnFecharCamera").style.display = "none";
                 }).catch(e => console.log(e));
 
-                // Volta o visual para a aba certa de Pendentes
+                // Redireciona o visual para a aba de Pendentes
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.getElementById("tabPendentes").classList.add('active');
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                 document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
                 
-                // Limpa o texto lido tirando espaços
                 let codigoLimpo = String(idLido).trim();
                 
-                // Busca na lista de pendentes
-// Substitua a linha do const encontrada por esta versão:
-const encontrada = pendentesDB.find(enc => {
-    let idBanco = String(enc.id).replace(/[^0-8]/g, "");
-    let idQr = codigoLimpo.replace(/[^0-8]/g, "");
-    return idBanco.includes(idQr) || idQr.includes(idBanco) || String(enc.id).trim() === codigoLimpo;
-});
+                // BUSCA DO ALVO: Compara o ID textual exato e singular do pacote
+                const encontrada = pendentesDB.find(enc => String(enc.id).trim() === codigoLimpo);
                 
                 if (encontrada) {
-                    alert(`Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
-                    abrirModalBaixa(encontrada.id);
+                    alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
+                    abrirModalBaixa(encontrada.id); // Abre o pacote específico direto no alvo!
                 } else {
-                    // DIAGNÓSTICO DO PITCH: Se der erro, ele te avisa o que a câmera leu de verdade
-                    alert(`O leitor leu o texto: "${codigoLimpo}"\nMas esse ID não bate com nenhuma encomenda pendente.`);
+                    alert(`O leitor leu o ID: "${codigoLimpo}"\nMas esse pacote específico não foi encontrado como Pendente.`);
                 }
             },
             (erro) => { }
