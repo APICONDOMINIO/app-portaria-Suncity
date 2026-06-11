@@ -438,7 +438,9 @@ async function abrirCameraRetirada() {
             });
             
             if (encontrada) {
-                alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
+                // Monta o alerta com todas as coordenadas da encomenda
+                alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nBloco: ${encontrada.bloco || 'N/A'}\nApartamento: ${encontrada.apartamento || 'N/A'}\nPacote: ${encontrada.descricao}`);
+                
                 abrirModalBaixa(encontrada.id); 
             } else {
                 alert(`O leitor leu o ID: "${codigoLimpo}"\nMas esse pacote específico não foi encontrado como Pendente.`);
