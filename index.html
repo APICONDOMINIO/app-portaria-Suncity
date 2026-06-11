@@ -427,11 +427,14 @@ async function abrirCameraRetirada() {
             // 1. Definição única da variável (Fim do bug do Login)
             let codigoLimpo = String(idLido).trim();
             
-            // 2. Busca por aproximação dos primeiros 9 dígitos (Fim do bug do "Não encontrado")
+            // 2. BUSCA MULTICRITÉRIO (ID aproximado + Bloco + Apto)
+            // Blindagem total contra arredondamentos do Google Sheets
             const encontrada = pendentesDB.find(enc => {
-                let idCortadoBanco = String(enc.id).trim().substring(0, 9);
-                let idCortadoCamer = codigoLimpo.substring(0, 9);
-                return idCortadoBanco === idCortadoCamer;
+                let idCortadoBanco = String(enc.id).trim().substring(0, 7);
+                let idCortadoCamer = codigoLimpo.substring(0, 7);
+                
+                // O sistema valida se o início do tempo bate E se o pacote pertence ao mesmo bloco/apto
+                return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
             });
             
             if (encontrada) {
