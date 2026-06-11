@@ -396,60 +396,56 @@
     // LEITOR DE RETIRADA RÁPIDA POR QR CODE
     // ==========================================
 async function abrirCameraRetirada() {
-        const area = document.getElementById("areaCamera");
-        const btnFechar = document.getElementById("btnFecharCamera");
-        
-        document.getElementById("tabReceber").classList.add("active");
-        area.style.display = "block";
-        btnFechar.style.display = "block";
+    const area = document.getElementById("areaCamera");
+    const btnFechar = document.getElementById("btnFecharCamera");
+    
+    document.getElementById("tabReceber").classList.add("active");
+    area.style.display = "block";
+    btnFechar.style.display = "block";
 
-        if (leitorCamera) {
-            try { await leitorCamera.stop(); } catch(e){}
-            leitorCamera = null;
-        }
-
-        leitorCamera = new Html5Qrcode("areaCamera");
-
-        leitorCamera.start(
-            { facingMode: "environment" },
-            { fps: 15, qrbox: { width: 200, height: 200 } },
-            (idLido) => {
-                if(leitorCamera) leitorCamera.stop().then(() => {
-                    document.getElementById("areaCamera").style.display = "none";
-                    document.getElementById("btnFecharCamera").style.display = "none";
-                }).catch(e => console.log(e));
-
-                // Redireciona o visual para a aba de Pendentes
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-                document.getElementById("tabPendentes").classList.add('active');
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
-                
-                let codigoLimpo = String(idLido).trim();
-                
-                // BUSCA DO ALVO: Compara o ID textual exato e singular do pacote
-                let codigoLimpo = String(idLido).trim();
-                
-                // BUSCA INTELIGENTE POR APROXIMAÇÃO: Compara os primeiros 9 dígitos do ID
-                // Isso ignora qualquer arredondamento científico que o Google Sheets tenha feito!
-                const encontrada = pendentesDB.find(enc => {
-                    let idCortadoBanco = String(enc.id).trim().substring(0, 9);
-                    let idCortadoCamer = codigoLimpo.substring(0, 9);
-                    return idCortadoBanco === idCortadoCamer;
-                });
-                
-                if (encontrada) {
-                    alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
-                    abrirModalBaixa(encontrada.id); // Abre o pacote específico direto no alvo!
-                } else {
-                    alert(`O leitor leu o ID: "${codigoLimpo}"\nMas esse pacote específico não foi encontrado como Pendente.`);
-                }
-            },
-            (erro) => { }
-        ).catch(err => {
-            alert("Erro ao iniciar câmera de retirada.");
-        });
+    if (leitorCamera) {
+        try { await leitorCamera.stop(); } catch(e){}
+        leitorCamera = null;
     }
+
+    leitorCamera = new Html5Qrcode("areaCamera");
+
+    leitorCamera.start(
+        { facingMode: "environment" },
+        { fps: 15, qrbox: { width: 200, height: 200 } },
+        (idLido) => {
+            if(leitorCamera) leitorCamera.stop().then(() => {
+                document.getElementById("areaCamera").style.display = "none";
+                document.getElementById("btnFecharCamera").style.display = "none";
+            }).catch(e => console.log(e));
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById("tabPendentes").classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
+            
+            // 1. Definição única da variável (Fim do bug do Login)
+            let codigoLimpo = String(idLido).trim();
+            
+            // 2. Busca por aproximação dos primeiros 9 dígitos (Fim do bug do "Não encontrado")
+            const encontrada = pendentesDB.find(enc => {
+                let idCortadoBanco = String(enc.id).trim().substring(0, 9);
+                let idCortadoCamer = codigoLimpo.substring(0, 9);
+                return idCortadoBanco === idCortadoCamer;
+            });
+            
+            if (encontrada) {
+                alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nPacote: ${encontrada.descricao}`);
+                abrirModalBaixa(encontrada.id); 
+            } else {
+                alert(`O leitor leu o ID: "${codigoLimpo}"\nMas esse pacote específico não foi encontrado como Pendente.`);
+            }
+        },
+        (erro) => { }
+    ).catch(err => {
+        alert("Erro ao iniciar câmera de retirada.");
+    });
+}
     
     function mudarAba(id, btn) {
         // Esconde todas as abas e mostra a nova
