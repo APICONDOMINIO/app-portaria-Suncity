@@ -437,9 +437,13 @@ async function abrirCameraRetirada() {
                 return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
             });
             
-            if (encontrada) {
-                // Monta o alerta com todas as coordenadas da encomenda
-                alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nBloco: ${encontrada.bloco || 'N/A'}\nApartamento: ${encontrada.apartamento || 'N/A'}\nPacote: ${encontrada.descricao}`);
+           if (encontrada) {
+                // Descobre qual variação de nome foi usada para Bloco e Apartamento na planilha
+                let blocoIdentificado = encontrada.bloco || encontrada.Bloco || encontrada.BLOCO || 'N/A';
+                let aptoIdentificado = encontrada.apartamento || encontrada.Apartamento || encontrada.apto || encontrada.Apto || encontrada.APTO || 'N/A';
+
+                // Monta o alerta com os dados identificados
+                alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nBloco: ${blocoIdentificado}\nApartamento: ${aptoIdentificado}\nPacote: ${encontrada.descricao}`);
                 
                 abrirModalBaixa(encontrada.id); 
             } else {
