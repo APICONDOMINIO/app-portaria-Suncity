@@ -635,11 +635,11 @@ async function registrarEncomenda() {
         // Texto limpo em negrito para rodar em qualquer aparelho sem quebrar caracteres
         let mensagem = `*[ NOTIFICACAO SUNCITY ]*\n\nOlá *${nome}*!\nUma nova encomenda aguarda por você na portaria:\n\n*Pacote:* ${descricao}\n*Local:* Bloco ${bloco} - Apto ${apto}\n\nPor favor, retire assim que possível.\n*Registrado por:* ${porteiroLogado}`;
         
-        if (qrCodeUrl) {
+if (qrCodeUrl) {
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrCodeUrl}`;
         } else {
             let idGerado = Date.now().toString();
-            let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
+            let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=P" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
