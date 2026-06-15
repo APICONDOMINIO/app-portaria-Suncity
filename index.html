@@ -465,11 +465,16 @@ if (encontrada) {
                           `🕒 Data/Hora: ${entregueAntes.dataSaida}\n` +
                           `🛡️ Porteiro que entregou: ${entregueAntes.porteiroSaida || 'Sistema'}`);
                 } else {
-                    // Se não achou em nenhuma das duas listas
-                    alert(`❌ Código Inválido!\nO ID "${codigoLimpo}" não foi encontrado no sistema ou pertence a um histórico muito antigo.`);
+                        alert(`❌ Código Inválido!\nO ID "${codigoLimpo}" não foi encontrado no sistema ou pertence a um histórico muito antigo.`);
+                    }
                 }
-            }
-    
+            },
+            (erro) => { }
+        ).catch(err => {
+            alert("Erro ao iniciar câmera de retirada.");
+        });
+    } // <--- COLOQUE ESTA CHAVE BEM AQUI PARA FECHAR A FUNÇÃO DA CÂMERA
+
     function mudarAba(id, btn) {
         // Esconde todas as abas e mostra a nova
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
