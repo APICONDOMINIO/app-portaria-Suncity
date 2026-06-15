@@ -84,11 +84,12 @@
             <button class="btn-danger" style="width:auto; padding:5px 10px;" onclick="fazerLogout()">Sair</button>
         </div>
 
-      <div class="nav-bottom">
+        <div class="nav-bottom">
             <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
             <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
             <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
             <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📊<span>Relatórios</span></button>
+            <button class="nav-item admin-only" id="menuGerenciar" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
             <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
         </div>
 
@@ -225,6 +226,41 @@
             </div>
         </div>
 
+        <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
+            
+            <div id="listaRelatorio" style="margin-top:15px;"></div>
+        </div>
+
+        <div id="tabGerenciar" class="card tab-content">
+            <h3>⚙️ Painel do Administrador</h3>
+            <p style="font-size:13px; color:#666; text-align:center; margin-top:-10px;">Gestão de Acessos e Cadastros</p>
+            
+            <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:15px; border: 1px solid #a8dadc;">
+                <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">👤 Cadastrar Novo Funcionário:</p>
+                <input type="text" id="admNovoNome" placeholder="Nome Completo do Porteiro">
+                <input type="text" id="admNovoLogin" placeholder="Usuário para Login">
+                <input type="text" id="admNovaSenha" placeholder="Senha de Acesso">
+                <select id="admNovoNivel">
+                    <option value="Porteiro">Nível: Porteiro</option>
+                    <option value="Administrador">Nível: Administrador / Zelador</option>
+                </select>
+                <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
+            </div>
+
+            <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #a8dadc;">
+                <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">📝 Editar Cadastro de Morador:</p>
+                <p style="margin:0 0 8px 0; font-size:12px; color:#666;">Localize o morador pelas coordenadas atuais:</p>
+                <div class="row">
+                    <select id="admOriginalBloco" onchange="admAtualizarAptos()"><option value="">Bloco Atual...</option></select>
+                    <select id="admOriginalApto" onchange="admCarregarDadosForm()"><option value="">Apto Atual...</option></select>
+                </div>
+                <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+                <input type="text" id="admNovoNomeMorador" placeholder="Novo Nome do Morador">
+                <input type="text" id="admNovoTelMorador" placeholder="Novo Telefone (Ex: 5571982282769)">
+                <input type="text" id="admNovoEmailMorador" placeholder="Novo E-mail do Morador">
+                <button class="btn-primary" style="background:#e63946;" onclick="admSalvarEdicaoMorador()">Salvar Alterações do Morador</button>
+            </div>
+        </div>
         <div id="tabChamado" class="card tab-content">
             <h3>Atualizar Cadastro</h3>
             <div class="row">
@@ -524,15 +560,16 @@ if (encontrada) {
             const s = document.getElementById("blocoSelect");
             const relBloco = document.getElementById("relBloco");
             const arqBloco = document.getElementById("arqBloco"); 
-            const pendB = document.getElementById("pendBloco"); // Novo filtro Pendentes
-            const histB = document.getElementById("histBloco"); // Novo filtro Historico
-            const admOrigB = document.getElementById("admOriginalBloco");
+            const pendB = document.getElementById("pendBloco"); 
+            const histB = document.getElementById("histBloco"); 
+            const admOrigB = document.getElementById("admOriginalBloco"); // <--- Adicionado aqui
+            
             s.innerHTML = '<option value="">Bloco...</option>';
             relBloco.innerHTML = '<option value="">Todos Blocos</option>';
             if(arqBloco) arqBloco.innerHTML = '<option value="">Bloco...</option>'; 
             if(pendB) pendB.innerHTML = '<option value="">Todos os Blocos</option>';
             if(histB) histB.innerHTML = '<option value="">Todos os Blocos</option>';
-            if(admOrigB) admOrigB.innerHTML = '<option value="">Bloco Atual...</option>';
+            if(admOrigB) admOrigB.innerHTML = '<option value="">Bloco Atual...</option>'; // <--- Adicionado aqui
 
             blocos.forEach(b => {
                 s.add(new Option(`Bloco ${b}`, b));
@@ -540,7 +577,7 @@ if (encontrada) {
                 if(arqBloco) arqBloco.add(new Option(`Bloco ${b}`, b)); 
                 if(pendB) pendB.add(new Option(`Bloco ${b}`, b));
                 if(histB) histB.add(new Option(`Bloco ${b}`, b));
-                if(admOrigB) admOrigB.add(new Option(`Bloco ${b}`, b));
+                if(admOrigB) admOrigB.add(new Option(`Bloco ${b}`, b)); // <--- Adicionado aqui
             });
         } catch (e) { console.error(e); }
     }
@@ -1067,7 +1104,91 @@ if (qrCodeUrl) {
         } catch(e) { alert("Erro de rede ao salvar alteração do morador."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
-    
+
+    // FUNÇÕES COMPLEMENTARES DO ADMINISTRADOR
+    async function admCadastrarFuncionario() {
+        const nome = document.getElementById("admNovoNome").value;
+        const login = document.getElementById("admNovoLogin").value;
+        const senha = document.getElementById("admNovaSenha").value;
+        const nivel = document.getElementById("admNovoNivel").value;
+
+        if(!nome || !login || !senha) return alert("Preencha todos os campos do funcionário!");
+
+        document.getElementById("loading").style.display = "block";
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ acao: "cadastrar_usuario", novoNome: nome, novoLogin: login, novaSenha: senha, novoNivel: nivel }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await res.json();
+            if(data.status === "Sucesso") {
+                alert("✅ " + data.msg);
+                document.getElementById("admNovoNome").value = "";
+                document.getElementById("admNovoLogin").value = "";
+                document.getElementById("admNovaSenha").value = "";
+            } else { alert("Erro: " + data.erro); }
+        } catch(e) { alert("Erro de rede ao salvar funcionário."); }
+        finally { document.getElementById("loading").style.display = "none"; }
+    }
+
+    function admAtualizarAptos() {
+        const b = document.getElementById("admOriginalBloco").value;
+        const s = document.getElementById("admOriginalApto");
+        s.innerHTML = '<option value="">Apto Atual...</option>';
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+    }
+
+    function admCarregarDadosForm() {
+        const b = document.getElementById("admOriginalBloco").value;
+        const a = document.getElementById("admOriginalApto").value;
+        const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(a));
+        
+        if(morador) {
+            document.getElementById("admNovoNomeMorador").value = morador.nome;
+            document.getElementById("admNovoTelMorador").value = morador.telefone;
+            document.getElementById("admNovoEmailMorador").value = morador.email || ""; 
+        }
+    }
+
+    async function admSalvarEdicaoMorador() {
+        const blocoOrig = document.getElementById("admOriginalBloco").value;
+        const aptoOrig = document.getElementById("admOriginalApto").value;
+        const novoNome = document.getElementById("admNovoNomeMorador").value;
+        const novoTel = document.getElementById("admNovoTelMorador").value;
+        const novoEmail = document.getElementById("admNovoEmailMorador").value;
+
+        if(!blocoOrig || !aptoOrig || !novoNome || !novoTel) return alert("Selecione o morador e preencha o Nome e Telefone!");
+
+        document.getElementById("loading").style.display = "block";
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    acao: "editar_morador",
+                    blocoOriginal: blocoOrig,
+                    aptoOriginal: aptoOrig,
+                    novoNome: novoNome,
+                    novoTelefone: novoTel,
+                    novoEmail: novoEmail
+                }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await res.json();
+            if(data.status === "Sucesso") {
+                alert("✅ " + data.msg);
+                await carregarMoradores(); 
+                const admBl = document.getElementById("admOriginalBloco").value;
+                const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+                const arqBloco = document.getElementById("admOriginalBloco");
+                arqBloco.innerHTML = '<option value="">Bloco Atual...</option>';
+                blocos.forEach(b => arqBloco.add(new Option(`Bloco ${b}`, b)));
+                document.getElementById("admOriginalBloco").value = admBl;
+                admAtualizarAptos();
+            } else { alert("Erro: " + data.erro); }
+        } catch(e) { alert("Erro de rede ao salvar alteração do morador."); }
+        finally { document.getElementById("loading").style.display = "none"; }
+    }
     function enviarChamado() {
         const bloco = document.getElementById("chamadoBloco").value;
         const apto = document.getElementById("chamadoApto").value;
