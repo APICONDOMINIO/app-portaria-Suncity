@@ -182,7 +182,7 @@
                 <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
             </div>
 
-            <!-- NOVA CAIXA: BUSCA NO ARQUIVO MORTO COM BLOCO E APTO -->
+            <!-- CAIXA: BUSCA NO ARQUIVO MORTO COM BLOCO E APTO -->
             <div style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cbd5e1;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1d3557;">🔍 Pesquisar em Histórico Antigo (Arquivo Morto):</p>
                 <div class="row">
@@ -199,42 +199,14 @@
             <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
             
             <div id="listaRelatorio" style="margin-top:15px;"></div>
-            <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #a8dadc;">
-                <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">🔑 Cadastrar Novo Funcionário (Portaria):</p>
-                <input type="text" id="admNovoNome" placeholder="Nome Completo do Porteiro">
-                <input type="text" id="admNovoLogin" placeholder="Usuário para Login">
-                <input type="text" id="admNovaSenha" placeholder="Senha de Acesso">
-                <select id="admNovoNivel">
-                    <option value="Porteiro">Nível: Porteiro</option>
-                    <option value="Administrador">Nível: Administrador / Zelador</option>
-                </select>
-                <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
-            </div>
-
-            <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #a8dadc;">
-                <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">📝 Editar Cadastro de Morador existente:</p>
-                <p style="margin:0 0 8px 0; font-size:12px; color:#666;">Selecione o Bloco e Apto atual para localizar e alterar os dados:</p>
-                <div class="row">
-                    <select id="admOriginalBloco" onchange="admAtualizarAptos()"><option value="">Bloco Atual...</option></select>
-                    <select id="admOriginalApto" onchange="admCarregarDadosForm()"><option value="">Apto Atual...</option></select>
-                </div>
-                <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-                <input type="text" id="admNovoNomeMorador" placeholder="Novo Nome do Morador">
-                <input type="text" id="admNovoTelMorador" placeholder="Novo Telefone (Ex: 5571982282769)">
-                <input type="text" id="admNovoEmailMorador" placeholder="Novo E-mail do Morador">
-                <button class="btn-primary" style="background:#e63946;" onclick="admSalvarEdicaoMorador()">Salvar Alterações do Morador</button>
-            </div>
         </div>
 
-        <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
-            
-            <div id="listaRelatorio" style="margin-top:15px;"></div>
-        </div>
-
+        <!-- ABA EXCLUSIVA GERENCIAR (PAINEL ADM) -->
         <div id="tabGerenciar" class="card tab-content">
             <h3>⚙️ Painel do Administrador</h3>
             <p style="font-size:13px; color:#666; text-align:center; margin-top:-10px;">Gestão de Acessos e Cadastros</p>
             
+            <!-- INTERFACE ADM: CADASTRAR FUNCIONÁRIO -->
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:15px; border: 1px solid #a8dadc;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">👤 Cadastrar Novo Funcionário:</p>
                 <input type="text" id="admNovoNome" placeholder="Nome Completo do Porteiro">
@@ -247,6 +219,7 @@
                 <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
             </div>
 
+            <!-- INTERFACE ADM: EDITAR DADOS DE MORADOR -->
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #a8dadc;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">📝 Editar Cadastro de Morador:</p>
                 <p style="margin:0 0 8px 0; font-size:12px; color:#666;">Localize o morador pelas coordenadas atuais:</p>
