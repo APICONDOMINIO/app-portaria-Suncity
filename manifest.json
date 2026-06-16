@@ -1,0 +1,16 @@
+{
+  "name": "Express Suncity Pro",
+  "short_name": "Suncity App",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1d3557",
+  "theme_color": "#1d3557",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo_suncity.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
