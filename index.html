@@ -1257,24 +1257,31 @@ function enviarChamado() {
         calcularPeriodoDashManual();
     }
 
-    function calcularPeriodoDashManual() {
+function calcularPeriodoDashManual() {
         const txtIn = document.getElementById("dashDataInicio").value;
         const txtFim = document.getElementById("dashDataFim").value;
         if(!txtIn || !txtFim) return alert("Por favor, selecione o período inicial e final!");
         
+        // Seta o início do dia do filtro e o minuto final do último dia
         const inicio = new Date(txtIn + "T00:00:00");
         const fim = new Date(txtFim + "T23:59:59");
 
         const recebidos = todasAsEncomendasDB.filter(enc => {
             if(!enc.dataHora) return false;
-            const partes = enc.dataHora.split(' ')[0].split('/');
+            // Remove espaços, vírgulas e pega apenas a parte da data (DD/MM/AAAA)
+            const dataLimpa = enc.dataHora.split(' ')[0].replace(',', '').trim();
+            const partes = dataLimpa.split('/');
+            if(partes.length < 3) return false;
+            // Monta o objeto de comparação no padrão internacional
             const dEnc = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
             return dEnc >= inicio && dEnc <= fim;
         }).length;
 
         const retirados = todasAsEncomendasDB.filter(enc => {
             if(!enc.dataSaida) return false;
-            const partes = enc.dataSaida.split(' ')[0].split('/');
+            const dataLimpa = enc.dataSaida.split(' ')[0].replace(',', '').trim();
+            const partes = dataLimpa.split('/');
+            if(partes.length < 3) return false;
             const dSai = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
             return dSai >= inicio && dSai <= fim;
         }).length;
