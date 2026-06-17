@@ -1017,8 +1017,9 @@
         finally { btnEmail.innerText = "✉️ Enviar para meu E-mail"; btnEmail.disabled = false; }
     }
 
-    // RECALIBRAÇÃO DO SENSOR: Garante o alinhamento perfeito do traço com o dedo no smartphone
-    // RECALIBRAÇÃO ATIVA DO SENSOR DE DESENHO
+    // =========================================================
+    // RECALIBRAÇÃO ATIVA DO SENSOR DE DESENHO E ASSINATURA
+    // =========================================================
     function getPos(e) {
         var localCanvas = document.getElementById('signaturePad');
         if (!localCanvas) return { x: 0, y: 0 };
@@ -1058,7 +1059,7 @@
     }
 
     function pararDesenho(e) { 
-        e.preventDefault(); 
+        if(e) e.preventDefault(); 
         isDrawing = false; 
         atualizarCliqueSessao(); 
     }
@@ -1075,7 +1076,6 @@
         document.getElementById("nomeRetirante").value = ""; 
         document.getElementById("modalAssinatura").style.display = "flex";
         
-        // Força o Canvas a capturar o tamanho físico e limpa resíduos
         setTimeout(() => { 
             var localCanvas = document.getElementById('signaturePad');
             if(localCanvas) {
@@ -1278,10 +1278,8 @@
     }
 
     // =========================================================
-    // MOTOR INTELIGENTE DE TIMEOUT COM ANTITRAVAMENTO DE ZAP (LOCALSTORAGE)
+    // CRONÔMETRO DE SEGURANÇA INTERNO (COMPLETAMENTE CORRIGIDO)
     // =========================================================
-    let appVisivel = true;
-
     const atualizarCliqueSessao = () => { 
         localStorage.setItem("suncityUltimoClique", new Date().getTime().toString()); 
     };
@@ -1291,17 +1289,15 @@
     window.addEventListener('scroll', atualizarCliqueSessao);
     window.addEventListener('keypress', atualizarCliqueSessao);
 
+    // VIGILANTE DEDICADO: Sempre que o porteiro voltar pro app, o sensor checa se o tempo expirou nos bastidores
     document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            appVisivel = false; 
-        } else {
-            appVisivel = true;  
-            atualizarCliqueSessao(); 
+        if (!document.hidden) {
+            verificarSessaoAtiva();
         }
     });
 
     function verificarSessaoAtiva() {
-        if(!porteiroLogado || !appVisivel) return; 
+        if(!porteiroLogado) return; 
         
         const ultimo = localStorage.getItem("suncityUltimoClique");
         if(ultimo) {
@@ -1317,6 +1313,7 @@
         }
     }
 
+    // Fica rodando em tempo real enquanto a tela estiver aberta na guarita
     setInterval(verificarSessaoAtiva, 5000);
 </script>
 </body>
