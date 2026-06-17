@@ -358,8 +358,8 @@
     let leitorCamera = null;
 
     window.onload = () => {
-        // Mudado para sessionStorage: fecha a aba, o login some!
-        let salvo = sessionStorage.getItem("suncityUser");
+        // CORREÇÃO: Volta para o localStorage para o celular não deslogar na troca rápida de telas
+        let salvo = localStorage.getItem("suncityUser");
         if(salvo) { 
             porteiroLogado = salvo; 
             iniciarSistema(); 
@@ -435,9 +435,9 @@
             
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
-                // Gravando na sessão temporária da aba
-                sessionStorage.setItem("suncityUser", porteiroLogado); 
-                sessionStorage.setItem("suncityNivel", data.nivel);
+                // CORREÇÃO: Salvando no localStorage estável
+                localStorage.setItem("suncityUser", porteiroLogado); 
+                localStorage.setItem("suncityNivel", data.nivel);
                 iniciarSistema();
             } else {
                 document.getElementById("msgLogin").innerText = data.erro;
@@ -452,8 +452,8 @@
 
     function fazerLogout() { 
         if(confirm("Deseja realmente encerrar a sessão e sair do app?")) {
-            sessionStorage.removeItem("suncityUser"); 
-            sessionStorage.removeItem("suncityNivel");
+            localStorage.removeItem("suncityUser"); 
+            localStorage.removeItem("suncityNivel");
             location.reload(); 
         }
     }
@@ -465,7 +465,7 @@
         
         atualizarCliqueSessao(); 
 
-        const nivel = sessionStorage.getItem("suncityNivel") || "";
+        const nivel = localStorage.getItem("suncityNivel") || "";
         const textoNivel = nivel.toLowerCase(); 
         
         if(textoNivel.includes("adm") || textoNivel.includes("gerente") || textoNivel.includes("deus")) {
@@ -657,7 +657,7 @@
             const raw = await response.json();
             
             if(raw.sistemaStatus === "Manutencao") {
-                const niv = sessionStorage.getItem("suncityNivel") || "";
+                const niv = localStorage.getItem("suncityNivel") || "";
                 if(niv.toLowerCase() !== "deus" && niv.toLowerCase() !== "superadmin") {
                     document.getElementById("telaManutencaoGeral").style.display = "flex";
                     return;
@@ -742,7 +742,7 @@
             let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
-        // UPGRADE OPERACIONAL: Abre o WhatsApp em nova aba imune a travamentos
+        // MODIFICAÇÃO: Abre o WhatsApp em nova aba imune a recarregamentos agressivos do celular
         window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
     }
 
@@ -797,7 +797,7 @@
 
     function limparFiltroHistorico() {
         document.getElementById("buscaHistorico").value = "";
-        if(document.getElementById("histBloco")) document.getElementById("histBloco").value = "";
+        if(document.getElementById("histBloco")) document.getElementById("histGlco").value = "";
         if(document.getElementById("histApto")) document.getElementById("histApto").innerHTML = '<option value="">Todos os Aptos</option>';
         aplicarFiltroHistorico();
     }
@@ -1235,6 +1235,11 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
+    // =========================================================
+    // MOTOR INTELIGENTE DE TIMEOUT COM ANTITRAVAMENTO DE ZAP (LOCALSTORAGE)
+    // =========================================================
+    let appVisivel = true;
+
     const atualizarCliqueSessao = () => { 
         localStorage.setItem("suncityUltimoClique", new Date().getTime().toString()); 
     };
@@ -1243,10 +1248,20 @@
     window.addEventListener('click', atualizarCliqueSessao);
     window.addEventListener('scroll', atualizarCliqueSessao);
     window.addEventListener('keypress', atualizarCliqueSessao);
-    window.addEventListener("focus", () => { verificarSessaoAtiva(); });
+
+    // CORREÇÃO DEFINDITIVA: Pausa a contagem quando abre o WhatsApp e reseta quando o porteiro volta
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            appVisivel = false; 
+        } else {
+            appVisivel = true;  
+            atualizarCliqueSessao(); 
+        }
+    });
 
     function verificarSessaoAtiva() {
-        if(!porteiroLogado) return;
+        if(!porteiroLogado || !appVisivel) return; 
+        
         const ultimo = localStorage.getItem("suncityUltimoClique");
         if(ultimo) {
             const minutos = (new Date().getTime() - parseInt(ultimo)) / 1000 / 60;
@@ -1260,5 +1275,8 @@
             }
         }
     }
-</script></body>
+
+    setInterval(verificarSessaoAtiva, 5000);
+</script>
+</body>
 </html>
