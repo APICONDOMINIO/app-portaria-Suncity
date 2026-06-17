@@ -676,7 +676,7 @@ if (encontrada) {
         }
     }
 
-    async function buscarPendentes() {
+async function buscarPendentes() {
         document.getElementById("loading").style.display = "block";
         try {
             const response = await fetch(API_URL);
@@ -684,8 +684,12 @@ if (encontrada) {
             pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
             
             aplicarFiltro(); 
-            aplicarFiltroHistorico(); // Carrega o histórico junto
+            aplicarFiltroHistorico(); 
             renderizarRelatorio();
+            
+            // INJEÇÃO CIRÚRGICA: Atualiza o placar de hoje assim que sincroniza os dados
+            calcularGiroHoje();
+            
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
@@ -1223,6 +1227,64 @@ if (qrCodeUrl) {
         if (!bloco || !apto || !just) { alert("Preencha todos os campos!"); return; }
         window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\nPorteiro: ${porteiroLogado}`)}`;
     }
+function enviarChamado() {
+        const bloco = document.getElementById("chamadoBloco").value;
+        const apto = document.getElementById("chamadoApto").value;
+        const just = document.getElementById("chamadoJustificativa").value;
+        if (!bloco || !apto || !just) return alert("Preencha tudo!");
+        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO: Bloco ${bloco} Ap ${apto} - ${just}\nPorteiro: ${porteiroLogado}`)}`;
+    }
+
+    // =========================================================
+    // NOVO MOTOR OPERACIONAL DO PAINEL DE INDICADORES
+    // =========================================================
+    function calcularGiroHoje() {
+        const hojeStr = new Date().toLocaleDateString('pt-BR');
+        const entradasHoje = todasAsEncomendasDB.filter(enc => enc.dataHora && enc.dataHora.startsWith(hojeStr)).length;
+        const saidasHoje = todasAsEncomendasDB.filter(enc => enc.dataSaida && enc.dataSaida.startsWith(hojeStr)).length;
+        
+        document.getElementById("dashHojeEntradas").innerText = entradasHoje;
+        document.getElementById("dashHojeSaidas").innerText = saidasHoje;
+    }
+
+    function filtrarPeriodoDash(dias) {
+        const fim = new Date(); 
+        const inicio = new Date();
+        inicio.setDate(fim.getDate() - dias);
+        
+        document.getElementById("dashDataInicio").value = inicio.toISOString().split('T')[0];
+        document.getElementById("dashDataFim").value = fim.toISOString().split('T')[0];
+        calcularPeriodoDashManual();
+    }
+
+    function calcularPeriodoDashManual() {
+        const txtIn = document.getElementById("dashDataInicio").value;
+        const txtFim = document.getElementById("dashDataFim").value;
+        if(!txtIn || !txtFim) return alert("Por favor, selecione o período inicial e final!");
+        
+        const inicio = new Date(txtIn + "T00:00:00");
+        const fim = new Date(txtFim + "T23:59:59");
+
+        const recebidos = todasAsEncomendasDB.filter(enc => {
+            if(!enc.dataHora) return false;
+            const partes = enc.dataHora.split(' ')[0].split('/');
+            const dEnc = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
+            return dEnc >= inicio && dEnc <= fim;
+        }).length;
+
+        const retirados = todasAsEncomendasDB.filter(enc => {
+            if(!enc.dataSaida) return false;
+            const partes = enc.dataSaida.split(' ')[0].split('/');
+            const dSai = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
+            return dSai >= inicio && dSai <= fim;
+        }).length;
+
+        document.getElementById("resDashEntradasPer").innerText = recebidos;
+        document.getElementById("resDashSaidasPer").innerText = retirados;
+    }
+</script>
+</body>
+</html>    
 </script>
 </body>
 </html>
