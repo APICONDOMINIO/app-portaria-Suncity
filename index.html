@@ -251,23 +251,7 @@
             
             <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Gerar PDF da Tela</button>
             <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
-            <!-- TABELA 1: RASTREABILIDADE OPERACIONAL (QUEM RECEBEU E QUEM ENTREGOU) -->
-            <div style="margin-top: 20px; overflow-x: auto;">
-                <h4 style="color: var(--primary); margin-bottom: 8px; font-size: 13px; font-weight: bold;">🕵️ Rastreabilidade de Operação</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; background: white; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
-                    <thead>
-                        <tr style="background: var(--primary); color: white;">
-                            <th style="padding: 8px;">Local / Pacote</th>
-                            <th style="padding: 8px;">Quem Recebeu</th>
-                            <th style="padding: 8px;">Quem Entregou</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabelaAuditoria">
-                        <tr><td colspan="3" style="padding: 12px; text-align: center; color: #64748b;">Aguardando filtros...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
+            
             <!-- TABELA 2: PLACAR DE PRODUTIVIDADE POR PORTEIRO -->
             <div style="margin-top: 25px; overflow-x: auto; margin-bottom: 15px;">
                 <h4 style="color: #457b9d; margin-bottom: 8px; font-size: 13px; font-weight: bold;">🏆 Produtividade por Funcionário</h4>
@@ -912,7 +896,7 @@ if (qrCodeUrl) {
         });
     }
 
-    function renderizarRelatorio() {
+function renderizarRelatorio() {
         const termo = document.getElementById("relMorador").value.toLowerCase();
         const fBloco = document.getElementById("relBloco").value;
         const fApto = document.getElementById("relApto").value.toLowerCase();
@@ -930,32 +914,19 @@ if (qrCodeUrl) {
         document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length; 
 
         // ==========================================
-        // PROCESSAMENTO DAS NOVAS TABELAS ADM
+        // PROCESSAMENTO EXCLUSIVO DO PLACAR DE PRODUTIVIDADE
         // ==========================================
-        const tabelaAuditoria = document.getElementById("corpoTabelaAuditoria");
         const tabelaProd = document.getElementById("corpoTabelaProdutividade");
-        
-        tabelaAuditoria.innerHTML = "";
         tabelaProd.innerHTML = "";
         let placar = {};
 
         if(filtradas.length === 0) {
-            tabelaAuditoria.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhuma correspondência encontrada</td></tr>`;
             tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhum funcionário ativo no filtro</td></tr>`;
         } else {
-            // Varre os itens filtrados de trás para frente (mais recentes primeiro)
+            // Acumula as ações para o Placar de Produtividade
             filtradas.slice().reverse().forEach(enc => {
                 let pIn = enc.porteiroEntrada || "Sistema";
-                let pOut = (enc.status === "Entregue" || enc.status === "Arquivado") ? (enc.porteiroSaida || "Sistema") : `<span style="color:#b45309;font-weight:bold;">Pendente</span>`;
                 
-                // 1. Alimenta a Tabela de Rastreabilidade
-                tabelaAuditoria.innerHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding:8px;"><b>Bl ${enc.bloco} - Ap ${enc.apto}</b><br><span style="font-size:10px;color:#666;">${enc.descricao}</span></td>
-                    <td style="padding:8px;">${pIn}<br><span style="font-size:9px;color:#999;">${enc.dataHora ? enc.dataHora.split(' ')[0] : ""}</span></td>
-                    <td style="padding:8px;">${pOut}<br><span style="font-size:9px;color:#999;">${enc.dataSaida ? enc.dataSaida.split(' ')[0] : ""}</span></td>
-                </tr>`;
-
-                // 2. Acumula os dados para o Placar de Produtividade
                 if(!placar[pIn]) placar[pIn] = { ins: 0, outs: 0 };
                 placar[pIn].ins++;
 
@@ -966,7 +937,7 @@ if (qrCodeUrl) {
                 }
             });
 
-            // 3. Desenha a Tabela de Produtividade na tela
+            // Desenha a Tabela de Produtividade na tela
             Object.keys(placar).forEach(f => {
                 tabelaProd.innerHTML += `<tr style="border-bottom:1px solid #e2e8f0;">
                     <td style="padding:8px; font-weight:bold;">👤 ${f}</td>
@@ -976,7 +947,7 @@ if (qrCodeUrl) {
             });
         }
 
-        // Desenha a lista detalhada tradicional embaixo das tabelas
+        // Desenha a lista detalhada tradicional embaixo da tabela
         const lista = document.getElementById("listaRelatorio");
         lista.innerHTML = "";
 
