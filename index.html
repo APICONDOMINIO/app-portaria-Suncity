@@ -1018,9 +1018,11 @@
     }
 
     // RECALIBRAÇÃO DO SENSOR: Garante o alinhamento perfeito do traço com o dedo no smartphone
+    // RECALIBRAÇÃO ATIVA DO SENSOR DE DESENHO
     function getPos(e) {
-        if (!canvas) return { x: 0, y: 0 };
-        var rect = canvas.getBoundingClientRect();
+        var localCanvas = document.getElementById('signaturePad');
+        if (!localCanvas) return { x: 0, y: 0 };
+        var rect = localCanvas.getBoundingClientRect();
         var clientX = e.touches && e.touches[0] ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : e.clientX);
         var clientY = e.touches && e.touches[0] ? e.touches[0].clientY : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : e.clientY);
         return {
@@ -1030,23 +1032,29 @@
     }
 
     function iniciarDesenho(e) { 
-        if (!ctx) return;
+        var localCanvas = document.getElementById('signaturePad');
+        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
+        if (!localCtx) return;
+        
         e.preventDefault(); 
         isDrawing = true; 
         let pos = getPos(e); 
-        ctx.beginPath(); 
-        ctx.moveTo(pos.x, pos.y); 
+        localCtx.beginPath(); 
+        localCtx.moveTo(pos.x, pos.y); 
     }
 
     function desenhar(e) { 
-        if (!isDrawing || !ctx) return; 
+        var localCanvas = document.getElementById('signaturePad');
+        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
+        if (!isDrawing || !localCtx) return; 
+        
         e.preventDefault(); 
         let pos = getPos(e); 
-        ctx.lineWidth = 3; 
-        ctx.lineCap = 'round'; 
-        ctx.strokeStyle = '#1d3557';
-        ctx.lineTo(pos.x, pos.y); 
-        ctx.stroke(); 
+        localCtx.lineWidth = 3; 
+        localCtx.lineCap = 'round'; 
+        localCtx.strokeStyle = '#1d3557';
+        localCtx.lineTo(pos.x, pos.y); 
+        localCtx.stroke(); 
     }
 
     function pararDesenho(e) { 
@@ -1056,7 +1064,9 @@
     }
 
     function limparCanvas() { 
-        if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        var localCanvas = document.getElementById('signaturePad');
+        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
+        if(localCtx && localCanvas) localCtx.clearRect(0, 0, localCanvas.width, localCanvas.height); 
     }
 
     function abrirModalBaixa(id) {
@@ -1065,11 +1075,12 @@
         document.getElementById("nomeRetirante").value = ""; 
         document.getElementById("modalAssinatura").style.display = "flex";
         
-        // Força o Canvas a assumir o tamanho correto e limpa resíduos antigos
+        // Força o Canvas a capturar o tamanho físico e limpa resíduos
         setTimeout(() => { 
-            if(canvas) {
-                canvas.width = canvas.offsetWidth; 
-                canvas.height = canvas.offsetHeight; 
+            var localCanvas = document.getElementById('signaturePad');
+            if(localCanvas) {
+                localCanvas.width = localCanvas.offsetWidth; 
+                localCanvas.height = localCanvas.offsetHeight; 
                 limparCanvas();
             }
         }, 200);
@@ -1280,7 +1291,6 @@
     window.addEventListener('scroll', atualizarCliqueSessao);
     window.addEventListener('keypress', atualizarCliqueSessao);
 
-    // CORREÇÃO DEFINDITIVA: Pausa a contagem quando abre o WhatsApp e reseta quando o porteiro volta
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
             appVisivel = false; 
