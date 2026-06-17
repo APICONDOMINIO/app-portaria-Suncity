@@ -73,6 +73,12 @@
 </head>
 <body>
 
+<div id="telaManutencaoGeral" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e293b; z-index: 99999; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 20px; text-align: center;">
+    <span style="font-size: 50px;">⚠️</span>
+    <h2 style="color: #f1faee; margin-top: 15px; font-family: sans-serif;">Sistema em Manutenção</h2>
+    <p style="color: #cbd5e1; max-width: 320px; margin-top: 5px; font-size: 14px;">O aplicativo está passando por ajustes operacionais ou encontra-se temporariamente suspenso. Por favor, consulte o administrador.</p>
+</div>
+    
 <div class="container">
     <h2>📦 Express Suncity</h2>
 
@@ -291,6 +297,15 @@
         <div id="tabGerenciar" class="card tab-content">
             <h3>⚙️ Painel do Administrador</h3>
             <p style="font-size:13px; color:#666; text-align:center; margin-top:-10px;">Gestão de Acessos e Cadastros</p>
+
+            <div id="painelSuperAdmin" style="display: none; background: #1e293b; color: white; padding: 15px; border-radius: 8px; margin-top: 15px; margin-bottom:15px; border: 2px solid #e63946;">
+                <p style="margin:0 0 4px 0; font-weight:bold; font-size:14px; color:#e63946;">⚡ Painel de Controle Mestre (SuperAdmin):</p>
+                <p style="font-size: 11px; color: #cbd5e1; margin-bottom: 12px;">Bloqueio e interrupção remota imediata de todo o aplicativo.</p>
+                <div class="row">
+                    <button class="btn-danger" style="margin: 0; padding:10px;" onclick="alterarStatusSistema('Manutencao')">🔴 Ativar Manutenção</button>
+                    <button class="btn-primary" style="margin: 0; padding:10px; background: #25D366;" onclick="alterarStatusSistema('Liberado')">🟢 Liberar Sistema</button>
+                </div>
+            </div>
             
             <!-- INTERFACE ADM: CADASTRAR FUNCIONÁRIO -->
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:15px; border: 1px solid #a8dadc;">
