@@ -797,7 +797,7 @@
 
     function limparFiltroHistorico() {
         document.getElementById("buscaHistorico").value = "";
-        if(document.getElementById("histBloco")) document.getElementById("histGlco").value = "";
+        if(document.getElementById("histBloco")) document.getElementById("histBloco").value = "";
         if(document.getElementById("histApto")) document.getElementById("histApto").innerHTML = '<option value="">Todos os Aptos</option>';
         aplicarFiltroHistorico();
     }
@@ -1074,7 +1074,7 @@
             fecharModal(); 
             alert("Baixa confirmada!");
             if(pacoteFaturado) {
-                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
+                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.name}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
             await buscarPendentes(); 
