@@ -929,6 +929,54 @@ if (qrCodeUrl) {
         document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
         document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length; 
 
+        // ==========================================
+        // PROCESSAMENTO DAS NOVAS TABELAS ADM
+        // ==========================================
+        const tabelaAuditoria = document.getElementById("corpoTabelaAuditoria");
+        const tabelaProd = document.getElementById("corpoTabelaProdutividade");
+        
+        tabelaAuditoria.innerHTML = "";
+        tabelaProd.innerHTML = "";
+        let placar = {};
+
+        if(filtradas.length === 0) {
+            tabelaAuditoria.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhuma correspondência encontrada</td></tr>`;
+            tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhum funcionário ativo no filtro</td></tr>`;
+        } else {
+            // Varre os itens filtrados de trás para frente (mais recentes primeiro)
+            filtradas.slice().reverse().forEach(enc => {
+                let pIn = enc.porteiroEntrada || "Sistema";
+                let pOut = (enc.status === "Entregue" || enc.status === "Arquivado") ? (enc.porteiroSaida || "Sistema") : `<span style="color:#b45309;font-weight:bold;">Pendente</span>`;
+                
+                // 1. Alimenta a Tabela de Rastreabilidade
+                tabelaAuditoria.innerHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding:8px;"><b>Bl ${enc.bloco} - Ap ${enc.apto}</b><br><span style="font-size:10px;color:#666;">${enc.descricao}</span></td>
+                    <td style="padding:8px;">${pIn}<br><span style="font-size:9px;color:#999;">${enc.dataHora ? enc.dataHora.split(' ')[0] : ""}</span></td>
+                    <td style="padding:8px;">${pOut}<br><span style="font-size:9px;color:#999;">${enc.dataSaida ? enc.dataSaida.split(' ')[0] : ""}</span></td>
+                </tr>`;
+
+                // 2. Acumula os dados para o Placar de Produtividade
+                if(!placar[pIn]) placar[pIn] = { ins: 0, outs: 0 };
+                placar[pIn].ins++;
+
+                if(enc.status === "Entregue" || enc.status === "Arquivado") {
+                    let sNome = enc.porteiroSaida || "Sistema";
+                    if(!placar[sNome]) placar[sNome] = { ins: 0, outs: 0 };
+                    placar[sNome].outs++;
+                }
+            });
+
+            // 3. Desenha a Tabela de Produtividade na tela
+            Object.keys(placar).forEach(f => {
+                tabelaProd.innerHTML += `<tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:8px; font-weight:bold;">👤 ${f}</td>
+                    <td style="padding:8px; text-align:center; color:#166534; font-weight:bold;">${placar[f].ins}</td>
+                    <td style="padding:8px; text-align:center; color:#991b1b; font-weight:bold;">${placar[f].outs}</td>
+                </tr>`;
+            });
+        }
+
+        // Desenha a lista detalhada tradicional embaixo das tabelas
         const lista = document.getElementById("listaRelatorio");
         lista.innerHTML = "";
 
