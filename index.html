@@ -89,16 +89,66 @@
         </div>
 
         <div class="nav-bottom">
-            <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
-            <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
-            <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
-            <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📊<span>Relatórios</span></button>
-            <button class="nav-item admin-only" id="menuGerenciar" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
-            <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
-        </div>
+    <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
+    <!-- NOVO BOTÃO DE ACESSO GERAL -->
+    <button class="nav-item" onclick="mudarAba('tabIndicadores', this)">📊<span>Indicadores</span></button>
+    
+    <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
+    <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
+    <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📈<span>Relatórios</span></button>
+    <button class="nav-item admin-only" id="menuGerenciar" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
+    <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
+</div>
 
         <p id="loading">Sincronizando... ⏳</p>
+        <!-- ABA INDICADORES (LIVRE PARA TODOS OS PERFIS) -->
+<div id="tabIndicadores" class="card tab-content">
+    <h3 style="margin-top:0; text-align:center; color:var(--primary);">📊 Painel Operacional</h3>
+    
+    <!-- CONTADORES FIXOS DE HOJE -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 8px;">📌 Movimentação de Hoje</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="background: #f0fdf4; color: #166534; border-left: 3px solid #2a9d8f; padding: 10px; border-radius: 6px; text-align: center;">
+                <span id="dashHojeEntradas" style="display: block; font-size: 1.6rem; font-weight: 800;">0</span>Entradas
+            </div>
+            <div style="background: #fef2f2; color: #991b1b; border-left: 3px solid #e63946; padding: 10px; border-radius: 6px; text-align: center;">
+                <span id="dashHojeSaidas" style="display: block; font-size: 1.6rem; font-weight: 800;">0</span>Retiradas
+            </div>
+        </div>
+    </div>
 
+    <!-- BUSCA POR PERÍODO -->
+    <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px;">
+        <div style="font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🔍 Auditoria por Período</div>
+        
+        <!-- Atalhos Rápidos -->
+        <div class="row" style="margin-bottom: 10px;">
+            <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(7)">7 Dias</button>
+            <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(15)">15 Dias</button>
+            <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(30)">30 Dias</button>
+        </div>
+
+        <!-- Filtro Manual -->
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 11px; font-weight:bold; color:#475569;">Data Início:</label>
+            <input type="date" id="dashDataInicio" style="padding: 8px; margin: 4px 0;">
+            <label style="font-size: 11px; font-weight:bold; color:#475569;">Data Fim:</label>
+            <input type="date" id="dashDataFim" style="padding: 8px; margin: 4px 0;">
+            <button class="btn-primary" style="margin-top: 8px;" onclick="calcularPeriodoDashManual()">Consultar Intervalo</button>
+        </div>
+
+        <!-- Resultados do Período -->
+        <div id="resultadoPeriodoDash" style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #cbd5e1;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px dashed #e2e8f0;">
+                <span>📥 Total Recebido:</span> <strong id="resDashEntradasPer">0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem;">
+                <span>📤 Total Retirado:</span> <strong id="resDashSaidasPer" style="color: #e63946;">0</strong>
+            </div>
+        </div>
+    </div>
+</div>
         <!-- ABA RECEBER -->
         <div id="tabReceber" class="card tab-content active">
             <h3>Nova Encomenda</h3>
