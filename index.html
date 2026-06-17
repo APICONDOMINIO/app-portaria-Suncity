@@ -769,15 +769,22 @@ async function registrarEncomenda() {
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    function enviarWhatsApp(telefone, nome, descricao, bloco, apto, qrCodeUrl = "") {
-        // Texto limpo em negrito para rodar em qualquer aparelho sem quebrar caracteres
+    function enviarWhatsApp(telefone, nome, descricao, bloco, apto, qrCodeUrl = "", id = "") {
+        // Se houver um ID válido, registra o clique na memória interna do aparelho
+        if(id) {
+            let cont = parseInt(localStorage.getItem("zap_" + id) || "0");
+            localStorage.setItem("zap_" + id, (cont + 1).toString());
+            // Atualiza a lista da tela imediatamente para mudar o texto do botão
+            aplicarFiltro();
+        }
+
         let mensagem = `*[ NOTIFICACAO SUNCITY ]*\n\nOlá *${nome}*!\nUma nova encomenda aguarda por você na portaria:\n\n*Pacote:* ${descricao}\n*Local:* Bloco ${bloco} - Apto ${apto}\n\nPor favor, retire assim que possível.\n*Registrado por:* ${porteiroLogado}`;
         
-if (qrCodeUrl) {
+        if (qrCodeUrl) {
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrCodeUrl}`;
         } else {
             let idGerado = Date.now().toString();
-            let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=P" + idGerado;
+            let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
@@ -890,6 +897,10 @@ if (qrCodeUrl) {
             const div = document.createElement("div");
             div.className = "encomenda-item";
             
+            // Busca na memória local se este pacote específico já teve cliques de WhatsApp
+            let numAvisos = localStorage.getItem("zap_" + enc.id) || "0";
+            let txtBotaoZap = numAvisos === "0" ? "Avisar no WhatsApp" : `Avisar no WhatsApp (${numAvisos}x)`;
+            
             let qrCodeDinamico = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + enc.id;
             
             div.innerHTML = `
@@ -897,7 +908,8 @@ if (qrCodeUrl) {
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
-                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}', '${qrCodeDinamico}')">Avisar no WhatsApp</button>
+                <!-- Alterado para passar o QR Code Dinâmico e o ID do pacote no final -->
+                <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}', '${qrCodeDinamico}', '${enc.id}')">${txtBotaoZap}</button>
                 <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">✅ Entregar / Assinar</button>
             `;
             lista.appendChild(div);
