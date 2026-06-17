@@ -61,6 +61,14 @@
             .tabela-pdf th { background: #f2f2f2; }
             h2.print-title { text-align: center; color: #1d3557; margin-bottom: 5px; }
         }
+        .encomenda-item.envelhecido-medio { border-left-color: #e9c46a; background: #fffbeb; border: 1px solid #fef3c7; border-left-width: 6px; }
+        .encomenda-item.envelhecido-critico { border-left-color: #e63946; background: #fef2f2; border: 1px solid #fee2e2; border-left-width: 6px; animation: alert-piscante 2s infinite; }
+
+@keyframes alert-piscante { 
+    0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4); } 
+    70% { box-shadow: 0 0 0 6px rgba(230, 57, 70, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); } 
+}
     </style>
 </head>
 <body>
@@ -897,10 +905,34 @@ async function registrarEncomenda() {
             const div = document.createElement("div");
             div.className = "encomenda-item";
             
-            // Busca na memória local se este pacote específico já teve cliques de WhatsApp
+            // MOTOR DE CALCULO DE ENCOMENDAS ENVELHECIDAS
+            if(enc.dataHora) {
+                try {
+                    // Limpa a string da data para garantir o formato correto (DD/MM/AAAA)
+                    const dataLimpa = enc.dataHora.split(' ')[0].replace(',', '').trim();
+                    const p = dataLimpa.split('/');
+                    if(p.length === 3) {
+                        const dataEntrada = new Date(p[2], p[1] - 1, p[0]);
+                        const dataHoje = new Date();
+                        // Zera as horas para comparar apenas os dias corridos
+                        dataHoje.setHours(0,0,0,0);
+                        dataEntrada.setHours(0,0,0,0);
+                        
+                        const diffTempo = dataHoje.getTime() - dataEntrada.getTime();
+                        const diffDias = Math.floor(diffTempo / (1000 * 60 * 60 * 24));
+                        
+                        // Aplica as classes CSS dependendo do tempo de guarita
+                        if(diffDias >= 10) {
+                            div.className += " envelhecido-critico";
+                        } else if(diffDias >= 5) {
+                            div.className += " envelhecido-medio";
+                        }
+                    }
+                } catch(err) { console.error("Erro ao calcular idade do pacote", err); }
+            }
+            
             let numAvisos = localStorage.getItem("zap_" + enc.id) || "0";
             let txtBotaoZap = numAvisos === "0" ? "Avisar no WhatsApp" : `Avisar no WhatsApp (${numAvisos}x)`;
-            
             let qrCodeDinamico = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + enc.id;
             
             div.innerHTML = `
@@ -908,7 +940,6 @@ async function registrarEncomenda() {
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small style="color:#666; font-weight:bold;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#666;">Registrado por: ${enc.porteiroEntrada || 'Sistema'}</small><br>
-                <!-- Alterado para passar o QR Code Dinâmico e o ID do pacote no final -->
                 <button class="btn-whats" onclick="enviarWhatsApp('${enc.telefone}', '${enc.nome}', '${enc.descricao}', '${enc.bloco}', '${enc.apto}', '${qrCodeDinamico}', '${enc.id}')">${txtBotaoZap}</button>
                 <button class="btn-danger" style="margin-top:5px;" onclick="abrirModalBaixa('${enc.id}')">✅ Entregar / Assinar</button>
             `;
