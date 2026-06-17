@@ -268,7 +268,15 @@
                     </tbody>
                 </table>
             </div>
-            <div id="listaRelatorio" style="margin-top:15px;"></div>
+            <!-- PAINEL RETRÁTIL DA LISTA DETALHADA -->
+            <details style="margin-top: 25px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; overflow: hidden;">
+                <summary style="padding: 12px; font-size: 13px; font-weight: bold; color: var(--primary); cursor: pointer; background: #f1f5f9; user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
+                    📋 Ver Lista Detalhada de Encomendas
+                    <span style="font-size: 11px; color: #64748b;">(Clique para Expandir)</span>
+                </summary>
+                <div id="listaRelatorio" style="padding: 12px; background: var(--bg);"></div>
+            </details>
+        </div>
         </div>
 
         <!-- ABA EXCLUSIVA GERENCIAR (PAINEL ADM) -->
