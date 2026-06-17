@@ -31,13 +31,12 @@
         
         .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .nav-buttons button { margin: 0; padding: 12px; font-size: 14px; }
-      /* ESTILO APP NATIVO - BOTTOM NAV (CORRIGIDA E DUPLA LINHA) */
         .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--primary); display: flex; justify-content: space-around; align-items: flex-end; padding: 8px 2px; box-shadow: 0 -2px 12px rgba(0,0,0,0.3); z-index: 999; box-sizing: border-box; }
         .nav-item { color: #a5a5a5; text-decoration: none; font-size: 22px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border: none; background: none; flex: 1; padding: 0; letter-spacing: -0.3px; }
         .nav-item.active { color: white; font-weight: bold; }
         .nav-item span { font-size: 10px; line-height: 1.1; margin-top: 4px; text-align: center; display: block; }
         body { padding-bottom: 85px; }
-        .admin-only { display: none; } /* Esconde abas de adm por padrão */
+        .admin-only { display: none; }
         .user-bar { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
         .user-bar span { font-weight: bold; color: var(--primary); }
 
@@ -64,11 +63,11 @@
         .encomenda-item.envelhecido-medio { border-left-color: #e9c46a; background: #fffbeb; border: 1px solid #fef3c7; border-left-width: 6px; }
         .encomenda-item.envelhecido-critico { border-left-color: #e63946; background: #fef2f2; border: 1px solid #fee2e2; border-left-width: 6px; animation: alert-piscante 2s infinite; }
 
-@keyframes alert-piscante { 
-    0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4); } 
-    70% { box-shadow: 0 0 0 6px rgba(230, 57, 70, 0); } 
-    100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); } 
-}
+        @keyframes alert-piscante { 
+            0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4); } 
+            70% { box-shadow: 0 0 0 6px rgba(230, 57, 70, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); } 
+        }
     </style>
 </head>
 <body>
@@ -76,7 +75,7 @@
 <div id="telaManutencaoGeral" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e293b; z-index: 99999; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 20px; text-align: center;">
     <span style="font-size: 50px;">⚠️</span>
     <h2 style="color: #f1faee; margin-top: 15px; font-family: sans-serif;">Sistema em Manutenção</h2>
-    <p style="color: #cbd5e1; max-width: 320px; margin-top: 5px; font-size: 14px;">O aplicativo está passando por ajustes operacionais ou encontra-se temporariamente suspenso. Por favor, consulte o administrador.</p>
+    <p style="color: #cbd5e1; max-width: 320px; margin-top: 5px; font-size: 14px;">O aplicativo está passando por adjustments operacionais ou encontra-se temporariamente suspenso. Por favor, consulte o administrador.</p>
 </div>
     
 <div class="container">
@@ -96,6 +95,7 @@
             <img src="logo_suncity.png" alt="Suncity Residential" style="max-width: 140px; height: auto; opacity: 0.95;">
         </div>
     </div>
+
     <div id="appContainer">
         <div class="user-bar">
             <div>Porteiro: <span id="nomePorteiroAtivo"></span></div>
@@ -103,74 +103,63 @@
         </div>
 
         <div class="nav-bottom">
-    <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
-    <!-- NOVO BOTÃO DE ACESSO GERAL -->
-    <button class="nav-item" onclick="mudarAba('tabIndicadores', this)">📊<span>Indicadores</span></button>
-    
-    <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
-    <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
-    <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📈<span>Relatórios</span></button>
-    <button class="nav-item admin-only" id="menuGerenciar" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
-    <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
-</div>
+            <button class="nav-item active" onclick="mudarAba('tabReceber', this)">📥<span>Receber</span></button>
+            <button class="nav-item" onclick="mudarAba('tabIndicadores', this)">📊<span>Indicadores</span></button>
+            <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
+            <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
+            <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📈<span>Relatórios</span></button>
+            <button class="nav-item admin-only" id="menuGerenciar" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
+            <button class="nav-item" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
+        </div>
 
         <p id="loading">Sincronizando... ⏳</p>
-        <!-- ABA INDICADORES (LIVRE PARA TODOS OS PERFIS) -->
-<div id="tabIndicadores" class="card tab-content">
-    <h3 style="margin-top:0; text-align:center; color:var(--primary);">📊 Painel Operacional</h3>
-    
-    <!-- CONTADORES FIXOS DE HOJE -->
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
-        <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 8px;">📌 Movimentação de Hoje</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div style="background: #f0fdf4; color: #166534; border-left: 3px solid #2a9d8f; padding: 10px; border-radius: 6px; text-align: center;">
-                <span id="dashHojeEntradas" style="display: block; font-size: 1.6rem; font-weight: 800;">0</span>Entradas
-            </div>
-            <div style="background: #fef2f2; color: #991b1b; border-left: 3px solid #e63946; padding: 10px; border-radius: 6px; text-align: center;">
-                <span id="dashHojeSaidas" style="display: block; font-size: 1.6rem; font-weight: 800;">0</span>Retiradas
-            </div>
-        </div>
-    </div>
 
-    <!-- BUSCA POR PERÍODO -->
-    <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px;">
-        <div style="font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🔍 Auditoria por Período</div>
-        
-        <!-- Atalhos Rápidos -->
-        <div class="row" style="margin-bottom: 10px;">
-            <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(7)">7 Dias</button>
-            <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(15)">15 Dias</button>
-            <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(30)">30 Dias</button>
+        <div id="tabIndicadores" class="card tab-content">
+            <h3 style="margin-top:0; text-align:center; color:var(--primary);">📊 Painel Operacional</h3>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #64748b; margin-bottom: 8px;">📌 Movimentação de Hoje</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="background: #f0fdf4; color: #166534; border-left: 3px solid #2a9d8f; padding: 10px; border-radius: 6px; text-align: center;">
+                        <span id="dashHojeEntradas" style="display: block; font-size: 1.6rem; font-weight: 800;">0</span>Entradas
+                    </div>
+                    <div style="background: #fef2f2; color: #991b1b; border-left: 3px solid #e63946; padding: 10px; border-radius: 6px; text-align: center;">
+                        <span id="dashHojeSaidas" style="display: block; font-size: 1.6rem; font-weight: 800;">0</span>Retiradas
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px;">
+                <div style="font-size: 0.85rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">🔍 Auditoria por Período</div>
+                <div class="row" style="margin-bottom: 10px;">
+                    <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(7)">7 Dias</button>
+                    <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(15)">15 Dias</button>
+                    <button class="btn-secondary" style="padding: 8px; font-size: 13px;" onclick="filtrarPeriodoDash(30)">30 Dias</button>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; font-weight:bold; color:#475569;">Data Início:</label>
+                    <input type="date" id="dashDataInicio" style="padding: 8px; margin: 4px 0;">
+                    <label style="font-size: 11px; font-weight:bold; color:#475569;">Data Fim:</label>
+                    <input type="date" id="dashDataFim" style="padding: 8px; margin: 4px 0;">
+                    <button class="btn-primary" style="margin-top: 8px;" onclick="calcularPeriodoDashManual()">Consultar Intervalo</button>
+                </div>
+                <div id="resultadoPeriodoDash" style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #cbd5e1;">
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px dashed #e2e8f0;">
+                        <span>📥 Total Recebido:</span> <strong id="resDashEntradasPer">0</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem;">
+                        <span>📤 Total Retirado:</span> <strong id="resDashSaidasPer" style="color: #e63946;">0</strong>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Filtro Manual -->
-        <div style="margin-bottom: 10px;">
-            <label style="font-size: 11px; font-weight:bold; color:#475569;">Data Início:</label>
-            <input type="date" id="dashDataInicio" style="padding: 8px; margin: 4px 0;">
-            <label style="font-size: 11px; font-weight:bold; color:#475569;">Data Fim:</label>
-            <input type="date" id="dashDataFim" style="padding: 8px; margin: 4px 0;">
-            <button class="btn-primary" style="margin-top: 8px;" onclick="calcularPeriodoDashManual()">Consultar Intervalo</button>
-        </div>
-
-        <!-- Resultados do Período -->
-        <div id="resultadoPeriodoDash" style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #cbd5e1;">
-            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px dashed #e2e8f0;">
-                <span>📥 Total Recebido:</span> <strong id="resDashEntradasPer">0</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem;">
-                <span>📤 Total Retirado:</span> <strong id="resDashSaidasPer" style="color: #e63946;">0</strong>
-            </div>
-        </div>
-    </div>
-</div>
-        <!-- ABA RECEBER -->
         <div id="tabReceber" class="card tab-content active">
             <h3>Nova Encomenda</h3>
             <div class="row">
                 <select id="blocoSelect" onchange="atualizarAptos()"><option value="">Bloco...</option></select>
                 <select id="aptoSelect"><option value="">Apto...</option></select>
             </div>
-           <select id="descInput">
+            <select id="descInput">
                 <option value="">Tipo de pacote...</option>
                 <option value="Mercado Livre">Mercado Livre</option>
                 <option value="Shopee">Shopee</option>
@@ -178,25 +167,20 @@
                 <option value="Detran">Detran</option>
                 <option value="Outros">Outros</option>
             </select>
-            
             <div class="row">
                 <input type="text" id="codigoRastreio" placeholder="Identificador / Cód. Rastreio (Opcional)">
                 <button class="btn-secondary" style="width: 60px; padding: 0; font-size: 22px; display: flex; align-items: center; justify-content: center;" onclick="abrirCamera()">📷</button>
             </div>
-            
             <div id="areaCamera" style="display:none; width: 100%; border: 2px dashed var(--primary); border-radius: 6px; overflow: hidden; margin: 8px 0;"></div>
             <button class="btn-danger" id="btnFecharCamera" style="display:none; margin-bottom: 10px;" onclick="fecharCamera()">❌ Cancelar Leitura</button>
-
             <button class="btn-primary" onclick="registrarEncomenda()">Salvar Entrada</button>
         </div>
 
-       <!-- ABA PENDENTES -->
         <div id="tabPendentes" class="card tab-content">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="margin: 0;">A Entregar (<span id="contador">0</span>)</h3>
                 <button class="btn-secondary" style="width: auto; margin: 0; padding: 6px 12px; font-size: 14px;" onclick="abrirCameraRetirada()">📷 Retirada QR</button>
             </div>
-            
             <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtro Dinâmico</p>
                 <div class="row">
@@ -206,14 +190,11 @@
                 <input type="text" id="buscaGeral" placeholder="Nome ou pacote..." onkeyup="aplicarFiltro()" style="margin-top:8px;">
                 <button class="btn-secondary" onclick="limparFiltro()">Limpar Filtros</button>
             </div>
-
             <div id="listaPendentes"></div>
         </div>
 
-        <!-- ABA HISTÓRICO (Visível para o Zelador) -->
         <div id="tabHistorico" class="card tab-content">
             <h3>Histórico de Entregas</h3>
-            
             <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtrar Histórico</p>
                 <div class="row">
@@ -223,26 +204,22 @@
                 <input type="text" id="buscaHistorico" placeholder="Nome ou pacote..." onkeyup="aplicarFiltroHistorico()" style="margin-top:8px;">
                 <button class="btn-secondary" onclick="limparFiltroHistorico()" style="margin-top:8px;">Limpar Filtros</button>
             </div>
-
             <div id="listaHistorico"></div>
         </div>
-        <!-- ABA RELATÓRIOS -->
+
         <div id="tabRelatorio" class="card tab-content">
             <h3>Visão Analítica</h3>
             <div class="stats-box">
                 <div class="stat">Pendentes <span id="statPend">0</span></div>
                 <div class="stat" style="background:#25D366;">Entregues <span id="statEntreg">0</span></div>
             </div>
-            
             <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">Filtros de Relatório</p>
-                
                 <select id="relStatus" onchange="renderizarRelatorio()">
                     <option value="">Status: Todos</option>
                     <option value="Pendente">Pendentes</option>
                     <option value="Entregue">Entregues</option>
                 </select>
-
                 <div class="row">
                     <select id="relBloco" onchange="renderizarRelatorio()"><option value="">Todos Blocos</option></select>
                     <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
@@ -250,7 +227,6 @@
                 <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
             </div>
 
-            <!-- CAIXA: BUSCA NO ARQUIVO MORTO COM BLOCO E APTO -->
             <div style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cbd5e1;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1d3557;">🔍 Pesquisar em Histórico Antigo (Arquivo Morto):</p>
                 <div class="row">
@@ -266,7 +242,6 @@
             <button id="btnImprimir" class="btn-secondary" onclick="imprimirRelatorio()">🖨️ Gerar PDF da Tela</button>
             <button id="btnEmailRel" class="btn-primary" style="background:#1d3557; margin-top:10px;" onclick="enviarRelatorioEmail()">✉️ Enviar para meu E-mail</button>
             
-            <!-- TABELA 2: PLACAR DE PRODUTIVIDADE POR PORTEIRO -->
             <div style="margin-top: 25px; overflow-x: auto; margin-bottom: 15px;">
                 <h4 style="color: #457b9d; margin-bottom: 8px; font-size: 13px; font-weight: bold;">🏆 Produtividade por Funcionário</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; background: white; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
@@ -282,7 +257,7 @@
                     </tbody>
                 </table>
             </div>
-            <!-- PAINEL RETRÁTIL DA LISTA DETALHADA -->
+
             <details style="margin-top: 25px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; overflow: hidden;">
                 <summary style="padding: 12px; font-size: 13px; font-weight: bold; color: var(--primary); cursor: pointer; background: #f1f5f9; user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
                     📋 Ver Lista Detalhada de Encomendas
@@ -291,9 +266,7 @@
                 <div id="listaRelatorio" style="padding: 12px; background: var(--bg);"></div>
             </details>
         </div>
-        </div>
 
-        <!-- ABA EXCLUSIVA GERENCIAR (PAINEL ADM) -->
         <div id="tabGerenciar" class="card tab-content">
             <h3>⚙️ Painel do Administrador</h3>
             <p style="font-size:13px; color:#666; text-align:center; margin-top:-10px;">Gestão de Acessos e Cadastros</p>
@@ -307,7 +280,6 @@
                 </div>
             </div>
             
-            <!-- INTERFACE ADM: CADASTRAR FUNCIONÁRIO -->
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:15px; border: 1px solid #a8dadc;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">👤 Cadastrar Novo Funcionário:</p>
                 <input type="text" id="admNovoNome" placeholder="Nome Completo do Porteiro">
@@ -320,7 +292,6 @@
                 <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
             </div>
 
-            <!-- INTERFACE ADM: EDITAR DADOS DE MORADOR -->
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #a8dadc;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">📝 Editar Cadastro de Morador:</p>
                 <p style="margin:0 0 8px 0; font-size:12px; color:#666;">Localize o morador pelas coordenadas atuais:</p>
@@ -335,6 +306,7 @@
                 <button class="btn-primary" style="background:#e63946;" onclick="admSalvarEdicaoMorador()">Salvar Alterações do Morador</button>
             </div>
         </div>
+
         <div id="tabChamado" class="card tab-content">
             <h3>Atualizar Cadastro</h3>
             <div class="row">
@@ -363,7 +335,6 @@
     </div>
 </div>
 
-<!-- NOVO POPUP PARA VER A FOTO DA ASSINATURA -->
 <div id="modalVerAssinatura" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1005; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
     <div class="modal-content" style="text-align: center;">
         <h3 style="margin-top:0;">Comprovante</h3>
@@ -375,9 +346,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // COLE SUA NOVA URL AQUI DENTRO DAS ASPAS
-    // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycby4Ed5aZfBa-eudf4jp4H5guaJt80PgX2YidRZwmsbUtvZVhwdx5yDDwZW9qR30VyG92Q/exec"; 
     const SEU_WHATSAPP = "5571982282769";
 
@@ -387,22 +355,7 @@
     let porteiroLogado = "";
     let idEmBaixa = null;
     let encomendaSelecionada = null; 
-
-    let ultimaAtividade = Date.now();
-    const resetarTimer = () => { ultimaAtividade = Date.now(); };
-    window.addEventListener('touchstart', resetarTimer);
-    window.addEventListener('click', resetarTimer);
-    window.addEventListener('scroll', resetarTimer);
-    window.addEventListener('keypress', resetarTimer);
-
-   setInterval(() => {
-        if(porteiroLogado && (Date.now() - ultimaAtividade > 5 * 60 * 1000)) {
-            alert("A sessão expirou por inatividade de 5 minutos.");
-            localStorage.removeItem("suncityUser"); 
-            localStorage.removeItem("suncityNivel");
-            location.reload(); 
-        }
-    }, 60000); 
+    let leitorCamera = null;
 
     window.onload = () => {
         let salvo = localStorage.getItem("suncityUser");
@@ -419,34 +372,29 @@
         const icone = document.getElementById("toggleSenha");
         if (input.type === "password") {
             input.type = "text";
-            icone.innerText = "🙈"; // Muda o ícone quando a senha está visível
+            icone.innerText = "🙈";
         } else {
             input.type = "password";
             icone.innerText = "👁️";
         }
     }
-// CONVERTE O LINK DO DRIVE EM IMAGEM DIRETA E ABRE O POPUP
+
     async function visualizarAssinatura(url) {
         const preview = document.getElementById('imgAssinaturaPreview');
         const modal = document.getElementById('modalVerAssinatura');
-        
-        // 1. Abre o modal e mostra um "Carregando"
         preview.src = ""; 
         preview.alt = "Carregando assinatura... ⏳";
         modal.style.display = 'flex';
 
         try {
-            // 2. Extrai o ID do arquivo do link do Drive
             let fileId = "";
             if (url.includes("/file/d/")) {
                 fileId = url.split("/file/d/")[1].split("/")[0];
             } else if (url.includes("id=")) {
                 fileId = url.split("id=")[1].split("&")[0];
             }
-
             if (!fileId) throw new Error("ID não encontrado");
 
-            // 3. Chama o Cérebro para pegar a imagem pura (Base64)
             const response = await fetch(API_URL + "?acao=get_assinatura&id=" + fileId);
             const base64Data = await response.text();
 
@@ -454,7 +402,6 @@
                 alert("Não foi possível carregar a imagem. Verifique se o arquivo ainda existe no Drive.");
                 fecharModalVis();
             } else {
-                // 4. Exibe a imagem com sucesso
                 preview.src = "data:image/png;base64," + base64Data;
                 preview.alt = "Assinatura";
             }
@@ -463,9 +410,10 @@
             fecharModalVis();
         }
     }
+
     function fecharModalVis() {
         document.getElementById('modalVerAssinatura').style.display = 'none';
-        document.getElementById('imgAssinaturaPreview').src = ""; // Limpa a foto
+        document.getElementById('imgAssinaturaPreview').src = "";
     }
     
     async function fazerLogin() {
@@ -498,7 +446,7 @@
         } finally { 
             document.getElementById("loginContainer").style.opacity = "1"; 
         }
-    } // <--- ESTA É A CHAVE QUE FALTAVA!
+    }
 
     function fazerLogout() { 
         if(confirm("Deseja realmente encerrar a sessão e sair do app?")) {
@@ -512,94 +460,85 @@
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
-        ultimaAtividade = Date.now(); 
-
-       // Controle de Nível de Acesso (Flexível para adm, Admin, Administrador)
-        const nivel = localStorage.getItem("suncityNivel") || "";
-        const textoNivel = nivel.toLowerCase(); // Converte tudo para minúsculo para comparar
         
-        if(textoNivel.includes("adm") || textoNivel.includes("gerente")) {
+        atualizarCliqueSessao(); 
+
+        const nivel = localStorage.getItem("suncityNivel") || "";
+        const textoNivel = nivel.toLowerCase(); 
+        
+        if(textoNivel.includes("adm") || textoNivel.includes("gerente") || textoNivel.includes("deus")) {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
         } else {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         }
         
+        if(textoNivel === "deus" || textoNivel === "superadmin") {
+            document.getElementById("painelSuperAdmin").style.display = "block";
+        }
+        
         await carregarMoradores();
         await buscarPendentes();
     }
-// ==========================================
-    // LEITOR DE RETIRADA RÁPIDA POR QR CODE
-    // ==========================================
-async function abrirCameraRetirada() {
-    const area = document.getElementById("areaCamera");
-    const btnFechar = document.getElementById("btnFecharCamera");
-    
-    document.getElementById("tabReceber").classList.add("active");
-    area.style.display = "block";
-    btnFechar.style.display = "block";
 
-    if (leitorCamera) {
-        try { await leitorCamera.stop(); } catch(e){}
-        leitorCamera = null;
-    }
+    async function abrirCameraRetirada() {
+        const area = document.getElementById("areaCamera");
+        const btnFechar = document.getElementById("btnFecharCamera");
+        
+        document.getElementById("tabReceber").classList.add("active");
+        area.style.display = "block";
+        btnFechar.style.display = "block";
 
-    leitorCamera = new Html5Qrcode("areaCamera");
+        if (leitorCamera) {
+            try { await leitorCamera.stop(); } catch(e){}
+            leitorCamera = null;
+        }
 
-    leitorCamera.start(
-        { facingMode: "environment" },
-        { fps: 15, qrbox: { width: 200, height: 200 } },
-        (idLido) => {
-            if(leitorCamera) leitorCamera.stop().then(() => {
-                document.getElementById("areaCamera").style.display = "none";
-                document.getElementById("btnFecharCamera").style.display = "none";
-            }).catch(e => console.log(e));
+        leitorCamera = new Html5Qrcode("areaCamera");
 
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById("tabPendentes").classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
-            
-            // 1. Definição única da variável (Fim do bug do Login)
-            let codigoLimpo = String(idLido).trim();
-            
-            // 2. BUSCA MULTICRITÉRIO (ID aproximado + Bloco + Apto)
-            // Blindagem total contra arredondamentos do Google Sheets
-            const encontrada = pendentesDB.find(enc => {
-                let idCortadoBanco = String(enc.id).trim().substring(0, 7);
-                let idCortadoCamer = codigoLimpo.substring(0, 7);
+        leitorCamera.start(
+            { facingMode: "environment" },
+            { fps: 15, qrbox: { width: 200, height: 200 } },
+            (idLido) => {
+                if(leitorCamera) leitorCamera.stop().then(() => {
+                    document.getElementById("areaCamera").style.display = "none";
+                    document.getElementById("btnFecharCamera").style.display = "none";
+                }).catch(e => console.log(e));
+
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.getElementById("tabPendentes").classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelector("button[onclick*='tabPendentes']").classList.add('active');
                 
-                // O sistema valida se o início do tempo bate E se o pacote pertence ao mesmo bloco/apto
-                return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
-            });
-            
-if (encontrada) {
-                // Descobre qual variação de nome foi usada para Bloco e Apartamento na planilha
-                let blocoIdentificado = encontrada.bloco || encontrada.Bloco || encontrada.BLOCO || 'N/A';
-                let aptoIdentificado = encontrada.apartamento || encontrada.Apartamento || encontrada.apto || encontrada.Apto || encontrada.APTO || 'N/A';
-
-                // Monta o alerta com os dados identificados
-                alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nBloco: ${blocoIdentificado}\nApartamento: ${aptoIdentificado}\nPacote: ${encontrada.descricao}`);
+                let codigoLimpo = String(idLido).trim();
                 
-                abrirModalBaixa(encontrada.id); 
-            } else {
-                // SE NÃO ACHOU NOS PENDENTES, PROCURA NO HISTÓRICO DE ENTREGUES
-                const entregueAntes = todasAsEncomendasDB.find(enc => {
+                const encontrada = pendentesDB.find(enc => {
                     let idCortadoBanco = String(enc.id).trim().substring(0, 7);
                     let idCortadoCamer = codigoLimpo.substring(0, 7);
                     return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
                 });
-
-                if (entregueAntes && entregueAntes.status === "Entregue") {
-                    // O pacote já foi entregue! Mostra o dossiê completo pro porteiro
-                    alert(`⚠️ ATENÇÃO: ESTE PACOTE JÁ FOI ENTREGUE!\n\n` +
-                          `📦 Pacote: ${entregueAntes.descricao}\n` +
-                          `👤 Morador: ${entregueAntes.nome}\n` +
-                          `🏢 Local: Bloco ${entregueAntes.bloco} - Apto ${entregueAntes.apto}\n\n` +
-                          `📋 DETALHES DA RETIRADA:\n` +
-                          `🔹 Retirado por: ${entregueAntes.quemRetirou}\n` +
-                          `🕒 Data/Hora: ${entregueAntes.dataSaida}\n` +
-                          `🛡️ Porteiro que entregou: ${entregueAntes.porteiroSaida || 'Sistema'}`);
+                
+                if (encontrada) {
+                    let blocoIdentificado = encontrada.bloco || encontrada.Bloco || encontrada.BLOCO || 'N/A';
+                    let aptoIdentificado = encontrada.apartamento || encontrada.Apartamento || encontrada.apto || encontrada.Apto || encontrada.APTO || 'N/A';
+                    alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nBloco: ${blocoIdentificado}\nApartamento: ${aptoIdentificado}\nPacote: ${encontrada.descricao}`);
+                    abrirModalBaixa(encontrada.id); 
                 } else {
+                    const entregueAntes = todasAsEncomendasDB.find(enc => {
+                        let idCortadoBanco = String(enc.id).trim().substring(0, 7);
+                        let idCortadoCamer = codigoLimpo.substring(0, 7);
+                        return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
+                    });
+
+                    if (entregueAntes && entregueAntes.status === "Entregue") {
+                        alert(`⚠️ ATENÇÃO: ESTE PACOTE JÁ FOI ENTREGUE!\n\n` +
+                              `📦 Pacote: ${entregueAntes.descricao}\n` +
+                              `👤 Morador: ${entregueAntes.nome}\n` +
+                              `🏢 Local: Bloco ${entregueAntes.bloco} - Apto ${entregueAntes.apto}\n\n` +
+                              `📋 DETALHES DA RETIRADA:\n` +
+                              `🔹 Retirado por: ${entregueAntes.quemRetirou}\n` +
+                              `🕒 Data/Hora: ${entregueAntes.dataSaida}\n` +
+                              `🛡️ Porteiro que entregou: ${entregueAntes.porteiroSaida || 'Sistema'}`);
+                    } else {
                         alert(`❌ Código Inválido!\nO ID "${codigoLimpo}" não foi encontrado no sistema ou pertence a um histórico muito antigo.`);
                     }
                 }
@@ -608,19 +547,15 @@ if (encontrada) {
         ).catch(err => {
             alert("Erro ao iniciar câmera de retirada.");
         });
-    } // <--- COLOQUE ESTA CHAVE BEM AQUI PARA FECHAR A FUNÇÃO DA CÂMERA
+    }
 
     function mudarAba(id, btn) {
-        // Esconde todas as abas e mostra a nova
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-
-        // Remove a cor de "ativo" de todos os botões e coloca no que foi clicado agora
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         if(btn) {
             btn.classList.add('active');
         } else {
-            // Caso a função seja chamada sem o botão (no início), marca o primeiro como ativo
             document.querySelector('.nav-item').classList.add('active');
         }
     }
@@ -636,14 +571,14 @@ if (encontrada) {
             const arqBloco = document.getElementById("arqBloco"); 
             const pendB = document.getElementById("pendBloco"); 
             const histB = document.getElementById("histBloco"); 
-            const admOrigB = document.getElementById("admOriginalBloco"); // <--- Adicionado aqui
+            const admOrigB = document.getElementById("admOriginalBloco");
             
             s.innerHTML = '<option value="">Bloco...</option>';
             relBloco.innerHTML = '<option value="">Todos Blocos</option>';
             if(arqBloco) arqBloco.innerHTML = '<option value="">Bloco...</option>'; 
             if(pendB) pendB.innerHTML = '<option value="">Todos os Blocos</option>';
             if(histB) histB.innerHTML = '<option value="">Todos os Blocos</option>';
-            if(admOrigB) admOrigB.innerHTML = '<option value="">Bloco Atual...</option>'; // <--- Adicionado aqui
+            if(admOrigB) admOrigB.innerHTML = '<option value="">Bloco Atual...</option>';
 
             blocos.forEach(b => {
                 s.add(new Option(`Bloco ${b}`, b));
@@ -651,7 +586,7 @@ if (encontrada) {
                 if(arqBloco) arqBloco.add(new Option(`Bloco ${b}`, b)); 
                 if(pendB) pendB.add(new Option(`Bloco ${b}`, b));
                 if(histB) histB.add(new Option(`Bloco ${b}`, b));
-                if(admOrigB) admOrigB.add(new Option(`Bloco ${b}`, b)); // <--- Adicionado aqui
+                if(admOrigB) admOrigB.add(new Option(`Bloco ${b}`, b));
             });
         } catch (e) { console.error(e); }
     }
@@ -663,7 +598,6 @@ if (encontrada) {
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
-    // NOVA FUNÇÃO: Cascata Universal para os Filtros
     function atualizarAptosFiltro(idBloco, idApto) {
         const b = document.getElementById(idBloco).value;
         const s = document.getElementById(idApto);
@@ -672,7 +606,7 @@ if (encontrada) {
             moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
         }
     }
-    // NOVA FUNÇÃO: Cascata do Arquivo Morto
+
     function atualizarAptosArq() {
         const b = document.getElementById("arqBloco").value;
         const s = document.getElementById("arqApto");
@@ -680,15 +614,9 @@ if (encontrada) {
         moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
     }
 
-    // ==========================================
-    // LEITOR DE CÓDIGO DE BARRAS E QR CODE
-    // ==========================================
-    let leitorCamera = null;
-
     function abrirCamera() {
         const area = document.getElementById("areaCamera");
         const btnFechar = document.getElementById("btnFecharCamera");
-        
         area.style.display = "block";
         btnFechar.style.display = "block";
 
@@ -697,17 +625,14 @@ if (encontrada) {
         }
 
         leitorCamera.start(
-            { facingMode: "environment" }, // Abre a câmera traseira
-            { fps: 10, qrbox: { width: 250, height: 100 } }, // Foco retangular para código de barras
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 100 } },
             (textoDecodificado) => {
-                // SUCESSO: Leu o código!
                 document.getElementById("codigoRastreio").value = textoDecodificado;
-                alert("✅ Código Lindo: " + textoDecodificado); // Aviso visual rápido
+                alert("✅ Código Lido: " + textoDecodificado);
                 fecharCamera();
             },
-            (erroDeLeitura) => {
-                // Ignora falhas contínuas de foco
-            }
+            (erroDeLeitura) => { }
         ).catch(err => {
             alert("Erro ao acessar a câmera. Verifique as permissões do seu celular.");
             fecharCamera();
@@ -723,24 +648,32 @@ if (encontrada) {
         }
     }
 
-async function buscarPendentes() {
+    async function buscarPendentes() {
         document.getElementById("loading").style.display = "block";
         try {
             const response = await fetch(API_URL);
-            todasAsEncomendasDB = await response.json();
+            const raw = await response.json();
+            
+            if(raw.sistemaStatus === "Manutencao") {
+                const niv = localStorage.getItem("suncityNivel") || "";
+                if(niv.toLowerCase() !== "deus" && niv.toLowerCase() !== "superadmin") {
+                    document.getElementById("telaManutencaoGeral").style.display = "flex";
+                    return;
+                }
+            }
+
+            todasAsEncomendasDB = raw.lista || raw;
             pendentesDB = todasAsEncomendasDB.filter(enc => enc.status === "Pendente");
             
             aplicarFiltro(); 
             aplicarFiltroHistorico(); 
             renderizarRelatorio();
-            
-            // INJEÇÃO CIRÚRGICA: Atualiza o placar de hoje assim que sincroniza os dados
             calcularGiroHoje();
-            
         } catch (e) { console.error(e); } 
         finally { document.getElementById("loading").style.display = "none"; }
     }
-async function registrarEncomenda() {
+
+    async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
         const tipoPacote = document.getElementById("descInput").value;
@@ -756,7 +689,7 @@ async function registrarEncomenda() {
             id: Date.now().toString(),
             bloco: bloco, 
             apto: apto, 
-            nome: morador.nome, 
+            name: morador.nome, 
             telefone: morador.telefone,
             descricao: desc, 
             dataHora: new Date().toLocaleString('pt-BR'), 
@@ -770,7 +703,6 @@ async function registrarEncomenda() {
                 body: JSON.stringify(dados), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
-            
             const textoBruto = await res.text();
             const data = JSON.parse(textoBruto);
             
@@ -778,9 +710,8 @@ async function registrarEncomenda() {
                 document.getElementById("descInput").value = "";
                 document.getElementById("codigoRastreio").value = "";
                 await buscarPendentes(); 
-                
                 if(confirm("Entrada Registrada no Sistema!\n\nDeseja enviar aviso por WhatsApp agora?")) {
-                    enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl);
+                    enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl, dados.id);
                 }
             } else {
                 alert("Erro no servidor: " + (data.erro || "Tente novamente."));
@@ -788,16 +719,15 @@ async function registrarEncomenda() {
         } catch (e) { 
             alert("Erro de comunicação com a API."); 
             console.error(e);
+        } finally { 
+            document.getElementById("loading").style.display = "none"; 
         }
-        finally { document.getElementById("loading").style.display = "none"; }
     }
 
     function enviarWhatsApp(telefone, nome, descricao, bloco, apto, qrCodeUrl = "", id = "") {
-        // Se houver um ID válido, registra o clique na memória interna do aparelho
         if(id) {
             let cont = parseInt(localStorage.getItem("zap_" + id) || "0");
             localStorage.setItem("zap_" + id, (cont + 1).toString());
-            // Atualiza a lista da tela imediatamente para mudar o texto do botão
             aplicarFiltro();
         }
 
@@ -810,7 +740,6 @@ async function registrarEncomenda() {
             let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
-        
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
 
@@ -920,23 +849,19 @@ async function registrarEncomenda() {
             const div = document.createElement("div");
             div.className = "encomenda-item";
             
-            // MOTOR DE CALCULO DE ENCOMENDAS ENVELHECIDAS
             if(enc.dataHora) {
                 try {
-                    // Limpa a string da data para garantir o formato correto (DD/MM/AAAA)
                     const dataLimpa = enc.dataHora.split(' ')[0].replace(',', '').trim();
                     const p = dataLimpa.split('/');
                     if(p.length === 3) {
                         const dataEntrada = new Date(p[2], p[1] - 1, p[0]);
                         const dataHoje = new Date();
-                        // Zera as horas para comparar apenas os dias corridos
                         dataHoje.setHours(0,0,0,0);
                         dataEntrada.setHours(0,0,0,0);
                         
                         const diffTempo = dataHoje.getTime() - dataEntrada.getTime();
                         const diffDias = Math.floor(diffTempo / (1000 * 60 * 60 * 24));
                         
-                        // Aplica as classes CSS dependendo do tempo de guarita
                         if(diffDias >= 10) {
                             div.className += " envelhecido-critico";
                         } else if(diffDias >= 5) {
@@ -962,7 +887,7 @@ async function registrarEncomenda() {
         });
     }
 
-function renderizarRelatorio() {
+    function renderizarRelatorio() {
         const termo = document.getElementById("relMorador").value.toLowerCase();
         const fBloco = document.getElementById("relBloco").value;
         const fApto = document.getElementById("relApto").value.toLowerCase();
@@ -979,9 +904,6 @@ function renderizarRelatorio() {
         document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
         document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length; 
 
-        // ==========================================
-        // PROCESSAMENTO EXCLUSIVO DO PLACAR DE PRODUTIVIDADE
-        // ==========================================
         const tabelaProd = document.getElementById("corpoTabelaProdutividade");
         tabelaProd.innerHTML = "";
         let placar = {};
@@ -989,10 +911,8 @@ function renderizarRelatorio() {
         if(filtradas.length === 0) {
             tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhum funcionário ativo no filtro</td></tr>`;
         } else {
-            // Acumula as ações para o Placar de Produtividade
             filtradas.slice().reverse().forEach(enc => {
                 let pIn = enc.porteiroEntrada || "Sistema";
-                
                 if(!placar[pIn]) placar[pIn] = { ins: 0, outs: 0 };
                 placar[pIn].ins++;
 
@@ -1003,7 +923,6 @@ function renderizarRelatorio() {
                 }
             });
 
-            // Desenha a Tabela de Produtividade na tela
             Object.keys(placar).forEach(f => {
                 tabelaProd.innerHTML += `<tr style="border-bottom:1px solid #e2e8f0;">
                     <td style="padding:8px; font-weight:bold;">👤 ${f}</td>
@@ -1013,7 +932,6 @@ function renderizarRelatorio() {
             });
         }
 
-        // Desenha a lista detalhada tradicional embaixo da tabela
         const lista = document.getElementById("listaRelatorio");
         lista.innerHTML = "";
 
@@ -1071,7 +989,6 @@ function renderizarRelatorio() {
             });
             htmlPDF += `</table>`;
         }
-
         document.getElementById("areaImpressao").innerHTML = htmlPDF;
         window.print();
     }
@@ -1096,10 +1013,6 @@ function renderizarRelatorio() {
         } catch (error) { alert("Erro ao enviar e-mail: " + error.message); } 
         finally { btnEmail.innerText = "✉️ Enviar para meu E-mail"; btnEmail.disabled = false; }
     }
-
-    const canvas = document.getElementById('signaturePad');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
 
     function getPos(e) {
         var rect = canvas.getBoundingClientRect();
@@ -1166,7 +1079,6 @@ function renderizarRelatorio() {
         finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
     }
 
-    // FUNÇÕES COMPLEMENTARES DO ADMINISTRADOR
     async function admCadastrarFuncionario() {
         const nome = document.getElementById("admNovoNome").value;
         const login = document.getElementById("admNovoLogin").value;
@@ -1204,94 +1116,6 @@ function renderizarRelatorio() {
         const b = document.getElementById("admOriginalBloco").value;
         const a = document.getElementById("admOriginalApto").value;
         const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(a));
-        
-        if(morador) {
-            document.getElementById("admNovoNomeMorador").value = morador.nome;
-            document.getElementById("admNovoTelMorador").value = morador.telefone;
-            // Busca o e-mail se ele existir na memória ou deixa em branco para preencher
-            document.getElementById("admNovoEmailMorador").value = morador.email || ""; 
-        }
-    }
-
-    async function admSalvarEdicaoMorador() {
-        const blocoOrig = document.getElementById("admOriginalBloco").value;
-        const aptoOrig = document.getElementById("admOriginalApto").value;
-        const novoNome = document.getElementById("admNovoNomeMorador").value;
-        const novoTel = document.getElementById("admNovoTelMorador").value;
-        const novoEmail = document.getElementById("admNovoEmailMorador").value;
-
-        if(!blocoOrig || !aptoOrig || !novoNome || !novoTel) return alert("Selecione o morador e preencha o Nome e Telefone!");
-
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    acao: "editar_morador",
-                    blocoOriginal: blocoOrig,
-                    aptoOriginal: aptoOrig,
-                    novoNome: novoNome,
-                    novoTelefone: novoTel,
-                    novoEmail: novoEmail
-                }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            const data = await res.json();
-            if(data.status === "Sucesso") {
-                alert("✅ " + data.msg);
-                await carregarMoradores(); // Atualiza a lista na memória do app
-                // Força a atualização do seletor do Administrador para sincronizar
-                const admBl = document.getElementById("admOriginalBloco").value;
-                const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
-                const arqBloco = document.getElementById("admOriginalBloco");
-                arqBloco.innerHTML = '<option value="">Bloco Atual...</option>';
-                blocos.forEach(b => arqBloco.add(new Option(`Bloco ${b}`, b)));
-                document.getElementById("admOriginalBloco").value = admBl;
-                admAtualizarAptos();
-            } else { alert("Erro: " + data.erro); }
-        } catch(e) { alert("Erro de rede ao salvar alteração do morador."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
-    // FUNÇÕES COMPLEMENTARES DO ADMINISTRADOR
-    async function admCadastrarFuncionario() {
-        const nome = document.getElementById("admNovoNome").value;
-        const login = document.getElementById("admNovoLogin").value;
-        const senha = document.getElementById("admNovaSenha").value;
-        const nivel = document.getElementById("admNovoNivel").value;
-
-        if(!nome || !login || !senha) return alert("Preencha todos os campos do funcionário!");
-
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ acao: "cadastrar_usuario", novoNome: nome, novoLogin: login, novaSenha: senha, novoNivel: nivel }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            const data = await res.json();
-            if(data.status === "Sucesso") {
-                alert("✅ " + data.msg);
-                document.getElementById("admNovoNome").value = "";
-                document.getElementById("admNovoLogin").value = "";
-                document.getElementById("admNovaSenha").value = "";
-            } else { alert("Erro: " + data.erro); }
-        } catch(e) { alert("Erro de rede ao salvar funcionário."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
-    function admAtualizarAptos() {
-        const b = document.getElementById("admOriginalBloco").value;
-        const s = document.getElementById("admOriginalApto");
-        s.innerHTML = '<option value="">Apto Atual...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
-    }
-
-    function admCarregarDadosForm() {
-        const b = document.getElementById("admOriginalBloco").value;
-        const a = document.getElementById("admOriginalApto").value;
-        const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(a));
-        
         if(morador) {
             document.getElementById("admNovoNomeMorador").value = morador.nome;
             document.getElementById("admNovoTelMorador").value = morador.telefone;
@@ -1329,7 +1153,7 @@ function renderizarRelatorio() {
                 const admBl = document.getElementById("admOriginalBloco").value;
                 const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
                 const arqBloco = document.getElementById("admOriginalBloco");
-                arqBloco.innerHTML = '<option value="">Bloco Atual...</option>';
+                arqBloco.innerHTML = '<option value="">Block Atual...</option>';
                 blocos.forEach(b => arqBloco.add(new Option(`Bloco ${b}`, b)));
                 document.getElementById("admOriginalBloco").value = admBl;
                 admAtualizarAptos();
@@ -1337,14 +1161,8 @@ function renderizarRelatorio() {
         } catch(e) { alert("Erro de rede ao salvar alteração do morador."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
+
     function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value;
-        const apto = document.getElementById("chamadoApto").value;
-        const just = document.getElementById("chamadoJustificativa").value;
-        if (!bloco || !apto || !just) { alert("Preencha todos os campos!"); return; }
-        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO SUNCITY:\nBloco ${bloco} Apto ${apto}\n"${just}"\nPorteiro: ${porteiroLogado}`)}`;
-    }
-function enviarChamado() {
         const bloco = document.getElementById("chamadoBloco").value;
         const apto = document.getElementById("chamadoApto").value;
         const just = document.getElementById("chamadoJustificativa").value;
@@ -1352,14 +1170,10 @@ function enviarChamado() {
         window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO: Bloco ${bloco} Ap ${apto} - ${just}\nPorteiro: ${porteiroLogado}`)}`;
     }
 
-    // =========================================================
-    // NOVO MOTOR OPERACIONAL DO PAINEL DE INDICADORES
-    // =========================================================
     function calcularGiroHoje() {
         const hojeStr = new Date().toLocaleDateString('pt-BR');
         const entradasHoje = todasAsEncomendasDB.filter(enc => enc.dataHora && enc.dataHora.startsWith(hojeStr)).length;
         const saidasHoje = todasAsEncomendasDB.filter(enc => enc.dataSaida && enc.dataSaida.startsWith(hojeStr)).length;
-        
         document.getElementById("dashHojeEntradas").innerText = entradasHoje;
         document.getElementById("dashHojeSaidas").innerText = saidasHoje;
     }
@@ -1368,28 +1182,24 @@ function enviarChamado() {
         const fim = new Date(); 
         const inicio = new Date();
         inicio.setDate(fim.getDate() - dias);
-        
         document.getElementById("dashDataInicio").value = inicio.toISOString().split('T')[0];
         document.getElementById("dashDataFim").value = fim.toISOString().split('T')[0];
         calcularPeriodoDashManual();
     }
 
-function calcularPeriodoDashManual() {
+    function calcularPeriodoDashManual() {
         const txtIn = document.getElementById("dashDataInicio").value;
         const txtFim = document.getElementById("dashDataFim").value;
         if(!txtIn || !txtFim) return alert("Por favor, selecione o período inicial e final!");
         
-        // Seta o início do dia do filtro e o minuto final do último dia
         const inicio = new Date(txtIn + "T00:00:00");
         const fim = new Date(txtFim + "T23:59:59");
 
         const recebidos = todasAsEncomendasDB.filter(enc => {
             if(!enc.dataHora) return false;
-            // Remove espaços, vírgulas e pega apenas a parte da data (DD/MM/AAAA)
             const dataLimpa = enc.dataHora.split(' ')[0].replace(',', '').trim();
             const partes = dataLimpa.split('/');
             if(partes.length < 3) return false;
-            // Monta o objeto de comparação no padrão internacional
             const dEnc = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
             return dEnc >= inicio && dEnc <= fim;
         }).length;
@@ -1406,9 +1216,47 @@ function calcularPeriodoDashManual() {
         document.getElementById("resDashEntradasPer").innerText = recebidos;
         document.getElementById("resDashSaidasPer").innerText = retirados;
     }
-</script>
-</body>
-</html>    
+
+    async function alterarStatusSistema(novoStatus) {
+        if(!confirm(`Deseja alterar o status geral do condomínio para: ${novoStatus}?`)) return;
+        document.getElementById("loading").style.display = "block";
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ acao: "alterar_status_sistema", status: novoStatus }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            alert("Status master do SunCity atualizado com sucesso!");
+            location.reload();
+        } catch(e) { alert("Erro de comunicação ao alterar status do sistema."); }
+        finally { document.getElementById("loading").style.display = "none"; }
+    }
+
+    const atualizarCliqueSessao = () => { 
+        localStorage.setItem("suncityUltimoClique", new Date().getTime().toString()); 
+    };
+
+    window.addEventListener('touchstart', atualizarCliqueSessao);
+    window.addEventListener('click', atualizarCliqueSessao);
+    window.addEventListener('scroll', atualizarCliqueSessao);
+    window.addEventListener('keypress', atualizarCliqueSessao);
+    window.addEventListener("focus", () => { verificarSessaoAtiva(); });
+
+    function verificarSessaoAtiva() {
+        if(!porteiroLogado) return;
+        const ultimo = localStorage.getItem("suncityUltimoClique");
+        if(ultimo) {
+            const minutos = (new Date().getTime() - parseInt(ultimo)) / 1000 / 60;
+            const nivel = localStorage.getItem("suncityNivel") || "";
+            
+            if(minutos > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin") {
+                alert("Sessão da portaria encerrada por inatividade de 2 minutos.");
+                localStorage.removeItem("suncityUser"); 
+                localStorage.removeItem("suncityNivel");
+                location.reload(); 
+            }
+        }
+    }
 </script>
 </body>
 </html>
