@@ -1023,12 +1023,15 @@
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    function resetarCanvasAssinatura() {
         if(canvas) {
+            canvas.width = canvas.offsetWidth; 
+            canvas.height = canvas.offsetHeight; 
+            if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
             canvas.addEventListener('mousedown', iniciarDesenho); canvas.addEventListener('mousemove', desenhar); canvas.addEventListener('mouseup', pararDesenho);
             canvas.addEventListener('touchstart', iniciarDesenho, {passive: false}); canvas.addEventListener('touchmove', desenhar, {passive: false}); canvas.addEventListener('touchend', pararDesenho, {passive: false});
         }
-    });
+    }
 
     function iniciarDesenho(e) { e.preventDefault(); isDrawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
     function desenhar(e) { if (!isDrawing) return; e.preventDefault(); let pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
@@ -1041,7 +1044,7 @@
         encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
         document.getElementById("nomeRetirante").value = ""; 
         document.getElementById("modalAssinatura").style.display = "flex";
-        setTimeout(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; limparCanvas(); }, 100);
+        setTimeout(() => { resetarCanvasAssinatura(); }, 200);
     }
 
     function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
