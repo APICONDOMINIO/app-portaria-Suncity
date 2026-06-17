@@ -326,7 +326,7 @@
         <h3 style="margin-top:0;">Confirmar Retirada</h3>
         <input type="text" id="nomeRetirante" placeholder="Nome de quem está retirando">
         <p style="margin-bottom:5px; font-size:14px; font-weight:bold;">Assinatura na Tela:</p>
-        <canvas id="signaturePad"></canvas>
+        <canvas id="signaturePad" onmousedown="iniciarDesenho(event)" onmousemove="desenhar(event)" onmouseup="pararDesenho(event)" ontouchstart="iniciarDesenho(event)" ontouchmove="desenhar(event)" ontouchend="pararDesenho(event)"></canvas>
         <div class="row">
             <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
             <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
@@ -1064,7 +1064,15 @@
         encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
         document.getElementById("nomeRetirante").value = ""; 
         document.getElementById("modalAssinatura").style.display = "flex";
-        setTimeout(() => { resetarCanvasAssinatura(); }, 200);
+        
+        // Força o Canvas a assumir o tamanho correto e limpa resíduos antigos
+        setTimeout(() => { 
+            if(canvas) {
+                canvas.width = canvas.offsetWidth; 
+                canvas.height = canvas.offsetHeight; 
+                limparCanvas();
+            }
+        }, 200);
     }
 
     function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
