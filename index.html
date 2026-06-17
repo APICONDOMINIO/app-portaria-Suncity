@@ -358,7 +358,8 @@
     let leitorCamera = null;
 
     window.onload = () => {
-        let salvo = localStorage.getItem("suncityUser");
+        // Mudado para sessionStorage: fecha a aba, o login some!
+        let salvo = sessionStorage.getItem("suncityUser");
         if(salvo) { 
             porteiroLogado = salvo; 
             iniciarSistema(); 
@@ -434,8 +435,9 @@
             
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
-                localStorage.setItem("suncityUser", porteiroLogado); 
-                localStorage.setItem("suncityNivel", data.nivel);
+                // Gravando na sessão temporária da aba
+                sessionStorage.setItem("suncityUser", porteiroLogado); 
+                sessionStorage.setItem("suncityNivel", data.nivel);
                 iniciarSistema();
             } else {
                 document.getElementById("msgLogin").innerText = data.erro;
@@ -450,8 +452,8 @@
 
     function fazerLogout() { 
         if(confirm("Deseja realmente encerrar a sessão e sair do app?")) {
-            localStorage.removeItem("suncityUser"); 
-            localStorage.removeItem("suncityNivel");
+            sessionStorage.removeItem("suncityUser"); 
+            sessionStorage.removeItem("suncityNivel");
             location.reload(); 
         }
     }
@@ -463,7 +465,7 @@
         
         atualizarCliqueSessao(); 
 
-        const nivel = localStorage.getItem("suncityNivel") || "";
+        const nivel = sessionStorage.getItem("suncityNivel") || "";
         const textoNivel = nivel.toLowerCase(); 
         
         if(textoNivel.includes("adm") || textoNivel.includes("gerente") || textoNivel.includes("deus")) {
@@ -655,7 +657,7 @@
             const raw = await response.json();
             
             if(raw.sistemaStatus === "Manutencao") {
-                const niv = localStorage.getItem("suncityNivel") || "";
+                const niv = sessionStorage.getItem("suncityNivel") || "";
                 if(niv.toLowerCase() !== "deus" && niv.toLowerCase() !== "superadmin") {
                     document.getElementById("telaManutencaoGeral").style.display = "flex";
                     return;
@@ -740,7 +742,8 @@
             let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
-        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+        // UPGRADE OPERACIONAL: Abre o WhatsApp em nova aba imune a travamentos
+        window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
     }
 
     async function pesquisarNoArquivo() {
@@ -1226,7 +1229,7 @@
                 body: JSON.stringify({ acao: "alterar_status_sistema", status: novoStatus }),
                 headers: { "Content-Type": "text/plain;charset=utf-8" }
             });
-            alert("Status master do SunCity atualizado com sucesso!");
+            alert("Status master do SunCity updated com sucesso!");
             location.reload();
         } catch(e) { alert("Erro de comunicação ao alterar status do sistema."); }
         finally { document.getElementById("loading").style.display = "none"; }
@@ -1257,6 +1260,5 @@
             }
         }
     }
-</script>
-</body>
+</script></body>
 </html>
