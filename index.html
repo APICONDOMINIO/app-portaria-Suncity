@@ -1119,6 +1119,7 @@
             fecharModal(); 
             alert("Baixa confirmada!");
             if(pacoteFaturado) {
+                // CORREÇÃO CIRÚRGICA: pacoteFaturado.nome traz o nome real do morador
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
