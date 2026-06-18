@@ -600,7 +600,7 @@
         const b = document.getElementById("blocoSelect").value;
         const s = document.getElementById("aptoSelect");
         s.innerHTML = '<option value="">Apto...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
     }
 
     function atualizarAptosFiltro(idBloco, idApto) {
@@ -608,7 +608,7 @@
         const s = document.getElementById(idApto);
         s.innerHTML = '<option value="">Todos os Aptos</option>';
         if (b) {
-            moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+            moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
         }
     }
 
@@ -616,7 +616,7 @@
         const b = document.getElementById("arqBloco").value;
         const s = document.getElementById("arqApto");
         s.innerHTML = '<option value="">Apto...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
     }
 
     function abrirCamera() {
@@ -745,7 +745,6 @@
             let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
-        // MODIFICAÇÃO: Abre o WhatsApp em nova aba imune a recarregamentos agressivos do celular
         window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
 
@@ -1112,14 +1111,13 @@
 
             await fetch(API_URL, { 
                 method: "POST", 
-                body: JSON.stringify({ acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identificado", quemRetirou: quemRetirou, assinatura: "Sim", imagemBase64: canvasMesclado.toDataURL("image/png") }), 
+                body: JSON.stringify({ acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identified", quemRetirou: quemRetirou, assinatura: "Sim", imagemBase64: canvasMesclado.toDataURL("image/png") }), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
             
             fecharModal(); 
             alert("Baixa confirmada!");
             if(pacoteFaturado) {
-                // CORREÇÃO CIRÚRGICA: pacoteFaturado.nome traz o nome real do morador
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
             }
@@ -1211,6 +1209,13 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
+    function admAtualizarAptos() {
+        const b = document.getElementById("admOriginalBloco").value;
+        const s = document.getElementById("admOriginalApto");
+        s.innerHTML = '<option value="">Apto Atual...</option>';
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
+    }
+
     function enviarChamado() {
         const bloco = document.getElementById("chamadoBloco").value;
         const apto = document.getElementById("chamadoApto").value;
@@ -1282,7 +1287,7 @@
     }
 
     // =========================================================
-    // CRONÔMETRO DE SEGURANÇA INTERNO (COMPLETAMENTE CORRIGIDO)
+    // CRONÔMETRO DE SEGURANÇA INTERNO
     // =========================================================
     const atualizarCliqueSessao = () => { 
         localStorage.setItem("suncityUltimoClique", new Date().getTime().toString()); 
@@ -1293,7 +1298,6 @@
     window.addEventListener('scroll', atualizarCliqueSessao);
     window.addEventListener('keypress', atualizarCliqueSessao);
 
-    // VIGILANTE DEDICADO: Sempre que o porteiro voltar pro app, o sensor checa se o tempo expirou nos bastidores
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
             verificarSessaoAtiva();
@@ -1308,21 +1312,19 @@
             const minutos = (new Date().getTime() - parseInt(ultimo)) / 1000 / 60;
             const nivel = localStorage.getItem("suncityNivel") || "";
             
-            if(minutos > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin") {
-                // BLINDAGEM AUTOMÁTICA: Limpa as variáveis imediatamente antes do alert
+            if(minutos > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin" && nivel.toLowerCase() !== "administrador") {
                 porteiroLogado = "";
                 localStorage.removeItem("suncityUser"); 
                 localStorage.removeItem("suncityNivel");
                 
                 alert("Sessão da portaria encerrada por inatividade de 2 minutos.");
                 location.reload(); 
-                return false; // Retorna falso para avisar o iniciarSistema para abortar
+                return false;
             }
         }
         return true;
     }
 
-    // Fica rodando em tempo real enquanto a tela estiver aberta na guarita
     setInterval(verificarSessaoAtiva, 5000);
 </script>
 </body>
