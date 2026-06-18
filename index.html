@@ -1287,7 +1287,135 @@
     }
 
     // =========================================================
-    // CRONÔMETRO DE SEGURANÇA INTERNO
+    // MOTOR HÍBRIDO DE ASSINATURA (CELULAR + MESA DIGITALIZADORA PC)
+    // =========================================================
+    function registrarEventosCanvas() {
+        var localCanvas = document.getElementById('signaturePad');
+        if (!localCanvas) return;
+
+        // Limpa ouvintes antigos para não duplicar o traço
+        localCanvas.onpointerdown = iniciarDesenhoHibrido;
+        localCanvas.onpointermove = desenharHibrido;
+        localCanvas.onpointerup = pararDesenhoHibrido;
+        localCanvas.onpointerleave = pararDesenhoHibrido;
+
+        localCanvas.ontouchstart = (e) => { e.preventDefault(); let t = e.touches[0]; tratarAcaoHibrida(t, 'start'); };
+        localCanvas.ontouchmove = (e) => { e.preventDefault(); let t = e.touches[0]; tratarAcaoHibrida(t, 'move'); };
+        localCanvas.ontouchend = (e) => { e.preventDefault(); tratarAcaoHibrida(null, 'end'); };
+    }
+
+    function obterCoordenadas(e) {
+        var localCanvas = document.getElementById('signaturePad');
+        var rect = localCanvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+    function iniciarDesenhoHibrido(e) {
+        if (e.pointerType === 'mouse' && e.buttons !== 1) return; // Ignora clique direito do mouse
+        isDrawing = true;
+        var ctxLocal = e.target.getContext('2d');
+        ctxLocal.beginPath();
+        let pos = obterCoordenadas(e);
+        ctxLocal.moveTo(pos.x, pos.y);
+    }
+
+    function desenharHibrido(e) {
+        if (!isDrawing) return;
+        var ctxLocal = e.target.getContext('2d');
+        ctxLocal.lineWidth = 3;
+        ctxLocal.lineCap = 'round';
+        ctxLocal.strokeStyle = '#1d3557';
+        let pos = obterCoordenadas(e);
+        ctxLocal.lineTo(pos.x, pos.y);
+        ctxLocal.stroke();
+    }
+
+    function pararDesenhoHibrido() { isDrawing = false; atualizarCliqueSessao(); }
+
+    function tratarAcaoHibrida(touchObj, acao) {
+        var localCanvas = document.getElementById('signaturePad');
+        if (!localCanvas) return;
+        var ctxLocal = localCanvas.getContext('2d');
+
+        if (acao === 'start') {
+            isDrawing = true;
+            ctxLocal.beginPath();
+            var rect = localCanvas.getBoundingClientRect();
+            ctxLocal.moveTo(touchObj.clientX - rect.left, touchObj.clientY - rect.top);
+        } else if (acao === 'move' && isDrawing) {
+            ctxLocal.lineWidth = 3; ctxLocal.lineCap = 'round'; ctxLocal.strokeStyle = '#1d3557';
+            var rect = localCanvas.getBoundingClientRect();
+            ctxLocal.lineTo(touchObj.clientX - rect.left, touchObj.clientY - rect.top);
+            ctxLocal.stroke();
+        } else if (acao === 'end') {
+            isDrawing = false;
+            atualizarCliqueSessao();
+        }
+    }
+
+    function limparCanvas() { 
+        var localCanvas = document.getElementById('signaturePad');
+        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
+        if(localCtx && localCanvas) localCtx.clearRect(0, 0, localCanvas.width, localCanvas.height); 
+    }
+
+    function abrirModalBaixa(id) {
+        idEmBaixa = id; 
+        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
+        document.getElementById("nomeRetirante").value = ""; 
+        document.getElementById("modalAssinatura").style.display = "flex";
+        
+        setTimeout(() => { 
+            var localCanvas = document.getElementById('signaturePad');
+            if(localCanvas) {
+                localCanvas.width = localCanvas.offsetWidth; 
+                localCanvas.height = localCanvas.offsetHeight; 
+                limparCanvas();
+                registrarEventosCanvas(); // Liga os sensores da caneta e do touch
+            }
+        }, 200);
+    }
+
+    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
+
+    async function confirmarEntregaFinal() {
+        const quemRetirou = document.getElementById("nomeRetirante").value;
+        if(!quemRetirou) { alert("Digite o nome de quem está retirando o pacote!"); return; }
+        const btn = document.getElementById("btnConfirmarBaixa");
+        btn.innerText = "Processando..."; btn.disabled = true;
+        
+        const dataBaixa = new Date().toLocaleString('pt-BR');
+        const pacoteFaturado = encomendaSelecionada;
+
+        try {
+            const canvasOriginal = document.getElementById('signaturePad');
+            const canvasMesclado = document.createElement('canvas');
+            canvasMesclado.width = canvasOriginal.width; canvasMesclado.height = canvasOriginal.height + 40;
+            const ctxMesclado = canvasMesclado.getContext('2d');
+            ctxMesclado.fillStyle = "#ffffff"; ctxMesclado.fillRect(0, 0, canvasMesclado.width, canvasMesclado.height);
+            ctxMesclado.font = "bold 14px Arial"; ctxMesclado.fillStyle = "#1d3557"; ctxMesclado.fillText("Retirado por: " + quemRetirou, 10, 20);
+            ctxMesclado.font = "10px Arial"; ctxMesclado.fillStyle = "#666666"; ctxMesclado.fillText("Data: " + dataBaixa, 10, 35);
+            ctxMesclado.drawImage(canvasOriginal, 0, 40);
+
+            await fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identificado", quemRetirou: quemRetirou, assinatura: "Sim", imagemBase64: canvasMesclado.toDataURL("image/png") }), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
+            
+            fecharModal(); 
+            alert("Baixa confirmada!");
+            if(pacoteFaturado) {
+                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
+                window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
+            }
+            await buscarPendentes(); 
+        } catch (error) { alert("Erro da rede: " + error.message); } 
+        finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
+    }
+
+    // =========================================================
+    // CRONÔMETRO DE SEGURANÇA E SESSÃO ATIVA
     // =========================================================
     const atualizarCliqueSessao = () => { 
         localStorage.setItem("suncityUltimoClique", new Date().getTime().toString()); 
