@@ -459,9 +459,8 @@
     }
 
     async function iniciarSistema() {
-        // Checagem imediata: se passou do tempo enquanto o app estava fechado, desloga na hora!
-        verificarSessaoAtiva();
-        if(!localStorage.getItem("suncityUser")) return; // Aborta se o timer deslogou
+        // CORREÇÃO CIRÚRGICA: Checa a sessão e, se retornar falso (vencida), para tudo!
+        if (verificarSessaoAtiva() === false) return;
 
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
@@ -1301,7 +1300,7 @@
     });
 
     function verificarSessaoAtiva() {
-        if(!porteiroLogado) return; 
+        if(!porteiroLogado) return true; 
         
         const ultimo = localStorage.getItem("suncityUltimoClique");
         if(ultimo) {
@@ -1309,12 +1308,17 @@
             const nivel = localStorage.getItem("suncityNivel") || "";
             
             if(minutos > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin") {
-                alert("Sessão da portaria encerrada por inatividade de 2 minutos.");
+                // BLINDAGEM AUTOMÁTICA: Limpa as variáveis imediatamente antes do alert
+                porteiroLogado = "";
                 localStorage.removeItem("suncityUser"); 
                 localStorage.removeItem("suncityNivel");
+                
+                alert("Sessão da portaria encerrada por inatividade de 2 minutos.");
                 location.reload(); 
+                return false; // Retorna falso para avisar o iniciarSistema para abortar
             }
         }
+        return true;
     }
 
     // Fica rodando em tempo real enquanto a tela estiver aberta na guarita
