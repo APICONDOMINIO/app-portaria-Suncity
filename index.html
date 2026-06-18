@@ -459,6 +459,10 @@
     }
 
     async function iniciarSistema() {
+        // Checagem imediata: se passou do tempo enquanto o app estava fechado, desloga na hora!
+        verificarSessaoAtiva();
+        if(!localStorage.getItem("suncityUser")) return; // Aborta se o timer deslogou
+
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("nomePorteiroAtivo").innerText = porteiroLogado;
@@ -743,7 +747,7 @@
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         // MODIFICAÇÃO: Abre o WhatsApp em nova aba imune a recarregamentos agressivos do celular
-        window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
+        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     }
 
     async function pesquisarNoArquivo() {
