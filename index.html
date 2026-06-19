@@ -516,10 +516,9 @@
                 
                 let codigoLimpo = String(idLido).trim();
                 
+                // BLINDAGEM COMPLETA: Busca apenas e estritamente pelo ID idêntico e total do pacote
                 const encontrada = pendentesDB.find(enc => {
-                    let idCortadoBanco = String(enc.id).trim().substring(0, 7);
-                    let idCortadoCamer = codigoLimpo.substring(0, 7);
-                    return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
+                    return String(enc.id).trim() === codigoLimpo || "P" + String(enc.id).trim() === codigoLimpo;
                 });
                 
                 if (encontrada) {
@@ -529,9 +528,7 @@
                     abrirModalBaixa(encontrada.id); 
                 } else {
                     const entregueAntes = todasAsEncomendasDB.find(enc => {
-                        let idCortadoBanco = String(enc.id).trim().substring(0, 7);
-                        let idCortadoCamer = codigoLimpo.substring(0, 7);
-                        return idCortadoBanco === idCortadoCamer || String(enc.id).trim() === codigoLimpo;
+                        return String(enc.id).trim() === codigoLimpo || "P" + String(enc.id).trim() === codigoLimpo;
                     });
 
                     if (entregueAntes && entregueAntes.status === "Entregue") {
