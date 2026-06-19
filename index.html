@@ -774,15 +774,14 @@
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
-        const urlZap = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-
-        // CORREÇÃO CIRÚRGICA: Se a largura da tela for menor que 768px, trata como celular
+        // CORREÇÃO LOGÍSTICA PARA COMPUTADOR VS CELULAR:
         if (window.innerWidth < 768) {
-            window.location.href = urlZap;
+            // No Celular: Usa o link padrão estável
+            window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
         } else {
-            // No computador: Abre ou atualiza a aba separada sem sair do Express Suncity
-            window.open(urlZap, 'janelaZapSunCity');
-            alert("Aviso de chegada acionado!\nSe o WhatsApp do computador não abrir de imediato, verifique a aba do WhatsApp Web aberta em segundo plano.");
+            // No Computador: Força o disparo do aplicativo instalado no Windows diretamente
+            window.location.href = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
+            alert("Aviso de chegada acionado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
         }
     }
 
@@ -1007,17 +1006,17 @@
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
-        const appendentes = filtradas.filter(e => e.status === "Pendente");
+        const pendentes = filtradas.filter(e => e.status === "Pendente");
         const entregues = filtradas.filter(e => e.status !== "Pendente"); 
 
         let htmlPDF = `<h2 class="print-title">📊 Relatório Analítico - Express Suncity</h2>`;
         htmlPDF += `<p style="text-align:center; font-family:Arial, sans-serif; font-size:12px; margin-bottom:20px;">Filtros: Status (${fStatus||"Todos"})</p>`;
 
-        if(appendentes.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${appendentes.length})</h3>
+        if(pendentes.length > 0) {
+            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${pendentes.length})</h3>
             <table class="tabela-pdf">
             <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr>`;
-            appendentes.forEach(p => {
+            pendentes.forEach(p => {
                 htmlPDF += `<tr><td>${p.bloco}</td><td>${p.apto}</td><td>${p.nome}</td><td>${p.descricao}</td><td>${p.dataHora}</td><td>${p.porteiroEntrada || '-'}</td></tr>`;
             });
             htmlPDF += `</table>`;
@@ -1243,12 +1242,12 @@
                 
                 const urlZapRecibo = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
 
-                // CORREÇÃO CIRÚRGICA NO RECIBO DA RETIRADA:
                 if (window.innerWidth < 768) {
                     window.location.href = urlZapRecibo;
                 } else {
-                    window.open(urlZapRecibo, 'janelaZapSunCity');
-                    alert("Recibo enviado!\nSe o WhatsApp do computador não abrir de imediato, verifique a aba do WhatsApp Web aberta em segundo plano.");
+                    // No computador: Força a abertura do programa nativo do PC sem sair da tela
+                    window.location.href = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
+                    alert("Recibo enviado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
                 }
             }
             await buscarPendentes(); 
