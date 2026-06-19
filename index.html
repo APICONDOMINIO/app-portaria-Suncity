@@ -1162,8 +1162,11 @@
         ctxLocal.stroke();
     }
 
-    function pararDesenhoHibrido() { isDrawing = false; atualizarCliqueSessao(); }
-
+    function pararDesenhoHibrido() { 
+    isDrawing = false; 
+    if (document.activeElement) { document.activeElement.blur(); } 
+    atualizarCliqueSessao(); 
+}
     function tratarAcaoHibrida(touchObj, acao) {
         var localCanvas = document.getElementById('signaturePad');
         if (!localCanvas) return;
@@ -1180,9 +1183,9 @@
             ctxLocal.lineTo(touchObj.clientX - rect.left, touchObj.clientY - rect.top);
             ctxLocal.stroke();
         } else if (acao === 'end') {
-            isDrawing = false;
-            atualizarCliqueSessao();
-        }
+    isDrawing = false;
+    if (document.activeElement) { document.activeElement.blur(); } // Força o teclado a fechar no celular
+    atualizarCliqueSessao();
     }
 
     function limparCanvas() { 
@@ -1240,12 +1243,10 @@
             if(pacoteFaturado) {
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 
-                const urlZapRecibo = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
-
+                // Aplica a mesma regra inteligente: abre o app direto se for PC
                 if (window.innerWidth < 768) {
-                    window.location.href = urlZapRecibo;
+                    window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
                 } else {
-                    // No computador: Força a abertura do programa nativo do PC sem sair da tela
                     window.location.href = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
                     alert("Recibo enviado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
                 }
