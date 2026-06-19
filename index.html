@@ -719,13 +719,61 @@
         let saidas = todasAsEncomendasDB.filter(e => e.dataSaida && e.dataSaida.includes(hoje)).length;
         if(document.getElementById("dashHojeEntradas")) document.getElementById("dashHojeEntradas").innerText = entradas;
         if(document.getElementById("dashHojeSaidas")) document.getElementById("dashHojeSaidas").innerText = saidas;
+        filtrarPeriodoDash(7); // Inicializa o painel inferior exibindo os últimos 7 dias por padrão
+    }
+
+    function filtrarPeriodoDash(dias) {
+        let dataFim = new Date();
+        let dataInicio = new Date();
+        dataInicio.setDate(dataFim.getDate() - dias);
+
+        document.getElementById("dashDataInicio").value = dataInicio.toISOString().split('T')[0];
+        document.getElementById("dashDataFim").value = dataFim.toISOString().split('T')[0];
+        
+        processarCalculoPeriodo(dataInicio, dataFim);
+    }
+
+    function calcularPeriodoDashManual() {
+        let iniStr = document.getElementById("dashDataInicio").value;
+        let fimStr = document.getElementById("dashDataFim").value;
+        if(!iniStr || !fimStr) { alert("Selecione as duas datas para a consulta!"); return; }
+
+        let dataInicio = new Date(iniStr + "T00:00:00");
+        let dataFim = new Date(fimStr + "T23:59:59");
+        processarCalculoPeriodo(dataInicio, dataFim);
+    }
+
+    function processarCalculoPeriodo(dataInicio, dataFim) {
+        let entradasPer = 0;
+        let saidasPer = 0;
+
+        todasAsEncomendasDB.forEach(enc => {
+            if(enc.dataHora) {
+                let p = enc.dataHora.split(' ')[0].split('/');
+                if(p.length === 3) {
+                    let dtIn = new Date(p[2], p[1] - 1, p[0]);
+                    if(dtIn >= dataInicio && dtIn <= dataFim) entradasPer++;
+                }
+            }
+            if(enc.dataSaida) {
+                let p = enc.dataSaida.split(' ')[0].split('/');
+                if(p.length === 3) {
+                    let dtOut = new Date(p[2], p[1] - 1, p[0]);
+                    if(dtOut >= dataInicio && dtOut <= dataFim) saidasPer++;
+                }
+            }
+        });
+
+        document.getElementById("resDashEntradasPer").innerText = entradasPer;
+        document.getElementById("resDashSaidasPer").innerText = saidasPer;
     }
 
     async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
         const tipoPacote = document.getElementById("descInput").value;
-        const rastreio = document.getElementById("codigoRastreio").value;
+        // CORREÇÃO: Limpa quebras de linha invisíveis induzidas por bipes de pistola no PC
+        const rastreio = document.getElementById("codigoRastreio").value.replace(/[\n\r]/g, "").trim();
         
         if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
 
@@ -790,12 +838,21 @@
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
-        const urlLinkComum = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-        const urlProtocoloApp = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
+        // CORREÇÃO: Protocolo unificado e higienizado para disparar o aplicativo nativo em ambos os dispositivos
+        const urlDisparoDireto = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
 
         if (window.innerWidth < 768) {
-            window.location.href = urlLinkComum;
+            // No Celular: Abre direto o aplicativo nativo sem passar por telas da web
+            window.location.href = urlDisparoDireto;
         } else {
+            // No PC: Cria o gatilho invisível para não ser bloqueado pelo Chrome
+            let linkInvisivel = document.createElement('a');
+            linkInvisivel.href = urlDisparoDireto;
+            document.body.appendChild(linkInvisivel);
+            linkInvisivel.click(); 
+            document.body.removeChild(linkInvisivel);
+            alert("Aviso de chegada acionado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
+        }
             let linkInvisivel = document.createElement('a');
             linkInvisivel.href = urlProtocoloApp;
             document.body.appendChild(linkInvisivel);
@@ -1265,14 +1322,15 @@
             if(pacoteFaturado) {
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 
-                const urlLinkComum = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
-                const urlProtocoloApp = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
+                const urlDisparoRecibo = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
 
                 if (window.innerWidth < 768) {
-                    window.location.href = urlLinkComum;
+                    // Celular: Direcionamento limpo para o App sem quebra de caracteres nos emojis
+                    window.location.href = urlDisparoRecibo;
                 } else {
+                    // Computador: Clique invisível antifalhas do Chrome
                     let linkInvisivel = document.createElement('a');
-                    linkInvisivel.href = urlProtocoloApp;
+                    linkInvisivel.href = urlDisparoRecibo;
                     document.body.appendChild(linkInvisivel);
                     linkInvisivel.click();
                     document.body.removeChild(linkInvisivel);
