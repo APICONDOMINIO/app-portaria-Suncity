@@ -718,7 +718,7 @@
         if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
 
         const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
-        const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(apto));
+        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
         
         const dados = {
             acao: "nova_encomenda", 
