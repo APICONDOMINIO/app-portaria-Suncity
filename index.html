@@ -553,7 +553,6 @@
                 
                 const encontrada = pendentesDB.find(enc => {
                     let idExclusivo = String(enc.id || "").trim();
-                    // CORREÇÃO: Converte o ID em string antes de comparar com a leitura da câmera
                     return idExclusivo === codigoLimpo || "P" + idExclusivo === codigoLimpo || codigoLimpo.includes(idExclusivo);
                 });
                 
@@ -712,14 +711,13 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // RESTAURAÇÃO: Adicionada a função que estava faltando no seu arquivo
     function calcularGiroHoje() {
         let hoje = new Date().toLocaleDateString('pt-BR');
         let entradas = todasAsEncomendasDB.filter(e => e.dataHora && e.dataHora.includes(hoje)).length;
         let saidas = todasAsEncomendasDB.filter(e => e.dataSaida && e.dataSaida.includes(hoje)).length;
         if(document.getElementById("dashHojeEntradas")) document.getElementById("dashHojeEntradas").innerText = entradas;
         if(document.getElementById("dashHojeSaidas")) document.getElementById("dashHojeSaidas").innerText = saidas;
-        filtrarPeriodoDash(7); // Inicializa o painel inferior exibindo os últimos 7 dias por padrão
+        filtrarPeriodoDash(7);
     }
 
     function filtrarPeriodoDash(dias) {
@@ -772,13 +770,11 @@
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
         const tipoPacote = document.getElementById("descInput").value;
-        // CORREÇÃO: Limpa quebras de linha invisíveis induzidas por bipes de pistola no PC
         const rastreio = document.getElementById("codigoRastreio").value.replace(/[\n\r]/g, "").trim();
         
         if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
 
         const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
-        // CORREÇÃO LOGÍSTICA: Trocado 'b' por 'bloco' para evitar travamento no celular
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
         
         const dados = {
@@ -838,23 +834,13 @@
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
-        // CORREÇÃO: Protocolo unificado e higienizado para disparar o aplicativo nativo em ambos os dispositivos
         const urlDisparoDireto = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
 
         if (window.innerWidth < 768) {
-            // No Celular: Abre direto o aplicativo nativo sem passar por telas da web
             window.location.href = urlDisparoDireto;
         } else {
-            // No PC: Cria o gatilho invisível para não ser bloqueado pelo Chrome
             let linkInvisivel = document.createElement('a');
             linkInvisivel.href = urlDisparoDireto;
-            document.body.appendChild(linkInvisivel);
-            linkInvisivel.click(); 
-            document.body.removeChild(linkInvisivel);
-            alert("Aviso de chegada acionado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
-        }
-            let linkInvisivel = document.createElement('a');
-            linkInvisivel.href = urlProtocoloApp;
             document.body.appendChild(linkInvisivel);
             linkInvisivel.click(); 
             document.body.removeChild(linkInvisivel);
@@ -1265,7 +1251,7 @@
             if (document.activeElement) { document.activeElement.blur(); } 
             atualizarCliqueSessao();
         }
-    } // CORREÇÃO: Função fechada corretamente para não engolir o canvas
+    }
 
     function limparCanvas() { 
         var localCanvas = document.getElementById('signaturePad');
@@ -1325,10 +1311,8 @@
                 const urlDisparoRecibo = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
 
                 if (window.innerWidth < 768) {
-                    // Celular: Direcionamento limpo para o App sem quebra de caracteres nos emojis
                     window.location.href = urlDisparoRecibo;
                 } else {
-                    // Computador: Clique invisível antifalhas do Chrome
                     let linkInvisivel = document.createElement('a');
                     linkInvisivel.href = urlDisparoRecibo;
                     document.body.appendChild(linkInvisivel);
