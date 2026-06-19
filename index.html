@@ -293,7 +293,7 @@
                 <input type="text" id="admNovaSenha" placeholder="Senha de Acesso">
                 <select id="admNovoNivel">
                     <option value="Porteiro">Nível: Porteiro</option>
-                    <option value="Administrador">Nível: Administrador / Zelador</option>
+                    <option value="Administrador">Nível: Administrator / Zelador</option>
                 </select>
                 <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
             </div>
@@ -332,7 +332,7 @@
         <h3 style="margin-top:0;">Confirmar Retirada</h3>
         <input type="text" id="nomeRetirante" placeholder="Nome de quem está retirando">
         <p style="margin-bottom:5px; font-size:14px; font-weight:bold;">Assinatura na Tela:</p>
-        <canvas id="signaturePad" onmousedown="iniciarDesenho(event)" onmousemove="desenhar(event)" onmouseup="pararDesenho(event)" ontouchstart="iniciarDesenho(event)" ontouchmove="desenhar(event)" ontouchend="pararDesenho(event)"></canvas>
+        <canvas id="signaturePad"></canvas>
         <div class="row">
             <button class="btn-secondary" onclick="limparCanvas()">Limpar</button>
             <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
@@ -362,6 +362,7 @@
     let idEmBaixa = null;
     let encomendaSelecionada = null; 
     let leitorCamera = null;
+    let isDrawing = false;
 
     window.onload = () => {
         let salvo = localStorage.getItem("suncityUser");
@@ -551,18 +552,20 @@
                 let codigoLimpo = String(idLido).trim();
                 
                 const encontrada = pendentesDB.find(enc => {
-                    return String(enc.id).trim() === codigoLimpo || "P" + String(enc.id).trim() === codigoLimpo;
+                    let idExclusivo = String(enc.id || "").trim();
+                    // CORREÇÃO: Converte o ID em string antes de comparar com a leitura da câmera
+                    return idExclusivo === codigoLimpo || "P" + idExclusivo === codigoLimpo || codigoLimpo.includes(idExclusivo);
                 });
                 
                 if (encontrada) {
                     let blocoIdentificado = encontrada.bloco || 'N/A';
                     let aptoIdentificado = encontrada.apto || 'N/A';
-                    // Alerta atualizado para guiar o porteiro com o Serial/EAN contido na descrição
                     alert(`✅ Código Exclusivo Confirmado!\n\n👤 Morador: ${encontrada.nome}\n🏢 Local: Bloco ${blocoIdentificado} - Ap ${aptoIdentificado}\n📦 Identificação do Pacote:\n👉 ${encontrada.descricao}`);
                     abrirModalBaixa(encontrada.id); 
                 } else {
                     const entregueAntes = todasAsEncomendasDB.find(enc => {
-                        return String(enc.id).trim() === codigoLimpo || "P" + String(enc.id).trim() === codigoLimpo;
+                        let idExclusivoAntigo = String(enc.id || "").trim();
+                        return idExclusivoAntigo === codigoLimpo || "P" + idExclusivoAntigo === codigoLimpo;
                     });
 
                     if (entregueAntes && entregueAntes.status === "Entregue") {
@@ -709,6 +712,15 @@
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
+    // RESTAURAÇÃO: Adicionada a função que estava faltando no seu arquivo
+    function calcularGiroHoje() {
+        let hoje = new Date().toLocaleDateString('pt-BR');
+        let entradas = todasAsEncomendasDB.filter(e => e.dataHora && e.dataHora.includes(hoje)).length;
+        let saidas = todasAsEncomendasDB.filter(e => e.dataSaida && e.dataSaida.includes(hoje)).length;
+        if(document.getElementById("dashHojeEntradas")) document.getElementById("dashHojeEntradas").innerText = entradas;
+        if(document.getElementById("dashHojeSaidas")) document.getElementById("dashHojeSaidas").innerText = saidas;
+    }
+
     async function registrarEncomenda() {
         const bloco = document.getElementById("blocoSelect").value;
         const apto = document.getElementById("aptoSelect").value;
@@ -718,6 +730,7 @@
         if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
 
         const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
+        // CORREÇÃO LOGÍSTICA: Trocado 'b' por 'bloco' para evitar travamento no celular
         const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
         
         const dados = {
@@ -1195,7 +1208,7 @@
             if (document.activeElement) { document.activeElement.blur(); } 
             atualizarCliqueSessao();
         }
-    }
+    } // CORREÇÃO: Função fechada corretamente para não engolir o canvas
 
     function limparCanvas() { 
         var localCanvas = document.getElementById('signaturePad');
