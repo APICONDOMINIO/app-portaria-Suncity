@@ -774,13 +774,18 @@
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
-        // CORREÇÃO LOGÍSTICA PARA COMPUTADOR VS CELULAR:
+        const urlLinkComum = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+        const urlProtocoloApp = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
+
+        // DETECÇÃO E DIRECIONAMENTO BLINDADO CONTRA BLOQUEADOR DE POP-UPS
         if (window.innerWidth < 768) {
-            // No Celular: Usa o link padrão estável
-            window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+            window.location.href = urlLinkComum;
         } else {
-            // No Computador: Força o disparo do aplicativo instalado no Windows diretamente
-            window.location.href = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
+            let linkInvisivel = document.createElement('a');
+            linkInvisivel.href = urlProtocoloApp;
+            document.body.appendChild(linkInvisivel);
+            linkInvisivel.click(); 
+            document.body.removeChild(linkInvisivel);
             alert("Aviso de chegada acionado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
         }
     }
@@ -1006,17 +1011,17 @@
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
-        const pendentes = filtradas.filter(e => e.status === "Pendente");
+        const appendentes = filtradas.filter(e => e.status === "Pendente");
         const entregues = filtradas.filter(e => e.status !== "Pendente"); 
 
         let htmlPDF = `<h2 class="print-title">📊 Relatório Analítico - Express Suncity</h2>`;
         htmlPDF += `<p style="text-align:center; font-family:Arial, sans-serif; font-size:12px; margin-bottom:20px;">Filtros: Status (${fStatus||"Todos"})</p>`;
 
-        if(pendentes.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${pendentes.length})</h3>
+        if(appendentes.length > 0) {
+            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${appendentes.length})</h3>
             <table class="tabela-pdf">
             <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr>`;
-            pendentes.forEach(p => {
+            appendentes.forEach(p => {
                 htmlPDF += `<tr><td>${p.bloco}</td><td>${p.apto}</td><td>${p.nome}</td><td>${p.descricao}</td><td>${p.dataHora}</td><td>${p.porteiroEntrada || '-'}</td></tr>`;
             });
             htmlPDF += `</table>`;
@@ -1188,7 +1193,7 @@
             if (document.activeElement) { document.activeElement.blur(); } 
             atualizarCliqueSessao();
         }
-    } // CORREÇÃO: Chave de fechamento da função recolocada aqui!
+    }
 
     function limparCanvas() { 
         var localCanvas = document.getElementById('signaturePad');
@@ -1245,10 +1250,17 @@
             if(pacoteFaturado) {
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 
+                const urlLinkComum = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
+                const urlProtocoloApp = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
+
                 if (window.innerWidth < 768) {
-                    window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
+                    window.location.href = urlLinkComum;
                 } else {
-                    window.location.href = `whatsapp://send?phone=${pacoteFaturado.telefone}&text=${encodeURIComponent(msgRecibo)}`;
+                    let linkInvisivel = document.createElement('a');
+                    linkInvisivel.href = urlProtocoloApp;
+                    document.body.appendChild(linkInvisivel);
+                    linkInvisivel.click();
+                    document.body.removeChild(linkInvisivel);
                     alert("Recibo enviado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
                 }
             }
