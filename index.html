@@ -773,7 +773,12 @@
             let qrFallback = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + idGerado;
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
-        window.location.href = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+        
+        // REUTILIZAÇÃO DE ABA ÚNICA: Abre ou atualiza sempre a mesma aba chamada "janelaZapSunCity"
+        window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, 'janelaZapSunCity');
+        
+        // ALERTA OPERACIONAL: Mensagem orientativa na tela da portaria
+        alert("Aviso de chegada acionado!\nSe o WhatsApp do computador não abrir de imediato, verifique a aba do WhatsApp Web aberta em segundo plano.");
     }
 
     async function pesquisarNoArquivo() {
@@ -1230,7 +1235,11 @@
             alert("Baixa confirmada!");
             if(pacoteFaturado) {
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
-                window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
+                
+                // REUTILIZAÇÃO DE ABA ÚNICA PARA O RECIBO DO WHATSAPP
+                window.open(`https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`, 'janelaZapSunCity');
+                
+                alert("Recibo enviado!\nSe o WhatsApp do computador não abrir de imediato, verifique a aba do WhatsApp Web aberta em segundo plano.");
             }
             await buscarPendentes(); 
         } catch (error) { alert("Erro da rede: " + error.message); } 
@@ -1260,10 +1269,10 @@
         
         const ultimo = localStorage.getItem("suncityUltimoClique");
         if(ultimo) {
-            const minutos = (new Date().getTime() - parseInt(ultimo)) / 1000 / 60;
+            const minutes = (new Date().getTime() - parseInt(ultimo)) / 1000 / 60;
             const nivel = localStorage.getItem("suncityNivel") || "";
             
-            if(minutos > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin" && nivel.toLowerCase() !== "administrador") {
+            if(minutes > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin" && nivel.toLowerCase() !== "administrador") {
                 porteiroLogado = "";
                 localStorage.removeItem("suncityUser"); 
                 localStorage.removeItem("suncityNivel");
