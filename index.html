@@ -179,8 +179,14 @@
         <div id="tabPendentes" class="card tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="margin: 0;">A Entregar (<span id="contador">0</span>)</h3>
-                <button class="btn-secondary" style="width: auto; margin: 0; padding: 6px 12px; font-size: 14px;" onclick="abrirCameraRetirada()">📷 Retirada QR</button>
+                <button class="btn-secondary" style="width: auto; margin: 0; padding: 6px 12px; font-size: 14px;" onclick="abrirCameraRetirada()">📷 Câmera QR</button>
             </div>
+            
+            <div style="background: #1d3557; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #cbd5e1;">
+                <label style="font-size: 12px; font-weight: bold; color: white; display: block; margin-bottom: 4px;">🖥️ Entrada Rápida Pistola USB / Leitor de Mesa:</label>
+                <input type="text" id="pistolaBipeRetirada" placeholder="Clique aqui e bipa o código do pacote ou QR Code..." style="margin: 0; padding: 10px; background: #ffffff;">
+            </div>
+
             <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtro Dinâmico</p>
                 <div class="row">
@@ -358,7 +364,6 @@
     let leitorCamera = null;
 
     window.onload = () => {
-        // CORREÇÃO: Volta para o localStorage para o celular não deslogar na troca rápida de telas
         let salvo = localStorage.getItem("suncityUser");
         if(salvo) { 
             porteiroLogado = salvo; 
@@ -366,6 +371,35 @@
         } else { 
             document.getElementById("loginContainer").style.display = "block"; 
         }
+        
+        // VÍNCULO DA PISTOLA USB (ENTRADA): Captura o Enter no campo de rastreio
+        document.getElementById("codigoRastreio").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                registrarEncomenda();
+            }
+        });
+
+        // VÍNCULO DA PISTOLA USB (SAÍDA/RETIRADA): Captura o Enter na aba de Pendentes
+        document.getElementById("pistolaBipeRetirada").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                let codLido = this.value.trim();
+                if(!codLido) return;
+                
+                const encontrada = pendentesDB.find(enc => {
+                    return String(enc.id).trim() === codLido || "P" + String(enc.id).trim() === codLido;
+                });
+                
+                if (encontrada) {
+                    this.value = ""; // Limpa para o próximo bipe
+                    abrirModalBaixa(encontrada.id);
+                } else {
+                    alert("❌ Código do pacote não encontrado na lista de Pendentes!");
+                    this.value = "";
+                }
+            }
+        });
     };
 
     function mostrarSenha() {
@@ -435,7 +469,6 @@
             
             if(data.status === "ok") {
                 porteiroLogado = data.nome;
-                // CORREÇÃO: Salvando no localStorage estável
                 localStorage.setItem("suncityUser", porteiroLogado); 
                 localStorage.setItem("suncityNivel", data.nivel);
                 iniciarSistema();
@@ -459,7 +492,6 @@
     }
 
     async function iniciarSistema() {
-        // CORREÇÃO CIRÚRGICA: Checa a sessão e, se retornar falso (vencida), para tudo!
         if (verificarSessaoAtiva() === false) return;
 
         document.getElementById("loginContainer").style.display = "none";
@@ -516,7 +548,6 @@
                 
                 let codigoLimpo = String(idLido).trim();
                 
-                // BLINDAGEM COMPLETA: Busca apenas e estritamente pelo ID idêntico e total do pacote
                 const encontrada = pendentesDB.find(enc => {
                     return String(enc.id).trim() === codigoLimpo || "P" + String(enc.id).trim() === codigoLimpo;
                 });
