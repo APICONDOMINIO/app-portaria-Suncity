@@ -774,15 +774,13 @@
             mensagem += `\n\n*Retirada Rapida:* Abra o link abaixo e apresente o QR Code no seu celular ao porteiro:\n👉 ${qrFallback}`;
         }
         
-        // IDENTIFICADOR INTELIGENTE DE DISPOSITIVO:
-        const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const urlZap = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
 
-        if (esCelular) {
-            // No celular: Abre direto o app nativo sem telas intermediárias
+        // CORREÇÃO CIRÚRGICA: Se a largura da tela for menor que 768px, trata como celular
+        if (window.innerWidth < 768) {
             window.location.href = urlZap;
         } else {
-            // No computador: Segura a aba única para não encher o PC de abas
+            // No computador: Abre ou atualiza a aba separada sem sair do Express Suncity
             window.open(urlZap, 'janelaZapSunCity');
             alert("Aviso de chegada acionado!\nSe o WhatsApp do computador não abrir de imediato, verifique a aba do WhatsApp Web aberta em segundo plano.");
         }
@@ -985,7 +983,6 @@
             div.className = "relatorio-item " + (enc.status === "Pendente" ? "status-pendente" : "status-entregue");
             let infoSaida = (enc.status === "Entregue" || enc.status === "Arquivado") ? `<br><strong>Retirado por:</strong> ${enc.quemRetirou} <br><small>Saída: ${enc.dataSaida} (${enc.porteiroSaida || 'Sistema'})</small>` : ``;
             div.innerHTML = `
-                // BLOCO UNIFICADO PARTE 2
                 <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
                 <strong>Status:</strong> ${enc.status}<br>
                 <strong>Pacote:</strong> ${enc.descricao} <br>
@@ -1010,17 +1007,17 @@
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
-        const pendentes = filtradas.filter(e => e.status === "Pendente");
+        const appendentes = filtradas.filter(e => e.status === "Pendente");
         const entregues = filtradas.filter(e => e.status !== "Pendente"); 
 
         let htmlPDF = `<h2 class="print-title">📊 Relatório Analítico - Express Suncity</h2>`;
         htmlPDF += `<p style="text-align:center; font-family:Arial, sans-serif; font-size:12px; margin-bottom:20px;">Filtros: Status (${fStatus||"Todos"})</p>`;
 
-        if(pendentes.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${pendentes.length})</h3>
+        if(appendentes.length > 0) {
+            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${appendentes.length})</h3>
             <table class="tabela-pdf">
             <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr>`;
-            pendentes.forEach(p => {
+            appendentes.forEach(p => {
                 htmlPDF += `<tr><td>${p.bloco}</td><td>${p.apto}</td><td>${p.nome}</td><td>${p.descricao}</td><td>${p.dataHora}</td><td>${p.porteiroEntrada || '-'}</td></tr>`;
             });
             htmlPDF += `</table>`;
@@ -1108,7 +1105,7 @@
                 const arqBloco = document.getElementById("admOriginalBloco"); arqBloco.innerHTML = '<option value="">Block Atual...</option>';
                 blocos.forEach(b => arqBloco.add(new Option(`Bloco ${b}`, b))); document.getElementById("admOriginalBloco").value = admBl; admAtualizarAptos();
             } else { alert("Erro: " + data.erro); }
-        } catch(e) { alert("Erro de rede ao salvar alteration do morador."); }
+        } catch(e) { alert("Erro de rede ao salvar alteração do morador."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
@@ -1244,10 +1241,10 @@
             if(pacoteFaturado) {
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 
-                const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const urlZapRecibo = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
 
-                if (esCelular) {
+                // CORREÇÃO CIRÚRGICA NO RECIBO DA RETIRADA:
+                if (window.innerWidth < 768) {
                     window.location.href = urlZapRecibo;
                 } else {
                     window.open(urlZapRecibo, 'janelaZapSunCity');
