@@ -388,8 +388,9 @@
                 if(!codLido) return;
                 
                 const encontrada = pendentesDB.find(enc => {
-                    return String(enc.id).trim() === codLido || "P" + String(enc.id).trim() === codLido;
-                });
+    let idDoBanco = String(enc.id || "").trim();
+    return idDoBanco === codLido || "P" + idDoBanco === codLido || idDoBanco.includes(codLido) || codLido.includes(idDoBanco);
+});
                 
                 if (encontrada) {
                     this.value = ""; // Limpa para o próximo bipe
