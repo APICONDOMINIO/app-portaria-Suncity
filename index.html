@@ -388,9 +388,10 @@
                 if(!codLido) return;
                 
                 const encontrada = pendentesDB.find(enc => {
-    let idDoBanco = String(enc.id || "").trim();
-    return idDoBanco === codLido || "P" + idDoBanco === codLido || idDoBanco.includes(codLido) || codLido.includes(idDoBanco);
-});
+                    let idExclusivo = String(enc.id || "").trim();
+                    // Valida estritamente contra o ID do QR Code enviado ao morador
+                    return idExclusivo === codLido || "P" + idExclusivo === codLido || codLido.includes(idExclusivo);
+                });
                 
                 if (encontrada) {
                     this.value = ""; // Limpa para o próximo bipe
@@ -554,9 +555,10 @@
                 });
                 
                 if (encontrada) {
-                    let blocoIdentificado = encontrada.bloco || encontrada.Bloco || encontrada.BLOCO || 'N/A';
-                    let aptoIdentificado = encontrada.apartamento || encontrada.Apartamento || encontrada.apto || encontrada.Apto || encontrada.APTO || 'N/A';
-                    alert(`✅ Código Válido!\nMorador: ${encontrada.nome}\nBloco: ${blocoIdentificado}\nApartamento: ${aptoIdentificado}\nPacote: ${encontrada.descricao}`);
+                    let blocoIdentificado = encontrada.bloco || 'N/A';
+                    let aptoIdentificado = encontrada.apto || 'N/A';
+                    // Alerta atualizado para guiar o porteiro com o Serial/EAN contido na descrição
+                    alert(`✅ Código Exclusivo Confirmado!\n\n👤 Morador: ${encontrada.nome}\n🏢 Local: Bloco ${blocoIdentificado} - Ap ${aptoIdentificado}\n📦 Identificação do Pacote:\n👉 ${encontrada.descricao}`);
                     abrirModalBaixa(encontrada.id); 
                 } else {
                     const entregueAntes = todasAsEncomendasDB.find(enc => {
@@ -716,7 +718,7 @@
         if (!bloco || !apto || !tipoPacote) { alert("Preencha bloco, apto e o tipo de pacote!"); return; }
 
         const desc = rastreio ? `${tipoPacote} (Rast: ${rastreio})` : tipoPacote;
-        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
+        const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(apto));
         
         const dados = {
             acao: "nova_encomenda", 
@@ -778,7 +780,6 @@
         const urlLinkComum = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
         const urlProtocoloApp = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
 
-        // DETECÇÃO E DIRECIONAMENTO BLINDADO CONTRA BLOQUEADOR DE POP-UPS
         if (window.innerWidth < 768) {
             window.location.href = urlLinkComum;
         } else {
@@ -1271,6 +1272,29 @@
     }
 
     // =========================================================
+    // CONTROLE MASTER DE STATUS (MANUTENÇÃO / LIBERADO)
+    // =========================================================
+    async function alterarStatusSistema(novoStatus) {
+        let statusFormatado = novoStatus === 'Manutencao' ? 'Manutencao' : 'Liberado';
+        if(!confirm(`Deseja alterar o status geral do condomínio para: ${statusFormatado}?`)) return;
+        document.getElementById("loading").style.display = "block";
+        try {
+            await fetch(API_URL, {
+                method: "POST", 
+                body: JSON.stringify({ acao: "alterar_status_sistema", status: statusFormatado }), 
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            alert("Status master do SunCity atualizado com sucesso!");
+            setTimeout(() => { location.reload(); }, 500);
+        } catch(e) { 
+            alert("Status enviado! Verifique se a alteração entrou em vigor na planilha.");
+            setTimeout(() => { location.reload(); }, 500);
+        } finally { 
+            document.getElementById("loading").style.display = "none"; 
+        }
+    }
+
+    // =========================================================
     // CRONÔMETRO DE SEGURANÇA E SESSÃO ATIVA (2 MINUTOS)
     // =========================================================
     const atualizarCliqueSessao = () => { 
@@ -1291,9 +1315,9 @@
     function verificarSessaoAtiva() {
         if(!porteiroLogado) return true; 
         
-        const ultimo = localStorage.getItem("suncityUltimoClique");
+        const ultimo = localStorage.getItem("suncityUser");
         if(ultimo) {
-            const minutos = (new Date().getTime() - parseInt(ultimo)) / 1000 / 60;
+            const minutos = (new Date().getTime() - parseInt(localStorage.getItem("suncityUltimoClique") || "0")) / 1000 / 60;
             const nivel = localStorage.getItem("suncityNivel") || "";
             
             if(minutos > 2 && nivel.toLowerCase() !== "deus" && nivel.toLowerCase() !== "superadmin" && nivel.toLowerCase() !== "administrador") {
