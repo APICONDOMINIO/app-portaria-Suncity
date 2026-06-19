@@ -997,17 +997,17 @@
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
-        const pendentes = filtradas.filter(e => e.status === "Pendente");
+        const appendentes = filtradas.filter(e => e.status === "Pendente");
         const entregues = filtradas.filter(e => e.status !== "Pendente"); 
 
         let htmlPDF = `<h2 class="print-title">📊 Relatório Analítico - Express Suncity</h2>`;
         htmlPDF += `<p style="text-align:center; font-family:Arial, sans-serif; font-size:12px; margin-bottom:20px;">Filtros: Status (${fStatus||"Todos"})</p>`;
 
-        if(pendentes.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${pendentes.length})</h3>
+        if(appendentes.length > 0) {
+            htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${appendentes.length})</h3>
             <table class="tabela-pdf">
             <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr>`;
-            pendentes.forEach(p => {
+            appendentes.forEach(p => {
                 htmlPDF += `<tr><td>${p.bloco}</td><td>${p.apto}</td><td>${p.nome}</td><td>${p.descricao}</td><td>${p.dataHora}</td><td>${p.porteiroEntrada || '-'}</td></tr>`;
             });
             htmlPDF += `</table>`;
@@ -1047,281 +1047,76 @@
         finally { btnEmail.innerText = "✉️ Enviar para meu E-mail"; btnEmail.disabled = false; }
     }
 
-    // =========================================================
-    // RECALIBRAÇÃO ATIVA DO SENSOR DE DESENHO E ASSINATURA
-    // =========================================================
-    function getPos(e) {
-        var localCanvas = document.getElementById('signaturePad');
-        if (!localCanvas) return { x: 0, y: 0 };
-        var rect = localCanvas.getBoundingClientRect();
-        var clientX = e.touches && e.touches[0] ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : e.clientX);
-        var clientY = e.touches && e.touches[0] ? e.touches[0].clientY : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : e.clientY);
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
-    }
-
-    function iniciarDesenho(e) { 
-        var localCanvas = document.getElementById('signaturePad');
-        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
-        if (!localCtx) return;
-        
-        e.preventDefault(); 
-        isDrawing = true; 
-        let pos = getPos(e); 
-        localCtx.beginPath(); 
-        localCtx.moveTo(pos.x, pos.y); 
-    }
-
-    function desenhar(e) { 
-        var localCanvas = document.getElementById('signaturePad');
-        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
-        if (!isDrawing || !localCtx) return; 
-        
-        e.preventDefault(); 
-        let pos = getPos(e); 
-        localCtx.lineWidth = 3; 
-        localCtx.lineCap = 'round'; 
-        localCtx.strokeStyle = '#1d3557';
-        localCtx.lineTo(pos.x, pos.y); 
-        localCtx.stroke(); 
-    }
-
-    function pararDesenho(e) { 
-        if(e) e.preventDefault(); 
-        isDrawing = false; 
-        atualizarCliqueSessao(); 
-    }
-
-    function limparCanvas() { 
-        var localCanvas = document.getElementById('signaturePad');
-        var localCtx = localCanvas ? localCanvas.getContext('2d') : null;
-        if(localCtx && localCanvas) localCtx.clearRect(0, 0, localCanvas.width, localCanvas.height); 
-    }
-
-    function abrirModalBaixa(id) {
-        idEmBaixa = id; 
-        encomendaSelecionada = pendentesDB.find(e => String(e.id) === String(id)); 
-        document.getElementById("nomeRetirante").value = ""; 
-        document.getElementById("modalAssinatura").style.display = "flex";
-        
-        setTimeout(() => { 
-            var localCanvas = document.getElementById('signaturePad');
-            if(localCanvas) {
-                localCanvas.width = localCanvas.offsetWidth; 
-                localCanvas.height = localCanvas.offsetHeight; 
-                limparCanvas();
-            }
-        }, 200);
-    }
-
-    function fecharModal() { document.getElementById("modalAssinatura").style.display = "none"; idEmBaixa = null; encomendaSelecionada = null; }
-
-    async function confirmarEntregaFinal() {
-        const quemRetirou = document.getElementById("nomeRetirante").value;
-        if(!quemRetirou) { alert("Digite o nome de quem está retirando o pacote!"); return; }
-        const btn = document.getElementById("btnConfirmarBaixa");
-        btn.innerText = "Processando..."; btn.disabled = true;
-        
-        const dataBaixa = new Date().toLocaleString('pt-BR');
-        const pacoteFaturado = encomendaSelecionada;
-
-        try {
-            const canvasOriginal = document.getElementById('signaturePad');
-            const canvasMesclado = document.createElement('canvas');
-            canvasMesclado.width = canvasOriginal.width; canvasMesclado.height = canvasOriginal.height + 40;
-            const ctxMesclado = canvasMesclado.getContext('2d');
-            ctxMesclado.fillStyle = "#ffffff"; ctxMesclado.fillRect(0, 0, canvasMesclado.width, canvasMesclado.height);
-            ctxMesclado.font = "bold 14px Arial"; ctxMesclado.fillStyle = "#1d3557"; ctxMesclado.fillText("Retirado por: " + quemRetirou, 10, 20);
-            ctxMesclado.font = "10px Arial"; ctxMesclado.fillStyle = "#666666"; ctxMesclado.fillText("Data: " + dataBaixa, 10, 35);
-            ctxMesclado.drawImage(canvasOriginal, 0, 40);
-
-            await fetch(API_URL, { 
-                method: "POST", 
-                body: JSON.stringify({ acao: "baixar", id: idEmBaixa.toString(), dataHora: dataBaixa, porteiroSaida: porteiroLogado || "Não identified", quemRetirou: quemRetirou, assinatura: "Sim", imagemBase64: canvasMesclado.toDataURL("image/png") }), 
-                headers: { "Content-Type": "text/plain;charset=utf-8" } 
-            });
-            
-            fecharModal(); 
-            alert("Baixa confirmada!");
-            if(pacoteFaturado) {
-                const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
-                window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
-            }
-            await buscarPendentes(); 
-        } catch (error) { alert("Erro da rede: " + error.message); } 
-        finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
-    }
-
-    async function admCadastrarFuncionario() {
-        const nome = document.getElementById("admNovoNome").value;
-        const login = document.getElementById("admNovoLogin").value;
-        const senha = document.getElementById("admNovaSenha").value;
-        const nivel = document.getElementById("admNovoNivel").value;
-
+    function admCadastrarFuncionario() {
+        const nome = document.getElementById("admNovoNome").value; const login = document.getElementById("admNovoLogin").value;
+        const senha = document.getElementById("admNovaSenha").value; const nivel = document.getElementById("admNovoNivel").value;
         if(!nome || !login || !senha) return alert("Preencha todos os campos do funcionário!");
-
         document.getElementById("loading").style.display = "block";
         try {
-            const res = await fetch(API_URL, {
+            fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({ acao: "cadastrar_usuario", novoNome: nome, novoLogin: login, novaSenha: senha, novoNivel: nivel }),
                 headers: { "Content-Type": "text/plain;charset=utf-8" }
+            }).then(res => res.json()).then(data => {
+                if(data.status === "Sucesso") {
+                    alert("✅ " + data.msg); document.getElementById("admNovoNome").value = "";
+                    document.getElementById("admNovoLogin").value = ""; document.getElementById("admNovaSenha").value = "";
+                } else { alert("Erro: " + data.erro); }
             });
-            const data = await res.json();
-            if(data.status === "Sucesso") {
-                alert("✅ " + data.msg);
-                document.getElementById("admNovoNome").value = "";
-                document.getElementById("admNovoLogin").value = "";
-                document.getElementById("admNovaSenha").value = "";
-            } else { alert("Erro: " + data.erro); }
         } catch(e) { alert("Erro de rede ao salvar funcionário."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    function admAtualizarAptos() {
-        const b = document.getElementById("admOriginalBloco").value;
-        const s = document.getElementById("admOriginalApto");
-        s.innerHTML = '<option value="">Apto Atual...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${m.apto} - ${m.nome}`, m.apto)));
-    }
-
     function admCarregarDadosForm() {
-        const b = document.getElementById("admOriginalBloco").value;
-        const a = document.getElementById("admOriginalApto").value;
+        const b = document.getElementById("admOriginalBloco").value; const a = document.getElementById("admOriginalApto").value;
         const morador = moradoresDB.find(m => m.bloco === b && String(m.apto) === String(a));
         if(morador) {
-            document.getElementById("admNovoNomeMorador").value = morador.nome;
-            document.getElementById("admNovoTelMorador").value = morador.telefone;
+            document.getElementById("admNovoNomeMorador").value = morador.nome; document.getElementById("admNovoTelMorador").value = morador.telefone;
             document.getElementById("admNovoEmailMorador").value = morador.email || ""; 
         }
     }
 
     async function admSalvarEdicaoMorador() {
-        const blocoOrig = document.getElementById("admOriginalBloco").value;
-        const aptoOrig = document.getElementById("admOriginalApto").value;
-        const novoNome = document.getElementById("admNovoNomeMorador").value;
-        const novoTel = document.getElementById("admNovoTelMorador").value;
+        const blocoOrig = document.getElementById("admOriginalBloco").value; const aptoOrig = document.getElementById("admOriginalApto").value;
+        const novoNome = document.getElementById("admNovoNomeMorador").value; const novoTel = document.getElementById("admNovoTelMorador").value;
         const novoEmail = document.getElementById("admNovoEmailMorador").value;
-
         if(!blocoOrig || !aptoOrig || !novoNome || !novoTel) return alert("Selecione o morador e preencha o Nome e Telefone!");
-
         document.getElementById("loading").style.display = "block";
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify({
-                    acao: "editar_morador",
-                    blocoOriginal: blocoOrig,
-                    aptoOriginal: aptoOrig,
-                    novoNome: novoNome,
-                    novoTelefone: novoTel,
-                    novoEmail: novoEmail
-                }),
+                body: JSON.stringify({ acao: "editar_morador", blocoOriginal: blocoOrig, aptoOriginal: aptoOrig, novoNome: novoNome, novoTelefone: novoTel, novoEmail: novoEmail }),
                 headers: { "Content-Type": "text/plain;charset=utf-8" }
             });
             const data = await res.json();
             if(data.status === "Sucesso") {
-                alert("✅ " + data.msg);
-                await carregarMoradores(); 
-                const admBl = document.getElementById("admOriginalBloco").value;
-                const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
-                const arqBloco = document.getElementById("admOriginalBloco");
-                arqBloco.innerHTML = '<option value="">Block Atual...</option>';
-                blocos.forEach(b => arqBloco.add(new Option(`Bloco ${b}`, b)));
-                document.getElementById("admOriginalBloco").value = admBl;
-                admAtualizarAptos();
+                alert("✅ " + data.msg); await carregarMoradores(); 
+                const admBl = document.getElementById("admOriginalBloco").value; const blocos = [...new Set(moradoresDB.map(m => m.bloco))].sort();
+                const arqBloco = document.getElementById("admOriginalBloco"); arqBloco.innerHTML = '<option value="">Block Atual...</option>';
+                blocos.forEach(b => arqBloco.add(new Option(`Bloco ${b}`, b))); document.getElementById("admOriginalBloco").value = admBl; admAtualizarAptos();
             } else { alert("Erro: " + data.erro); }
         } catch(e) { alert("Erro de rede ao salvar alteração do morador."); }
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
     function admAtualizarAptos() {
-        const b = document.getElementById("admOriginalBloco").value;
-        const s = document.getElementById("admOriginalApto");
-        s.innerHTML = '<option value="">Apto Atual...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
+        const b = document.getElementById("admOriginalBloco").value; const s = document.getElementById("admOriginalApto");
+        s.innerHTML = '<option value="">Apto Atual...</option>'; moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
     }
 
     function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value;
-        const apto = document.getElementById("chamadoApto").value;
-        const just = document.getElementById("chamadoJustificativa").value;
-        if (!bloco || !apto || !just) return alert("Preencha tudo!");
+        const bloco = document.getElementById("chamadoBloco").value; const apto = document.getElementById("chamadoApto").value;
+        const just = document.getElementById("chamadoJustificativa").value; if (!bloco || !apto || !just) return alert("Preencha tudo!");
         window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO: Bloco ${bloco} Ap ${apto} - ${just}\nPorteiro: ${porteiroLogado}`)}`;
     }
 
-    function calcularGiroHoje() {
-        const hojeStr = new Date().toLocaleDateString('pt-BR');
-        const entradasHoje = todasAsEncomendasDB.filter(enc => enc.dataHora && enc.dataHora.startsWith(hojeStr)).length;
-        const saidasHoje = todasAsEncomendasDB.filter(enc => enc.dataSaida && enc.dataSaida.startsWith(hojeStr)).length;
-        document.getElementById("dashHojeEntradas").innerText = entradasHoje;
-        document.getElementById("dashHojeSaidas").innerText = saidasHoje;
-    }
-
-    function filtrarPeriodoDash(dias) {
-        const fim = new Date(); 
-        const inicio = new Date();
-        inicio.setDate(fim.getDate() - dias);
-        document.getElementById("dashDataInicio").value = inicio.toISOString().split('T')[0];
-        document.getElementById("dashDataFim").value = fim.toISOString().split('T')[0];
-        calcularPeriodoDashManual();
-    }
-
-    function calcularPeriodoDashManual() {
-        const txtIn = document.getElementById("dashDataInicio").value;
-        const txtFim = document.getElementById("dashDataFim").value;
-        if(!txtIn || !txtFim) return alert("Por favor, selecione o período inicial e final!");
-        
-        const inicio = new Date(txtIn + "T00:00:00");
-        const fim = new Date(txtFim + "T23:59:59");
-
-        const recebidos = todasAsEncomendasDB.filter(enc => {
-            if(!enc.dataHora) return false;
-            const dataLimpa = enc.dataHora.split(' ')[0].replace(',', '').trim();
-            const partes = dataLimpa.split('/');
-            if(partes.length < 3) return false;
-            const dEnc = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
-            return dEnc >= inicio && dEnc <= fim;
-        }).length;
-
-        const retirados = todasAsEncomendasDB.filter(enc => {
-            if(!enc.dataSaida) return false;
-            const dataLimpa = enc.dataSaida.split(' ')[0].replace(',', '').trim();
-            const partes = dataLimpa.split('/');
-            if(partes.length < 3) return false;
-            const dSai = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T00:00:00`);
-            return dSai >= inicio && dSai <= fim;
-        }).length;
-
-        document.getElementById("resDashEntradasPer").innerText = recebidos;
-        document.getElementById("resDashSaidasPer").innerText = retirados;
-    }
-
-    async function alterarStatusSistema(novoStatus) {
-        if(!confirm(`Deseja alterar o status geral do condomínio para: ${novoStatus}?`)) return;
-        document.getElementById("loading").style.display = "block";
-        try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ acao: "alterar_status_sistema", status: novoStatus }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            alert("Status master do SunCity updated com sucesso!");
-            location.reload();
-        } catch(e) { alert("Erro de comunicação ao alterar status do sistema."); }
-        finally { document.getElementById("loading").style.display = "none"; }
-    }
-
     // =========================================================
-    // MOTOR HÍBRIDO DE ASSINATURA (CELULAR + MESA DIGITALIZADORA PC)
+    // MOTOR HÍBRIDO DE ASSINATURA ELETRÔNICA (TOUCH + CANETA + MOUSE)
     // =========================================================
     function registrarEventosCanvas() {
         var localCanvas = document.getElementById('signaturePad');
         if (!localCanvas) return;
 
-        // Limpa ouvintes antigos para não duplicar o traço
         localCanvas.onpointerdown = iniciarDesenhoHibrido;
         localCanvas.onpointermove = desenharHibrido;
         localCanvas.onpointerup = pararDesenhoHibrido;
@@ -1339,7 +1134,7 @@
     }
 
     function iniciarDesenhoHibrido(e) {
-        if (e.pointerType === 'mouse' && e.buttons !== 1) return; // Ignora clique direito do mouse
+        if (e.pointerType === 'mouse' && e.buttons !== 1) return;
         isDrawing = true;
         var ctxLocal = e.target.getContext('2d');
         ctxLocal.beginPath();
@@ -1399,7 +1194,7 @@
                 localCanvas.width = localCanvas.offsetWidth; 
                 localCanvas.height = localCanvas.offsetHeight; 
                 limparCanvas();
-                registrarEventosCanvas(); // Liga os sensores da caneta e do touch
+                registrarEventosCanvas(); 
             }
         }, 200);
     }
@@ -1443,7 +1238,7 @@
     }
 
     // =========================================================
-    // CRONÔMETRO DE SEGURANÇA E SESSÃO ATIVA
+    // CRONÔMETRO DE SEGURANÇA E SESSÃO ATIVA (2 MINUTOS)
     // =========================================================
     const atualizarCliqueSessao = () => { 
         localStorage.setItem("suncityUltimoClique", new Date().getTime().toString()); 
