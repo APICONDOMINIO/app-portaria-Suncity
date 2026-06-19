@@ -1163,10 +1163,11 @@
     }
 
     function pararDesenhoHibrido() { 
-    isDrawing = false; 
-    if (document.activeElement) { document.activeElement.blur(); } 
-    atualizarCliqueSessao(); 
-}
+        isDrawing = false; 
+        if (document.activeElement) { document.activeElement.blur(); } 
+        atualizarCliqueSessao(); 
+    }
+
     function tratarAcaoHibrida(touchObj, acao) {
         var localCanvas = document.getElementById('signaturePad');
         if (!localCanvas) return;
@@ -1183,10 +1184,11 @@
             ctxLocal.lineTo(touchObj.clientX - rect.left, touchObj.clientY - rect.top);
             ctxLocal.stroke();
         } else if (acao === 'end') {
-    isDrawing = false;
-    if (document.activeElement) { document.activeElement.blur(); } // Força o teclado a fechar no celular
-    atualizarCliqueSessao();
-    }
+            isDrawing = false;
+            if (document.activeElement) { document.activeElement.blur(); } 
+            atualizarCliqueSessao();
+        }
+    } // CORREÇÃO: Chave de fechamento da função recolocada aqui!
 
     function limparCanvas() { 
         var localCanvas = document.getElementById('signaturePad');
@@ -1243,7 +1245,6 @@
             if(pacoteFaturado) {
                 const msgRecibo = `✅ *ENCOMENDA RETIRADA!* ✅\n\nOlá *${pacoteFaturado.nome}*!\nA sua encomenda (${pacoteFaturado.descricao}) foi retirada na portaria.\n\n👤 *Entregue para:* ${quemRetirou}\n🕒 *Data/Hora:* ${dataBaixa}\n🛡️ *Registrado por:* ${porteiroLogado}`;
                 
-                // Aplica a mesma regra inteligente: abre o app direto se for PC
                 if (window.innerWidth < 768) {
                     window.location.href = `https://wa.me/${pacoteFaturado.telefone}?text=${encodeURIComponent(msgRecibo)}`;
                 } else {
