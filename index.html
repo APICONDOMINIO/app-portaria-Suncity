@@ -712,6 +712,7 @@
     }
 
     function calcularGiroHoje() {
+        if (!todasAsEncomendasDB || todasAsEncomendasDB.length === 0) return;
         let hoje = new Date().toLocaleDateString('pt-BR');
         let entradas = todasAsEncomendasDB.filter(e => e.dataHora && e.dataHora.includes(hoje)).length;
         let saidas = todasAsEncomendasDB.filter(e => e.dataSaida && e.dataSaida.includes(hoje)).length;
@@ -725,8 +726,12 @@
         let dataInicio = new Date();
         dataInicio.setDate(dataFim.getDate() - dias);
 
-        document.getElementById("dashDataInicio").value = dataInicio.toISOString().split('T')[0];
-        document.getElementById("dashDataFim").value = dataFim.toISOString().split('T')[0];
+        // Zera as horas para a comparação ser puramente por data comercial completa
+        dataInicio.setHours(0, 0, 0, 0);
+        dataFim.setHours(23, 59, 59, 999);
+
+        if(document.getElementById("dashDataInicio")) document.getElementById("dashDataInicio").value = dataInicio.toISOString().split('T')[0];
+        if(document.getElementById("dashDataFim")) document.getElementById("dashDataFim").value = dataFim.toISOString().split('T')[0];
         
         processarCalculoPeriodo(dataInicio, dataFim);
     }
@@ -736,6 +741,7 @@
         let fimStr = document.getElementById("dashDataFim").value;
         if(!iniStr || !fimStr) { alert("Selecione as duas datas para a consulta!"); return; }
 
+        // Cria as datas garantindo que o dia inteiro seja contabilizado na janela de busca
         let dataInicio = new Date(iniStr + "T00:00:00");
         let dataFim = new Date(fimStr + "T23:59:59");
         processarCalculoPeriodo(dataInicio, dataFim);
@@ -745,25 +751,27 @@
         let entradasPer = 0;
         let saidasPer = 0;
 
-        todasAsEncomendasDB.forEach(enc => {
-            if(enc.dataHora) {
-                let p = enc.dataHora.split(' ')[0].split('/');
-                if(p.length === 3) {
-                    let dtIn = new Date(p[2], p[1] - 1, p[0]);
-                    if(dtIn >= dataInicio && dtIn <= dataFim) entradasPer++;
+        if (todasAsEncomendasDB && todasAsEncomendasDB.length > 0) {
+            todasAsEncomendasDB.forEach(enc => {
+                if(enc.dataHora) {
+                    let p = enc.dataHora.split(' ')[0].split('/');
+                    if(p.length === 3) {
+                        let dtIn = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                        if(dtIn >= dataInicio && dtIn <= dataFim) entradasPer++;
+                    }
                 }
-            }
-            if(enc.dataSaida) {
-                let p = enc.dataSaida.split(' ')[0].split('/');
-                if(p.length === 3) {
-                    let dtOut = new Date(p[2], p[1] - 1, p[0]);
-                    if(dtOut >= dataInicio && dtOut <= dataFim) saidasPer++;
+                if(enc.dataSaida) {
+                    let p = enc.dataSaida.split(' ')[0].split('/');
+                    if(p.length === 3) {
+                        let dtOut = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                        if(dtOut >= dataInicio && dtOut <= dataFim) saidasPer++;
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        document.getElementById("resDashEntradasPer").innerText = entradasPer;
-        document.getElementById("resDashSaidasPer").innerText = saidasPer;
+        if(document.getElementById("resDashEntradasPer")) document.getElementById("resDashEntradasPer").innerText = entradasPer;
+        if(document.getElementById("resDashSaidasPer")) document.getElementById("resDashSaidasPer").innerText = saidasPer;
     }
 
     async function registrarEncomenda() {
