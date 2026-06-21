@@ -1018,20 +1018,39 @@
         let dataInicio = iniStr ? new Date(iniStr + "T00:00:00") : null;
         let dataFim = fimStr ? new Date(fimStr + "T23:59:59") : null;
 
-        // 1. FILTRO EXCLUSIVO PARA A LISTA VISUAL DE ENCOMENDAS
+        // 1. FILTRO UNIFICADO: APLICA TEXTO, STATUS, BLOCO E PERÍODO NAS ENCOMENDAS
         const filtradas = todasAsEncomendasDB.filter(enc => {
             const matchBloco = fBloco === "" || enc.bloco === fBloco;
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
             const matchNome = termo === "" || enc.nome.toLowerCase().includes(termo) || enc.descricao.toLowerCase().includes(termo);
             const matchStatus = fStatus === "" || enc.status === fStatus;
-            return matchBloco && matchApto && matchNome && matchStatus;
+            
+            // Validação cronológica: Se houver período selecionado, a encomenda precisa estar dentro dele
+            let matchData = true;
+            if (dataInicio && dataFim) {
+                // Checa a data principal aplicável (Saída para entregues, Entrada para pendentes)
+                let dataAlvoStr = (enc.status === "Entregue" || enc.status === "Arquivado") ? enc.dataSaida : enc.dataHora;
+                if (dataAlvoStr) {
+                    let p = dataAlvoStr.split(' ')[0].split('/');
+                    if (p.length === 3) {
+                        let dtAlvo = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                        matchData = (dtAlvo >= dataInicio && dtAlvo <= dataFim);
+                    } else {
+                        matchData = false;
+                    }
+                } else {
+                    matchData = false;
+                }
+            }
+            
+            return matchBloco && matchApto && matchNome && matchStatus && matchData;
         });
 
-        // Atualiza os cards superiores com base na busca visual de pacotes
+        // Atualiza os cards superiores com base na busca filtrada por tempo e texto
         document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
         document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length; 
 
-        // 2. CÁLCULO DE PRODUTIVIDADE GLOBAL FILTRADO POR SEU PERÍODO EXCLUSIVO
+        // 2. CÁLCULO DE PRODUTIVIDADE GLOBAL FILTRADO PELO MESMO PERÍODO
         const tabelaProd = document.getElementById("corpoTabelaProdutividade");
         tabelaProd.innerHTML = "";
         let placar = {};
@@ -1040,7 +1059,7 @@
             tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhum funcionário ativo no sistema</td></tr>`;
         } else {
             todasAsEncomendasDB.forEach(enc => {
-                // Filtra as entradas do funcionário pelo período exclusivo do relatório
+                // Filtra as entradas do período
                 if(enc.dataHora) {
                     let p = enc.dataHora.split(' ')[0].split('/');
                     if(p.length === 3) {
@@ -1053,7 +1072,7 @@
                     }
                 }
 
-                // Filtra as retiradas do funcionário pelo período exclusivo do relatório
+                // Filtra as retiradas do período
                 if((enc.status === "Entregue" || enc.status === "Arquivado") && enc.dataSaida) {
                     let p = enc.dataSaida.split(' ')[0].split('/');
                     if(p.length === 3) {
@@ -1080,7 +1099,7 @@
             }
         }
 
-        // 3. RENDERIZA A LISTA DETALHADA EXPANSÍVEL
+        // 3. RENDERIZA A LISTA DETALHADA EXPANSÍVEL (AGORA CRONOLOGICAMENTE CORRETA)
         const lista = document.getElementById("listaRelatorio");
         lista.innerHTML = "";
 
