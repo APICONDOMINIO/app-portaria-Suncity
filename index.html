@@ -231,6 +231,12 @@
                     <input type="text" id="relApto" placeholder="Apto" onkeyup="renderizarRelatorio()">
                 </div>
                 <input type="text" id="relMorador" placeholder="Pesquisar Morador ou Pacote..." onkeyup="renderizarRelatorio()">
+                
+                <p style="margin: 8px 0 2px 0; font-size: 12px; font-weight: bold; color: var(--primary);">📅 Período da Produtividade / Relatório:</p>
+                <div class="row">
+                    <input type="date" id="relDataInicio" onchange="renderizarRelatorio()" style="margin: 2px 0; padding: 8px; font-size: 13px;">
+                    <input type="date" id="relDataFim" onchange="renderizarRelatorio()" style="margin: 2px 0; padding: 8px; font-size: 13px;">
+                </div>
             </div>
 
             <div style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cbd5e1;">
