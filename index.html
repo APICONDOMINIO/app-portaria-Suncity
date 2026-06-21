@@ -1012,6 +1012,13 @@
         const fApto = document.getElementById("relApto").value.toLowerCase();
         const fStatus = document.getElementById("relStatus").value;
 
+        // Captura as datas exclusivas e isoladas da aba de Relatórios
+        let iniStr = document.getElementById("relDataInicio").value;
+        let fimStr = document.getElementById("relDataFim").value;
+        let dataInicio = iniStr ? new Date(iniStr + "T00:00:00") : null;
+        let dataFim = fimStr ? new Date(fimStr + "T23:59:59") : null;
+
+        // 1. FILTRO EXCLUSIVO PARA A LISTA VISUAL DE ENCOMENDAS
         const filtradas = todasAsEncomendasDB.filter(enc => {
             const matchBloco = fBloco === "" || enc.bloco === fBloco;
             const matchApto = fApto === "" || String(enc.apto).toLowerCase().includes(fApto);
@@ -1020,37 +1027,60 @@
             return matchBloco && matchApto && matchNome && matchStatus;
         });
 
+        // Atualiza os cards superiores com base na busca visual de pacotes
         document.getElementById("statPend").innerText = filtradas.filter(e => e.status === "Pendente").length;
         document.getElementById("statEntreg").innerText = filtradas.filter(e => e.status !== "Pendente").length; 
 
+        // 2. CÁLCULO DE PRODUTIVIDADE GLOBAL FILTRADO POR SEU PERÍODO EXCLUSIVO
         const tabelaProd = document.getElementById("corpoTabelaProdutividade");
         tabelaProd.innerHTML = "";
         let placar = {};
 
-        if(filtradas.length === 0) {
-            tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhum funcionário ativo no filtro</td></tr>`;
+        if(!todasAsEncomendasDB || todasAsEncomendasDB.length === 0) {
+            tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px;">Nenhum funcionário ativo no sistema</td></tr>`;
         } else {
-            filtradas.slice().reverse().forEach(enc => {
-                let pIn = enc.porteiroEntrada || "Sistema";
-                if(!placar[pIn]) placar[pIn] = { ins: 0, outs: 0 };
-                placar[pIn].ins++;
+            todasAsEncomendasDB.forEach(enc => {
+                // Filtra as entradas do funcionário pelo período exclusivo do relatório
+                if(enc.dataHora) {
+                    let p = enc.dataHora.split(' ')[0].split('/');
+                    if(p.length === 3) {
+                        let dtIn = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                        if(!dataInicio || !dataFim || (dtIn >= dataInicio && dtIn <= dataFim)) {
+                            let pIn = enc.porteiroEntrada || "Sistema";
+                            if(!placar[pIn]) placar[pIn] = { ins: 0, outs: 0 };
+                            placar[pIn].ins++;
+                        }
+                    }
+                }
 
-                if(enc.status === "Entregue" || enc.status === "Arquivado") {
-                    let sNome = enc.porteiroSaida || "Sistema";
-                    if(!placar[sNome]) placar[sNome] = { ins: 0, outs: 0 };
-                    placar[sNome].outs++;
+                // Filtra as retiradas do funcionário pelo período exclusivo do relatório
+                if((enc.status === "Entregue" || enc.status === "Arquivado") && enc.dataSaida) {
+                    let p = enc.dataSaida.split(' ')[0].split('/');
+                    if(p.length === 3) {
+                        let dtOut = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                        if(!dataInicio || !dataFim || (dtOut >= dataInicio && dtOut <= dataFim)) {
+                            let sNome = enc.porteiroSaida || "Sistema";
+                            if(!placar[sNome]) placar[sNome] = { ins: 0, outs: 0 };
+                            placar[sNome].outs++;
+                        }
+                    }
                 }
             });
 
-            Object.keys(placar).forEach(f => {
-                tabelaProd.innerHTML += `<tr style="border-bottom:1px solid #e2e8f0;">
-                    <td style="padding:8px; font-weight:bold;">👤 ${f}</td>
-                    <td style="padding:8px; text-align:center; color:#166534; font-weight:bold;">${placar[f].ins}</td>
-                    <td style="padding:8px; text-align:center; color:#991b1b; font-weight:bold;">${placar[f].outs}</td>
-                </tr>`;
-            });
+            if(Object.keys(placar).length === 0) {
+                tabelaProd.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px; color:#64748b;">Nenhuma movimentação no período selecionado</td></tr>`;
+            } else {
+                Object.keys(placar).forEach(f => {
+                    tabelaProd.innerHTML += `<tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:8px; font-weight:bold;">👤 ${f}</td>
+                        <td style="padding:8px; text-align:center; color:#166534; font-weight:bold;">${placar[f].ins}</td>
+                        <td style="padding:8px; text-align:center; color:#991b1b; font-weight:bold;">${placar[f].outs}</td>
+                    </tr>`;
+                });
+            }
         }
 
+        // 3. RENDERIZA A LISTA DETALHADA EXPANSÍVEL
         const lista = document.getElementById("listaRelatorio");
         lista.innerHTML = "";
 
