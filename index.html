@@ -319,6 +319,16 @@
             </div>
 
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #cbd5e1;">
+                <p style="margin:0 0 4px 0; font-weight:bold; font-size:14px; color:#1d3557;">🔍 Consultar / Filtrar Chamados:</p>
+                <select id="admFiltroStatusChamado" onchange="admFiltrarChamadosMestre()">
+                    <option value="">Status: Todos</option>
+                    <option value="Aberto">Abertos</option>
+                    <option value="Concluído">Concluídos</option>
+                </select>
+                <div id="admListaChamadosFiltrados" style="margin-top: 10px; max-height: 200px; overflow-y: auto; font-size: 13px; background: white; border-radius: 4px; padding: 5px; border: 1px solid #cbd5e1; display: none;"></div>
+            </div>
+
+            <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #cbd5e1;">
                 <p style="margin:0 0 4px 0; font-weight:bold; font-size:14px; color:#1d3557;">✅ Concluir / Finalizar Chamado Administrativo:</p>
                 <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Apenas perfis administrativos possuem autorização para encerrar tickets.</p>
                 <div class="row">
@@ -1296,19 +1306,19 @@
                 document.getElementById("infoProtocoloProximo").innerText = `Último Chamado Aberto: Protocolo Nº ${protocoloGerdado}`;
                 document.getElementById("chamadoJustificativa").value = "";
                 
-                const msgZapAdm = `⚠️ *NOVO CHAMADO ABERTO - Nº ${protocoloGerdado}* ⚠️\n\n🏢 *Local:* Bloco ${bloco} - Ap ${apto}\n👤 *Morador:* ${morador.nome}\n📝 *Justificativa:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data:* ${data.dataAbertura}`;
-                const msgZapMorador = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n📝 *Solicitação:* ${just}`;
+                // CORREÇÃO: Mensagem de Zap unificada contendo expressamente o Motivo (Justificativa)
+                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}* / *Administração*!\nUm chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${apto}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}`;
                 
-                alert(`✅ Chamado Nº ${protocoloGerdado} gravado e e-mails enviados!`);
+                alert(`✅ Chamado Nº ${protocoloGerdado} gravado com sucesso! E-mails personalizados disparados simultaneamente para o ADM e para o Morador.`);
                 
-                const urlMorador = `whatsapp://send?phone=${morador.telefone}&text=${encodeURIComponent(msgZapMorador)}`;
-                const urlAdm = `whatsapp://send?phone=${SEU_WHATSAPP}&text=${encodeURIComponent(msgZapAdm)}`;
+                const urlDisparoZap = `whatsapp://send?phone=${morador.telefone}&text=${encodeURIComponent(msgZapUnificada)}`;
+                const urlDisparoZapAdm = `whatsapp://send?phone=${SEU_WHATSAPP}&text=${encodeURIComponent(msgZapUnificada)}`;
                 
                 if (window.innerWidth < 768) {
-                    window.location.href = urlMorador;
+                    window.location.href = urlDisparoZap;
                 } else {
                     let linkInvisivel = document.createElement('a');
-                    linkInvisivel.href = urlAdm;
+                    linkInvisivel.href = urlDisparoZapAdm;
                     document.body.appendChild(linkInvisivel);
                     linkInvisivel.click();
                     document.body.removeChild(linkInvisivel);
@@ -1335,7 +1345,7 @@
             const data = await res.json();
 
             if(data.status === "Sucesso") {
-                alert(`✅ Chamado Nº ${numChamado} finalizado!`);
+                alert(`✅ Chamado Nº ${numChamado} finalizado com sucesso no Sheets e e-mail enviado!`);
                 document.getElementById("admNumeroChamadoFechar").value = "";
 
                 const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* ✅\n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.\n\nOs dados já encontram-se atualizados. ☀️`;
@@ -1348,6 +1358,40 @@
             } else { alert("Erro ao finalizar chamado: " + data.erro); }
         } catch(e) { alert("Erro de comunicação ao encerrar o chamado."); } 
         finally { document.getElementById("loading").style.display = "none"; }
+    }
+
+    // NOVA FUNÇÃO: Motor do Filtro Visual de Chamados na aba ADM
+    async function admFiltrarChamadosMestre() {
+        const statusAlvo = document.getElementById("admFiltroStatusChamado").value;
+        const listaDiv = document.getElementById("admListaChamadosFiltrados");
+        if(statusAlvo === "") { listaDiv.style.display = "none"; return; }
+        
+        listaDiv.innerHTML = "Carregando chamados... ⏳";
+        listaDiv.style.display = "block";
+        
+        try {
+            const res = await fetch(API_URL + "?acao=get_chamados_filtro");
+            const chamados = await res.json();
+            const filtrados = chamados.filter(c => c.status === statusAlvo);
+            
+            if(filtrados.length === 0) {
+                listaDiv.innerHTML = "<span style='color:#64748b;'>Nenhum chamado com este status.</span>";
+                return;
+            }
+            
+            listaDiv.innerHTML = "";
+            filtrados.reverse().forEach(c => {
+                const item = document.createElement("div");
+                item.style.padding = "6px";
+                item.style.borderBottom = "1px dashed #e2e8f0";
+                item.innerHTML = `<strong>Nº ${c.id}</strong> - Bl ${c.bloco} Ap ${c.apto} (${c.morador})<br>` +
+                                 `⚠️ <strong>Motivo:</strong> ${c.justificativa}<br>` +
+                                 `<small style='color:#64748b;'>Abertura: ${c.data}</small>`;
+                listaDiv.appendChild(item);
+            });
+        } catch(e) {
+            listaDiv.innerHTML = "<span style='color:red;'>Erro ao ler chamados da planilha.</span>";
+        }
     }
 
     // =========================================================
