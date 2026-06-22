@@ -1345,16 +1345,33 @@
             const data = await res.json();
 
             if(data.status === "Sucesso") {
-                alert(`✅ Chamado Nº ${numChamado} finalizado com sucesso no Sheets e e-mail enviado!`);
+                alert(`✅ Chamado Nº ${numChamado} finalizado!\n\nAgora o sistema abrirá os disparos automáticos para o Morador e para a Administração.`);
                 document.getElementById("admNumeroChamadoFechar").value = "";
 
-                const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* ✅\n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.\n\nOs dados já encontram-se atualizados. ☀️`;
-                const urlDisparoC = `whatsapp://send?phone=${data.telefoneMorador}&text=${encodeURIComponent(msgZapConclusao)}`;
+                // Formatação limpa dos telefones (apenas números)
+                const telMoradorLimpo = String(data.telefoneMorador || "").replace(/\D/g, "");
+                const telAdmLimpo = String(SEU_WHATSAPP || "").replace(/\D/g, "");
 
-                if (window.innerWidth < 768 && data.telefoneMorador) {
-                    window.location.href = urlDisparoC;
+                const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* ✅\n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.\n\nOs dados já encontram-se atualizados. ☀️`;
+                
+                // Urls de disparo nativo direto
+                const urlMorador = `whatsapp://send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`;
+                const urlAdm = `whatsapp://send?phone=${telAdmLimpo}&text=${encodeURIComponent(msgZapConclusao)}`;
+
+                // Fluxo de disparo duplo
+                if (window.innerWidth < 768) {
+                    // No celular, dispara primeiro para o morador
+                    if(telMoradorLimpo) window.location.href = urlMorador;
+                } else {
+                    // No computador, abre caixas sequenciais para os dois contatos sem perder o foco
+                    if(telMoradorLimpo) window.open(`https://web.whatsapp.com/send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`, '_blank');
+                    if(telAdmLimpo) window.open(`https://web.whatsapp.com/send?phone=${telAdmLimpo}&text=${encodeURIComponent(msgZapConclusao)}`, '_blank');
                 }
+                
                 await buscarPendentes();
+                if(document.getElementById("admFiltroStatusChamado").value !== "") {
+                    admFiltrarChamadosMestre(); // Atualiza a lista na tela na hora se o filtro estiver aberto
+                }
             } else { alert("Erro ao finalizar chamado: " + data.erro); }
         } catch(e) { alert("Erro de comunicação ao encerrar o chamado."); } 
         finally { document.getElementById("loading").style.display = "none"; }
@@ -1362,9 +1379,9 @@
 
     // NOVA FUNÇÃO: Motor do Filtro Visual de Chamados na aba ADM
     async function admFiltrarChamadosMestre() {
-        const statusAlvo = document.getElementById("admFiltroStatusChamado").value;
-        const listaDiv = document.getElementById("admListaChamadosFiltrados");
-        if(statusAlvo === "") { listaDiv.style.display = "none"; return; }
+    const statusAlvo = document.getElementById("admFiltroStatusChamado").value;
+    const listaDiv = document.getElementById("admListaChamadosFiltrados");
+    listaDiv.style.display = "block";
         
         listaDiv.innerHTML = "Carregando chamados... ⏳";
         listaDiv.style.display = "block";
@@ -1372,7 +1389,7 @@
         try {
             const res = await fetch(API_URL + "?acao=get_chamados_filtro");
             const chamados = await res.json();
-            const filtrados = chamados.filter(c => c.status === statusAlvo);
+            const filtrados = chamados.filter(c => statusAlvo === "" || c.status === statusAlvo);
             
             if(filtrados.length === 0) {
                 listaDiv.innerHTML = "<span style='color:#64748b;'>Nenhum chamado com este status.</span>";
