@@ -1313,7 +1313,7 @@
                 document.getElementById("chamadoJustificativa").value = "";
                 
                 // CORREÇÃO: Mensagem de Zap unificada contendo expressamente o Motivo (Justificativa)
-                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}* / *Administração*!\nUm chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${apto}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}`;
+                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${apto}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data/Hora:* ${data.dataAbertura}`;
                 
                 alert(`✅ Chamado Nº ${protocoloGerdado} gravado com sucesso! E-mails personalizados disparados simultaneamente para o ADM e para o Morador.`);
                 
