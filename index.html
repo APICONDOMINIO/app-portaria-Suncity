@@ -325,6 +325,11 @@
                     <option value="Aberto">Abertos</option>
                     <option value="Concluído">Concluídos</option>
                 </select>
+                <p style="margin: 8px 0 2px 0; font-size: 11px; font-weight: bold; color: var(--primary);">Filtrar por Período do Chamado:</p>
+                <div class="row">
+                    <input type="date" id="admChamadoDataInicio" onchange="admFiltrarChamadosMestre()" style="margin: 2px 0; padding: 8px; font-size: 13px;">
+                    <input type="date" id="admChamadoDataFim" onchange="admFiltrarChamadosMestre()" style="margin: 2px 0; padding: 8px; font-size: 13px;">
+                </div>
                 <div id="admListaChamadosFiltrados" style="margin-top: 10px; max-height: 200px; overflow-y: auto; font-size: 13px; background: white; border-radius: 4px; padding: 5px; border: 1px solid #cbd5e1; display: none;"></div>
             </div>
 
@@ -622,6 +627,7 @@
         } else {
             document.querySelector('.nav-item').classList.add('active');
         }
+        if(id === 'tabGerenciar') { setTimeout(() => { admFiltrarChamadosMestre(); }, 200); }
     }
 
     async function carregarMoradores() {
@@ -1379,9 +1385,13 @@
 
     // NOVA FUNÇÃO: Motor do Filtro Visual de Chamados na aba ADM
     async function admFiltrarChamadosMestre() {
-    const statusAlvo = document.getElementById("admFiltroStatusChamado").value;
-    const listaDiv = document.getElementById("admListaChamadosFiltrados");
-    listaDiv.style.display = "block";
+        const statusAlvo = document.getElementById("admFiltroStatusChamado").value;
+        const listaDiv = document.getElementById("admListaChamadosFiltrados");
+        
+        let iniStr = document.getElementById("admChamadoDataInicio").value;
+        let fimStr = document.getElementById("admChamadoDataFim").value;
+        let dataInicio = iniStr ? new Date(iniStr + "T00:00:00") : null;
+        let dataFim = fimStr ? new Date(fimStr + "T23:59:59") : null;
         
         listaDiv.innerHTML = "Carregando chamados... ⏳";
         listaDiv.style.display = "block";
@@ -1389,10 +1399,23 @@
         try {
             const res = await fetch(API_URL + "?acao=get_chamados_filtro");
             const chamados = await res.json();
-            const filtrados = chamados.filter(c => statusAlvo === "" || c.status === statusAlvo);
+            
+            const filtrados = chamados.filter(c => {
+                const matchStatus = (statusAlvo === "" || c.status === statusAlvo);
+                
+                let matchData = true;
+                if (dataInicio && dataFim && c.data) {
+                    let p = c.data.split(' ')[0].split('/');
+                    if (p.length === 3) {
+                        let dtAlvo = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                        matchData = (dtAlvo >= dataInicio && dtAlvo <= dataFim);
+                    }
+                }
+                return matchStatus && matchData;
+            });
             
             if(filtrados.length === 0) {
-                listaDiv.innerHTML = "<span style='color:#64748b;'>Nenhum chamado com este status.</span>";
+                listaDiv.innerHTML = "<span style='color:#64748b;'>Nenhum chamado encontrado com esses filtros.</span>";
                 return;
             }
             
@@ -1401,7 +1424,7 @@
                 const item = document.createElement("div");
                 item.style.padding = "6px";
                 item.style.borderBottom = "1px dashed #e2e8f0";
-                item.innerHTML = `<strong>Nº ${c.id}</strong> - Bl ${c.bloco} Ap ${c.apto} (${c.morador})<br>` +
+                item.innerHTML = `<strong>Nº ${c.id} [${c.status}]</strong> - Bl ${c.bloco} Ap ${c.apto} (${c.morador})<br>` +
                                  `⚠️ <strong>Motivo:</strong> ${c.justificativa}<br>` +
                                  `<small style='color:#64748b;'>Abertura: ${c.data}</small>`;
                 listaDiv.appendChild(item);
