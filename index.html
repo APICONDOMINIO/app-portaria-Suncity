@@ -1364,14 +1364,13 @@
                 const urlMorador = `whatsapp://send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`;
                 const urlAdm = `whatsapp://send?phone=${telAdmLimpo}&text=${encodeURIComponent(msgZapConclusao)}`;
 
-                // Fluxo de disparo duplo
-                if (window.innerWidth < 768) {
-                    // No celular, dispara primeiro para o morador
-                    if(telMoradorLimpo) window.location.href = urlMorador;
-                } else {
-                    // No computador, abre caixas sequenciais para os dois contatos sem perder o foco
-                    if(telMoradorLimpo) window.open(`https://web.whatsapp.com/send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`, '_blank');
-                    if(telAdmLimpo) window.open(`https://web.whatsapp.com/send?phone=${telAdmLimpo}&text=${encodeURIComponent(msgZapConclusao)}`, '_blank');
+                // Disparo focado e direto para o morador responsável pelo ticket
+                if (telMoradorLimpo) {
+                    if (window.innerWidth < 768) {
+                        window.location.href = urlMorador;
+                    } else {
+                        window.open(`https://web.whatsapp.com/send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`, '_blank');
+                    }
                 }
                 
                 await buscarPendentes();
