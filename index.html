@@ -1292,7 +1292,7 @@
         const dadosChamado = {
             acao: "abrir_chamado",
             bloco: bloco,
-            apto: apto,
+            apto: String(apto).padStart(3, '0'),
             moradorNome: morador.nome,
             telefone: morador.telefone,
             justificativa: just,
@@ -1314,7 +1314,7 @@
                 document.getElementById("chamadoJustificativa").value = "";
                 
                 // CORREÇÃO: Mensagem de Zap unificada contendo expressamente o Motivo (Justificativa)
-                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${apto}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data/Hora:* ${data.dataAbertura}`;
+                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${String(apto).padStart(3, '0')}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data/Hora:* ${data.dataAbertura}`;
                 
                 alert(`✅ Chamado Nº ${protocoloGerdado} gravado com sucesso! E-mails personalizados disparados simultaneamente para o ADM e para o Morador.`);
                 
@@ -1363,7 +1363,7 @@
 const blocoIdentificado = encomendaSelecionada ? encomendaSelecionada.bloco : "";
 const infoLocal = blocoIdentificado ? `\n🏢 *Local:* Bloco ${blocoIdentificado} - Ap ${aptoIdentificado}` : "";
 
-const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* ✅\n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.${infoLocal}\n\nOs dados já encontram-se atualizados. ☀️`;
+const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* \n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.\n\nOs dados já encontram-se atualizados. ☀️`;
                 
                 // Urls de disparo nativo direto
                 const urlMorador = `whatsapp://send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`;
