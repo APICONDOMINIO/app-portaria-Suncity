@@ -317,16 +317,26 @@
                 <input type="text" id="admNovoEmailMorador" placeholder="Novo E-mail do Morador">
                 <button class="btn-primary" style="background:#e63946;" onclick="admSalvarEdicaoMorador()">Salvar Alterações do Morador</button>
             </div>
+
+            <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #cbd5e1;">
+                <p style="margin:0 0 4px 0; font-weight:bold; font-size:14px; color:#1d3557;">✅ Concluir / Finalizar Chamado Administrativo:</p>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Apenas perfis administrativos possuem autorização para encerrar tickets.</p>
+                <div class="row">
+                    <input type="number" id="admNumeroChamadoFechar" placeholder="Nº do Chamado (Ex: 5)">
+                    <button class="btn-primary" style="background:#25D366; width: 40%;" onclick="admFinalizarChamadoCompleto()">Finalizar</button>
+                </div>
+            </div>
         </div>
 
         <div id="tabChamado" class="card tab-content">
-            <h3>Atualizar Cadastro</h3>
+            <h3>Abertura de chamado</h3>
+            <p id="infoProtocoloProximo" style="font-size: 13px; color: #457b9d; font-weight: bold; margin-top: -10px; margin-bottom: 15px; text-align: center;">Preencha os dados abaixo para gerar o ticket</p>
             <div class="row">
-                <input type="number" id="chamadoBloco" placeholder="Bloco">
-                <input type="text" id="chamadoApto" placeholder="Apto">
+                <select id="chamadoBlocoSelect" onchange="atualizarAptosChamado()"><option value="">Bloco...</option></select>
+                <select id="chamadoAptoSelect"><option value="">Apto...</option></select>
             </div>
-            <textarea id="chamadoJustificativa" placeholder="O que deve ser alterado e por que?" rows="3"></textarea>
-            <button class="btn-whats" onclick="enviarChamado()">Enviar para Administração</button>
+            <textarea id="chamadoJustificativa" placeholder="Descreva de forma clara o que deve ser alterado e o motivo..." rows="3"></textarea>
+            <button class="btn-primary" style="background: var(--primary);" onclick="processarAberturaChamadoCompleto()">Registrar e Enviar Notificações</button>
         </div>
     </div>
 </div>
@@ -632,6 +642,12 @@
                 if(histB) histB.add(new Option(`Bloco ${b}`, b));
                 if(admOrigB) admOrigB.add(new Option(`Bloco ${b}`, b));
             });
+            
+            const chamB = document.getElementById("chamadoBlocoSelect");
+            if(chamB) {
+                chamB.innerHTML = '<option value="">Bloco...</option>';
+                blocos.forEach(b => chamB.add(new Option(`Bloco ${b}`, b)));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -1239,10 +1255,99 @@
         s.innerHTML = '<option value="">Apto Atual...</option>'; moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
     }
 
-    function enviarChamado() {
-        const bloco = document.getElementById("chamadoBloco").value; const apto = document.getElementById("chamadoApto").value;
-        const just = document.getElementById("chamadoJustificativa").value; if (!bloco || !apto || !just) return alert("Preencha tudo!");
-        window.location.href = `https://wa.me/${SEU_WHATSAPP}?text=${encodeURIComponent(`⚠️ CHAMADO: Bloco ${bloco} Ap ${apto} - ${just}\nPorteiro: ${porteiroLogado}`)}`;
+    function atualizarAptosChamado() {
+        const b = document.getElementById("chamadoBlocoSelect").value;
+        const s = document.getElementById("chamadoAptoSelect");
+        s.innerHTML = '<option value="">Apto...</option>';
+        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
+    }
+
+    async function processarAberturaChamadoCompleto() {
+        const bloco = document.getElementById("chamadoBlocoSelect").value;
+        const apto = document.getElementById("chamadoAptoSelect").value;
+        const just = document.getElementById("chamadoJustificativa").value.trim();
+        
+        if(!bloco || !apto || !just) { alert("Por favor, selecione o Bloco, o Apto e digite a justificativa!"); return; }
+        
+        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
+        if(!morador) { alert("Morador não localizado."); return; }
+
+        const dadosChamado = {
+            acao: "abrir_chamado",
+            bloco: bloco,
+            apto: apto,
+            moradorNome: morador.nome,
+            telefone: morador.telefone,
+            justificativa: just,
+            porteiro: porteiroLogado || "Sistema"
+        };
+
+        document.getElementById("loading").style.display = "block";
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(dadosChamado),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await res.json();
+            
+            if(data.status === "Sucesso") {
+                const protocoloGerdado = data.numeroChamado;
+                document.getElementById("infoProtocoloProximo").innerText = `Último Chamado Aberto: Protocolo Nº ${protocoloGerdado}`;
+                document.getElementById("chamadoJustificativa").value = "";
+                
+                const msgZapAdm = `⚠️ *NOVO CHAMADO ABERTO - Nº ${protocoloGerdado}* ⚠️\n\n🏢 *Local:* Bloco ${bloco} - Ap ${apto}\n👤 *Morador:* ${morador.nome}\n📝 *Justificativa:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data:* ${data.dataAbertura}`;
+                const msgZapMorador = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n📝 *Solicitação:* ${just}`;
+                
+                alert(`✅ Chamado Nº ${protocoloGerdado} gravado e e-mails enviados!`);
+                
+                const urlMorador = `whatsapp://send?phone=${morador.telefone}&text=${encodeURIComponent(msgZapMorador)}`;
+                const urlAdm = `whatsapp://send?phone=${SEU_WHATSAPP}&text=${encodeURIComponent(msgZapAdm)}`;
+                
+                if (window.innerWidth < 768) {
+                    window.location.href = urlMorador;
+                } else {
+                    let linkInvisivel = document.createElement('a');
+                    linkInvisivel.href = urlAdm;
+                    document.body.appendChild(linkInvisivel);
+                    linkInvisivel.click();
+                    document.body.removeChild(linkInvisivel);
+                }
+                await buscarPendentes();
+            } else { alert("Erro ao gravar chamado: " + data.erro); }
+        } catch(e) { alert("Erro de comunicação ao abrir o chamado."); } 
+        finally { document.getElementById("loading").style.display = "none"; }
+    }
+
+    async function admFinalizarChamadoCompleto() {
+        const numChamado = document.getElementById("admNumeroChamadoFechar").value.trim();
+        if(!numChamado) { alert("Digite o número do chamado!"); return; }
+
+        if(!confirm(`Deseja realmente encerrar o Chamado Nº ${numChamado}?`)) return;
+
+        document.getElementById("loading").style.display = "block";
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ acao: "finalizar_chamado", idChamado: numChamado, porteiro: porteiroLogado || "Administrador" }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await res.json();
+
+            if(data.status === "Sucesso") {
+                alert(`✅ Chamado Nº ${numChamado} finalizado!`);
+                document.getElementById("admNumeroChamadoFechar").value = "";
+
+                const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* ✅\n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.\n\nOs dados já encontram-se atualizados. ☀️`;
+                const urlDisparoC = `whatsapp://send?phone=${data.telefoneMorador}&text=${encodeURIComponent(msgZapConclusao)}`;
+
+                if (window.innerWidth < 768 && data.telefoneMorador) {
+                    window.location.href = urlDisparoC;
+                }
+                await buscarPendentes();
+            } else { alert("Erro ao finalizar chamado: " + data.erro); }
+        } catch(e) { alert("Erro de comunicação ao encerrar o chamado."); } 
+        finally { document.getElementById("loading").style.display = "none"; }
     }
 
     // =========================================================
