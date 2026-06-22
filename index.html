@@ -1280,7 +1280,8 @@
 
     async function processarAberturaChamadoCompleto() {
         const bloco = document.getElementById("chamadoBlocoSelect").value;
-        const apto = document.getElementById("chamadoAptoSelect").value;
+        const aptoRaw = document.getElementById("chamadoAptoSelect").value;
+        const apto = String(aptoRaw).padStart(3, '0');
         const just = document.getElementById("chamadoJustificativa").value.trim();
         
         if(!bloco || !apto || !just) { alert("Por favor, selecione o Bloco, o Apto e digite a justificativa!"); return; }
@@ -1358,7 +1359,11 @@
                 const telMoradorLimpo = String(data.telefoneMorador || "").replace(/\D/g, "");
                 const telAdmLimpo = String(SEU_WHATSAPP || "").replace(/\D/g, "");
 
-                const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* \n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.\n\nOs dados já encontram-se atualizados. ☀️`;
+                const aptoIdentificado = encomendaSelecionada ? String(encomendaSelecionada.apto).padStart(3, '0') : "";
+const blocoIdentificado = encomendaSelecionada ? encomendaSelecionada.bloco : "";
+const infoLocal = blocoIdentificado ? `\n🏢 *Local:* Bloco ${blocoIdentificado} - Ap ${aptoIdentificado}` : "";
+
+const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* ✅\n\nOlá!\nInformamos que o seu chamado sob o *Protocolo Nº ${numChamado}* foi concluído pela administração.${infoLocal}\n\nOs dados já encontram-se atualizados. ☀️`;
                 
                 // Urls de disparo nativo direto
                 const urlMorador = `whatsapp://send?phone=${telMoradorLimpo}&text=${encodeURIComponent(msgZapConclusao)}`;
