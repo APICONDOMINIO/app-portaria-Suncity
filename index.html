@@ -1281,18 +1281,21 @@
     async function processarAberturaChamadoCompleto() {
         const bloco = document.getElementById("chamadoBlocoSelect").value;
         const aptoRaw = document.getElementById("chamadoAptoSelect").value;
-        const apto = String(aptoRaw).padStart(3, '0');
         const just = document.getElementById("chamadoJustificativa").value.trim();
         
-        if(!bloco || !apto || !just) { alert("Por favor, selecione o Bloco, o Apto e digite a justificativa!"); return; }
+        if(!bloco || !aptoRaw || !just) { alert("Por favor, selecione o Bloco, o Apto e digite a justificativa!"); return; }
         
-        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(apto));
+        // 1. Busca o morador usando o valor original/puro selecionado (Garante que vai localizar)
+        const morador = moradoresDB.find(m => m.bloco === bloco && String(m.apto) === String(aptoRaw));
         if(!morador) { alert("Morador não localizado."); return; }
+
+        // 2. Agora sim, formatamos o apartamento com 3 dígitos para gravação e envio
+        const aptoFormatado = String(aptoRaw).padStart(3, '0');
 
         const dadosChamado = {
             acao: "abrir_chamado",
             bloco: bloco,
-            apto: String(apto).padStart(3, '0'),
+            apto: aptoFormatado,
             moradorNome: morador.nome,
             telefone: morador.telefone,
             justificativa: just,
@@ -1313,19 +1316,18 @@
                 document.getElementById("infoProtocoloProximo").innerText = `Último Chamado Aberto: Protocolo Nº ${protocoloGerdado}`;
                 document.getElementById("chamadoJustificativa").value = "";
                 
-                // CORREÇÃO: Mensagem de Zap unificada contendo expressamente o Motivo (Justificativa)
-                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${String(apto).padStart(3, '0')}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data/Hora:* ${data.dataAbertura}`;
+                // Mensagem com o apartamento perfeitamente formatado com 3 dígitos
+                const msgZapUnificada = `🔔 *CONDOMINIO SUNCITY - CHAMADO ABERTO* 🔔\n\nOlá *${morador.nome}*!\nSeu chamado de atualização cadastral foi registrado com sucesso.\n\n🆔 *Protocolo:* Nº ${protocoloGerdado}\n🏢 *Local:* Bloco ${bloco} - Ap ${aptoFormatado}\n👤 *Morador:* ${morador.nome}\n📝 *Motivo:* ${just}\n🛡️ *Operador:* ${dadosChamado.porteiro}\n🕒 *Data/Hora:* ${data.dataAbertura}`;
                 
                 alert(`✅ Chamado Nº ${protocoloGerdado} gravado com sucesso! E-mails personalizados disparados simultaneamente para o ADM e para o Morador.`);
                 
                 const urlDisparoZap = `whatsapp://send?phone=${morador.telefone}&text=${encodeURIComponent(msgZapUnificada)}`;
-                const urlDisparoZapAdm = `whatsapp://send?phone=${SEU_WHATSAPP}&text=${encodeURIComponent(msgZapUnificada)}`;
                 
                 if (window.innerWidth < 768) {
                     window.location.href = urlDisparoZap;
                 } else {
                     let linkInvisivel = document.createElement('a');
-                    linkInvisivel.href = urlDisparoZapAdm;
+                    linkInvisivel.href = urlDisparoZap;
                     document.body.appendChild(linkInvisivel);
                     linkInvisivel.click();
                     document.body.removeChild(linkInvisivel);
