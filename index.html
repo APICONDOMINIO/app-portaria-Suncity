@@ -572,10 +572,10 @@
         const nivel = localStorage.getItem("suncityNivel") || "";
         const textoNivel = nivel.toLowerCase(); 
         
-        // Ativação cirúrgica de abas por segurança
+        // Liberação direta dos botões do menu inferior
         if(textoNivel.includes("adm") || textoNivel.includes("gerente") || textoNivel.includes("deus") || textoNivel.includes("administrador")) {
-            document.getElementById("menuRelatorio").style.display = "flex";
-            document.getElementById("menuGerenciar").style.display = "flex";
+            document.getElementById("menuRelatorio").style.display = "block";
+            document.getElementById("menuGerenciar").style.display = "block";
         } else {
             document.getElementById("menuRelatorio").style.display = "none";
             document.getElementById("menuGerenciar").style.display = "none";
