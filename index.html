@@ -219,6 +219,8 @@
                 <button class="btn-secondary" onclick="limparFiltroHistorico()" style="margin-top:8px;">Limpar Filtros</button>
             </div>
             <div id="listaHistorico"></div>
+        </div>
+    </div>
 
         <div id="tabRelatorio" class="card tab-content">
             <h3>Visão Analítica</h3>
@@ -657,14 +659,20 @@
     }
 
     function mudarAba(id, btn) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        if(btn) {
-            btn.classList.add('active');
-        } else {
-            document.querySelector('.nav-item').classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.remove('active');
+            el.style.display = 'none'; // Garante que todas as outras telas sumam
+        });
+        
+        const abaAlvo = document.getElementById(id);
+        if(abaAlvo) {
+            abaAlvo.classList.add('active');
+            abaAlvo.style.display = 'block'; // Força a tela clicada a aparecer de verdade
         }
+
+        document.querySelectorAll('.nav-bottom .nav-item').forEach(el => el.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        
         if(id === 'tabGerenciar') { setTimeout(() => { admFiltrarChamadosMestre(); }, 200); }
     }
 
