@@ -979,8 +979,10 @@
         const botoesAntigos = document.getElementById("listaRelatorio").querySelectorAll("button.btn-danger");
         botoesAntigos.forEach(b => b.remove());
 
-        // 3. Re-sincroniza a base de dados com as encomendas reais do condomínio
-        buscarPendentes();
+        // 3. Reseta os filtros visuais da tabela e volta a exibir o histórico local original
+        aplicarFiltro(); 
+        aplicarFiltroHistorico(); 
+        renderizarRelatorio();
     }
 
     function aplicarFiltro() {
@@ -1264,10 +1266,10 @@
         }
 
         if(entregues.length > 0) {
-            htmlPDF += `<h3 class="print-sub" style="page-break-before: always;">🟢 ENTREGUES / HISTÓRICO (${entregues.length})</h3>`;
+            htmlPDF += `<h3 class="print-sub" style="page-break-before: always;">🟢 ENTREGUES / HISTÓRICO (${entregues.length})</h3>
             <table class="tabela-pdf">
             <thead><tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA ENTRADA</th><th>DATA SAÍDA</th><th>QUEM RETIROU</th><th>PORTEIRO OUT</th></tr></thead>
-            <tbody>`; // Abre o corpo da tabela aqui
+            <tbody>`; // Abre o corpo da tabela aqui perfeitamente
             
             entregues.forEach(e => {
                 htmlPDF += `<tr><td>${e.bloco}</td><td>${e.apto}</td><td>${e.nome}</td><td>${e.descricao}</td><td>${e.dataHora}</td><td>${e.dataSaida || '-'}</td><td>${e.quemRetirou || '-'}</td><td>${e.porteiroSaida || '-'}</td></tr>`;
