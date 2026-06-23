@@ -258,7 +258,7 @@
                 <div class="row">
                     <input type="text" id="arqNome" placeholder="Nome ou Pacote...">
                     <button class="btn-primary" style="width:30%;" onclick="pesquisarNoArquivo()">Buscar</button>
-                    <button class="btn-danger" style="width:30%; background:#cbd5e1; color:#333; margin:8px 0;" onclick="window.location.reload();">Limpar</button>
+                    <button class="btn-danger" style="width:30%; background:#cbd5e1; color:#333; margin:8px 0;" onclick="limparArquivoMorto()">Limpar</button>
                 </div>
             </div>
             
@@ -964,17 +964,23 @@
                 todasAsEncomendasDB = dadosArquivo; 
                 renderizarRelatorio();
                 alert(`Exibindo ${dadosArquivo.length} registros encontrados.`);
-                // Cria e exibe um botão flutuante de limpeza para redefinir o app sem precisar dar F5 manualmente
-                const divFiltro = document.getElementById("listaRelatorio");
-                const btnLimparf5 = document.createElement("button");
-                btnLimparf5.className = "btn-danger";
-                btnLimparf5.style.cssText = "margin-bottom: 15px; background: #e63946; font-weight: bold;";
-                btnLimparf5.innerText = "🔄 Limpar Filtros e Voltar Histórico Real";
-                btnLimparf5.onclick = () => { window.location.reload(); };
-                divFiltro.insertBefore(btnLimparf5, divFiltro.firstChild);
             }
         } catch(e) { alert("Erro ao buscar no arquivo."); }
         finally { document.getElementById("loading").style.display = "none"; }
+    }
+    // FUNÇÃO DE LIMPEZA REAL SEM RECARREGAR A TELA (Item 2)
+    function limparArquivoMorto() {
+        // 1. Limpa os seletores visuais da tela
+        document.getElementById("arqBloco").value = "";
+        document.getElementById("arqApto").innerHTML = '<option value="">Todos os Aptos</option>';
+        document.getElementById("arqNome").value = "";
+        
+        // 2. Remove qualquer botão flutuante que tenha sido criado antes
+        const botoesAntigos = document.getElementById("listaRelatorio").querySelectorAll("button.btn-danger");
+        botoesAntigos.forEach(b => b.remove());
+
+        // 3. Re-sincroniza a base de dados com as encomendas reais do condomínio
+        buscarPendentes();
     }
 
     function aplicarFiltro() {
@@ -1258,7 +1264,7 @@
         }
 
         if(entregues.length > 0) {
-            htmlPDF += `<h3 class="print-sub">🟢 ENTREGUES / HISTÓRICO (${entregues.length})</h3>
+            htmlPDF += `<h3 class="print-sub" style="page-break-before: always;">🟢 ENTREGUES / HISTÓRICO (${entregues.length})</h3>`;
             <table class="tabela-pdf">
             <thead><tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA ENTRADA</th><th>DATA SAÍDA</th><th>QUEM RETIROU</th><th>PORTEIRO OUT</th></tr></thead>
             <tbody>`; // Abre o corpo da tabela aqui
