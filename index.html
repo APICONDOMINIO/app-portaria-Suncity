@@ -109,8 +109,8 @@
             <button class="nav-item" onclick="mudarAba('tabIndicadores', this)">📊<span>Indicadores</span></button>
             <button class="nav-item" onclick="mudarAba('tabPendentes', this)">📋<span>Pendentes</span></button>
             <button class="nav-item" onclick="mudarAba('tabHistorico', this)">📦<span>Histórico<br>de entregas</span></button>
-            <button class="nav-item admin-only" id="menuRelatorio" style="display:none;" onclick="mudarAba('tabRelatorio', this)">📈<span>Relatórios</span></button>
-            <button class="nav-item admin-only" id="menuGerenciar" style="display:none;" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
+            <button class="nav-item admin-only" id="menuRelatorio" onclick="mudarAba('tabRelatorio', this)">📈<span>Relatórios</span></button>
+            <button class="nav-item admin-only" id="menuGerenciar" onclick="mudarAba('tabGerenciar', this)">⚙️<span>Painel ADM</span></button>
             <button class="nav-item" id="menuChamado" onclick="mudarAba('tabChamado', this)">📝<span>Chamados</span></button>
         </div>
 
@@ -572,14 +572,20 @@
         const nivel = localStorage.getItem("suncityNivel") || "";
         const textoNivel = nivel.toLowerCase(); 
         
+        // Ativação cirúrgica de abas por segurança
         if(textoNivel.includes("adm") || textoNivel.includes("gerente") || textoNivel.includes("deus") || textoNivel.includes("administrador")) {
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+            document.getElementById("menuRelatorio").style.display = "flex";
+            document.getElementById("menuGerenciar").style.display = "flex";
         } else {
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            document.getElementById("menuRelatorio").style.display = "none";
+            document.getElementById("menuGerenciar").style.display = "none";
         }
         
+        // Trava do modo mestre operacional
         if(textoNivel === "deus" || textoNivel === "superadmin") {
             document.getElementById("painelSuperAdmin").style.display = "block";
+        } else {
+            document.getElementById("painelSuperAdmin").style.display = "none";
         }
         
         await carregarMoradores();
