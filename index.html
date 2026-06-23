@@ -252,7 +252,7 @@
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1d3557;">🔍 Pesquisar em Histórico Antigo (Arquivo Morto):</p>
                 <div class="row">
                     <select id="arqBloco" onchange="atualizarAptosArq()"><option value="">Todos os Blocos</option></select>
-                    <select id="arqApto"><option value="">Apto...</option></select>
+                    <select id="arqApto"><option value="">Todos os Aptos</option></select>
                 </div>
                 <div class="row">
                     <input type="text" id="arqNome" placeholder="Nome ou Pacote...">
@@ -732,8 +732,10 @@
     function atualizarAptosArq() {
         const b = document.getElementById("arqBloco").value;
         const s = document.getElementById("arqApto");
-        s.innerHTML = '<option value="">Apto...</option>';
-        moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
+        s.innerHTML = '<option value="">Todos os Aptos</option>';
+        if (b) {
+            moradoresDB.filter(m => m.bloco === b).forEach(m => s.add(new Option(`${String(m.apto).padStart(3, '0')} - ${m.nome}`, m.apto)));
+        }
     }
 
     function abrirCamera() {
@@ -940,12 +942,12 @@
         }
     }
 
+    // Se o usuário clicar em buscar sem digitar termo e com "Todos" selecionado, ele roda a pesquisa geral sem travar (Item 3)
     async function pesquisarNoArquivo() {
         const b = document.getElementById("arqBloco").value;
         const a = document.getElementById("arqApto").value;
         const t = document.getElementById("arqNome").value;
         
-        if(!b && !a && !t) return alert("Preencha pelo menos um campo para buscar.");
         document.getElementById("loading").style.display = "block";
         try {
             const res = await fetch(API_URL, { 
