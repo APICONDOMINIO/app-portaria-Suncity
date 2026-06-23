@@ -294,16 +294,41 @@
                 </div>
             </div>
             
+            <!-- QUADRO UNIFICADO DE GESTÃO DE FUNCIONÁRIOS (SÓ APARECE PARA ADM) -->
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:15px; border: 1px solid #a8dadc;">
-                <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">👤 Cadastrar Novo Funcionário:</p>
-                <input type="text" id="admNovoNome" placeholder="Nome Completo do Porteiro">
-                <input type="text" id="admNovoLogin" placeholder="Usuário para Login">
-                <input type="text" id="admNovaSenha" placeholder="Senha de Acesso">
-                <select id="admNovoNivel">
-                    <option value="Porteiro">Porteiro</option>
-                    <option value="Administrador">Administrador</option>
-                </select>
-                <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
+                <div style="display:flex; gap:10px; margin-bottom:12px; border-bottom:1px solid #cbd5e1; padding-bottom:8px;">
+                    <button id="btnAbraCad" class="btn-primary" style="margin:0; padding:6px; font-size:12px; background:#1d3557;" onclick="document.getElementById('boxCadastrarUser').style.display='block'; document.getElementById('boxEditarUser').style.display='none';">➕ Novo Cadastro</button>
+                    <button id="btnAbraEdi" class="btn-secondary" style="margin:0; padding:6px; font-size:12px; background:#457b9d;" onclick="document.getElementById('boxCadastrarUser').style.display='none'; document.getElementById('boxEditarUser').style.display='block';">✏️ Editar Existente</button>
+                </div>
+
+                <!-- Formulário de Cadastro -->
+                <div id="boxCadastrarUser">
+                    <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#1d3557;">👤 Cadastrar Novo Funcionário:</p>
+                    <input type="text" id="admNovoNome" placeholder="Nome Completo do Porteiro">
+                    <input type="text" id="admNovoLogin" placeholder="Usuário para Login">
+                    <input type="text" id="admNovaSenha" placeholder="Senha de Acesso">
+                    <select id="admNovoNivel">
+                        <option value="Porteiro">Porteiro</option>
+                        <option value="Administrador">Administrador</option>
+                    </select>
+                    <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
+                </div>
+
+                <!-- Novo Formulário de Edição (Item 8) -->
+                <div id="boxEditarUser" style="display:none;">
+                    <p style="margin:0 0 8px 0; font-weight:bold; font-size:14px; color:#e63946;">✏️ Editar Funcionário Cadastrado:</p>
+                    <input type="text" id="admEditLoginAlvo" placeholder="Digite EXATAMENTE o Usuário/Login do funcionário">
+                    <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
+                    <input type="password" id="admEditSenhaAnterior" placeholder="Digite a Senha Atual (Obrigatório para validar)">
+                    <input type="text" id="admEditNovoNome" placeholder="Novo Nome Completo (Opcional)">
+                    <input type="text" id="admEditNovaSenha" placeholder="Nova Senha de Acesso (Opcional)">
+                    <select id="admEditNovoNivel">
+                        <option value="">Manter Nível Atual...</option>
+                        <option value="Porteiro">Porteiro</option>
+                        <option value="Administrador">Administrador</option>
+                    </select>
+                    <button class="btn-primary" style="background:#e63946;" onclick="admEditarFuncionarioCompleto()">Salvar Alterações de Acesso</button>
+                </div>
             </div>
 
             <div style="background:#f1faee; padding:15px; border-radius:8px; margin-top:20px; border: 1px solid #a8dadc;">
@@ -1242,6 +1267,52 @@
             });
         } catch(e) { alert("Erro de rede ao salvar funcionário."); }
         finally { document.getElementById("loading").style.display = "none"; }
+    }
+    // MOTOR OPERACIONAL: EDICAO DE FUNCIONARIO COM SEGURANCA EXCLUSIVA ADM (Item 8)
+    function admEditarFuncionarioCompleto() {
+        const loginAlvo = document.getElementById("admEditLoginAlvo").value.trim();
+        const senhaAnterior = document.getElementById("admEditSenhaAnterior").value;
+        const novoNome = document.getElementById("admEditNovoNome").value.trim();
+        const novaSenha = document.getElementById("admEditNovaSenha").value;
+        const novoNivel = document.getElementById("admEditNovoNivel").value;
+
+        if(!loginAlvo || !senhaAnterior) {
+            alert("Por favor, informe o Usuário/Login do funcionário e a Senha Atual dele para prosseguir!");
+            return;
+        }
+
+        if(!confirm(`Confirma a edição dos dados de acesso do usuário "${loginAlvo}"?`)) return;
+
+        document.getElementById("loading").style.display = "block";
+        try {
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ 
+                    acao: "editar_usuario", 
+                    loginAlvo: loginAlvo, 
+                    senhaAnterior: senhaAnterior, 
+                    novoNome: novoNome, 
+                    novaSenha: novaSenha, 
+                    novoNivel: novoNivel 
+                }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            }).then(res => res.json()).then(data => {
+                if(data.status === "Sucesso") {
+                    alert("✅ " + data.msg);
+                    document.getElementById("admEditLoginAlvo").value = "";
+                    document.getElementById("admEditSenhaAnterior").value = "";
+                    document.getElementById("admEditNovoNome").value = "";
+                    document.getElementById("admEditNovaSenha").value = "";
+                    document.getElementById("admEditNovoNivel").value = "";
+                } else { 
+                    alert("❌ Erro de Validação: " + data.erro); 
+                }
+            });
+        } catch(e) { 
+            alert("Erro de comunicação ao atualizar o acesso."); 
+        } finally { 
+            document.getElementById("loading").style.display = "none"; 
+        }
     }
 
     function admCarregarDadosForm() {
