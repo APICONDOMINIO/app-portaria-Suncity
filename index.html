@@ -53,13 +53,14 @@
         @media print {
             body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
             .container, #modalAssinatura, .nav-bottom, .user-bar { display: none !important; }
-            #areaImpressao { display: block !important; width: 100%; }
-            @page { size: A4 landscape; margin: 8mm; }
-            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-top: 15px; page-break-inside: auto; }
+            #areaImpressao { display: block !important; width: 100%; height: auto; }
+            @page { size: A4 portrait; margin: 12mm 10mm 12mm 10mm; }
+            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-top: 10px; page-break-inside: auto; }
+            .tabela-pdf thead { display: table-header-group; } /* Força o cabeçalho a repetir em toda nova folha */
             .tabela-pdf tr { page-break-inside: avoid; page-break-after: auto; }
-            .tabela-pdf th, .tabela-pdf td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
-            .tabela-pdf th { background: #457b9d !important; color: white !important; font-weight: bold; }
-            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 3px; font-size: 18px; }
+            .tabela-pdf th, .tabela-pdf td { border: 1px solid #cbd5e1; padding: 7px 5px; text-align: left; }
+            .tabela-pdf th { background: #1d3557 !important; color: white !important; font-weight: bold; }
+            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 5px; font-size: 18px; }
             .print-sub { font-size: 13px; color: #1d3557; margin-top: 15px; margin-bottom: 5px; border-bottom: 2px solid #1d3557; padding-bottom: 2px; }
         }
         .encomenda-item.envelhecido-medio { border-left-color: #e9c46a; background: #fffbeb; border: 1px solid #fef3c7; border-left-width: 6px; }
@@ -256,7 +257,8 @@
                 </div>
                 <div class="row">
                     <input type="text" id="arqNome" placeholder="Nome ou Pacote...">
-                    <button class="btn-primary" style="width:40%;" onclick="pesquisarNoArquivo()">Buscar</button>
+                    <button class="btn-primary" style="width:30%;" onclick="pesquisarNoArquivo()">Buscar</button>
+                    <button class="btn-danger" style="width:30%; background:#cbd5e1; color:#333; margin:8px 0;" onclick="window.location.reload();">Limpar</button>
                 </div>
             </div>
             
@@ -1245,21 +1247,27 @@
         if(appendentes.length > 0) {
             htmlPDF += `<h3 class="print-sub">🔴 PENDENTES (${appendentes.length})</h3>
             <table class="tabela-pdf">
-            <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr>`;
+            <thead><tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA/HORA ENTRADA</th><th>PORTEIRO IN</th></tr></thead>
+            <tbody>`; // Abre o corpo da tabela aqui
+            
             appendentes.forEach(p => {
                 htmlPDF += `<tr><td>${p.bloco}</td><td>${p.apto}</td><td>${p.nome}</td><td>${p.descricao}</td><td>${p.dataHora}</td><td>${p.porteiroEntrada || '-'}</td></tr>`;
             });
-            htmlPDF += `</table>`;
+            
+            htmlPDF += `</tbody></table>`; // Fecha o corpo e a tabela aqui perfeitamente
         }
 
         if(entregues.length > 0) {
             htmlPDF += `<h3 class="print-sub">🟢 ENTREGUES / HISTÓRICO (${entregues.length})</h3>
             <table class="tabela-pdf">
-            <tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA ENTRADA</th><th>DATA SAÍDA</th><th>QUEM RETIROU</th><th>PORTEIRO OUT</th></tr>`;
+            <thead><tr><th>BLOCO</th><th>APTO</th><th>MORADOR</th><th>PACOTE</th><th>DATA ENTRADA</th><th>DATA SAÍDA</th><th>QUEM RETIROU</th><th>PORTEIRO OUT</th></tr></thead>
+            <tbody>`; // Abre o corpo da tabela aqui
+            
             entregues.forEach(e => {
                 htmlPDF += `<tr><td>${e.bloco}</td><td>${e.apto}</td><td>${e.nome}</td><td>${e.descricao}</td><td>${e.dataHora}</td><td>${e.dataSaida || '-'}</td><td>${e.quemRetirou || '-'}</td><td>${e.porteiroSaida || '-'}</td></tr>`;
             });
-            htmlPDF += `</table>`;
+            
+            htmlPDF += `</tbody></table>`; // Fecha o corpo e a tabela aqui perfeitamente
         }
         document.getElementById("areaImpressao").innerHTML = htmlPDF;
         window.print();
