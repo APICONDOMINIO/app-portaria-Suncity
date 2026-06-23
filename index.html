@@ -204,12 +204,20 @@
         <div id="tabHistorico" class="card tab-content">
             <h3>Histórico de Entregas</h3>
             <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <div class="filter-area" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold;">🔎 Filtrar Histórico</p>
                 <div class="row">
                     <select id="histBloco" onchange="atualizarAptosFiltro('histBloco', 'histApto'); aplicarFiltroHistorico()"><option value="">Todos os Blocos</option></select>
                     <select id="histApto" onchange="aplicarFiltroHistorico()"><option value="">Todos os Aptos</option></select>
                 </div>
                 <input type="text" id="buscaHistorico" placeholder="Nome ou pacote..." onkeyup="aplicarFiltroHistorico()" style="margin-top:8px;">
+                
+                <!-- Campos de período adicionados para auditoria retroativa (Item 2) -->
+                <p style="margin: 8px 0 2px 0; font-size: 11px; font-weight: bold; color: var(--primary);">📅 Filtrar Saída por Período:</p>
+                <div class="row">
+                    <input type="date" id="histDataInicio" onchange="aplicarFiltroHistorico()" style="margin: 2px 0; padding: 8px; font-size: 13px;">
+                    <input type="date" id="histDataFim" onchange="aplicarFiltroHistorico()" style="margin: 2px 0; padding: 8px; font-size: 13px;">
+                </div>
                 <button class="btn-secondary" onclick="limparFiltroHistorico()" style="margin-top:8px;">Limpar Filtros</button>
             </div>
             <div id="listaHistorico"></div>
@@ -982,6 +990,8 @@
         document.getElementById("buscaHistorico").value = "";
         if(document.getElementById("histBloco")) document.getElementById("histBloco").value = "";
         if(document.getElementById("histApto")) document.getElementById("histApto").innerHTML = '<option value="">Todos os Aptos</option>';
+        if(document.getElementById("histDataInicio")) document.getElementById("histDataInicio").value = "";
+        if(document.getElementById("histDataFim")) document.getElementById("histDataFim").value = "";
         aplicarFiltroHistorico();
     }
 
@@ -989,6 +999,11 @@
         const termoBusca = document.getElementById("buscaHistorico").value.toLowerCase();
         const blocoSelecionado = document.getElementById("histBloco") ? document.getElementById("histBloco").value : "";
         const aptoSelecionado = document.getElementById("histApto") ? document.getElementById("histApto").value : "";
+        
+        let iniStr = document.getElementById("histDataInicio").value;
+        let fimStr = document.getElementById("histDataFim").value;
+        let dataInicio = iniStr ? new Date(iniStr + "T00:00:00") : null;
+        let dataFim = fimStr ? new Date(fimStr + "T23:59:59") : null;
         
         let entreguesRecentes = todasAsEncomendasDB.filter(enc => enc.status === "Entregue");
         let filtrados = entreguesRecentes.filter(enc => {
@@ -998,7 +1013,16 @@
                                enc.nome.toLowerCase().includes(termoBusca) || 
                                enc.descricao.toLowerCase().includes(termoBusca) ||
                                String(enc.apto).includes(termoBusca);
-            return matchBloco && matchApto && matchTexto;
+                               
+            let matchData = true;
+            if (dataInicio && dataFim && enc.dataSaida) {
+                let p = enc.dataSaida.split(' ')[0].split('/');
+                if (p.length === 3) {
+                    let dtSaida = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
+                    matchData = (dtSaida >= dataInicio && dtSaida <= dataFim);
+                }
+            }
+            return matchBloco && matchApto && matchTexto && matchData;
         });
         
         const lista = document.getElementById("listaHistorico");
@@ -1015,7 +1039,7 @@
                 botaoAssinatura = `<br><button class="btn-secondary" style="padding: 6px; font-size: 11px; margin-top: 8px; width: auto;" onclick="visualizarAssinatura('${linkTarget}')">🖋️ Ver Assinatura</button>`;
             }
             div.innerHTML = `
-                <strong>Bl ${enc.bloco} - Ap ${enc.apto}</strong> (${enc.nome})<br>
+                <strong>Bl ${enc.bloco} - Ap ${String(enc.apto).padStart(3, '0')}</strong> (${enc.nome})<br>
                 <strong>Pacote:</strong> ${enc.descricao} <br>
                 <small style="color:#666;">Entrada: ${enc.dataHora}</small><br>
                 <small style="color:#25D366; font-weight:bold;">Entregue a: ${enc.quemRetirou}</small><br>
@@ -1244,9 +1268,28 @@
                 body: JSON.stringify({ acao: "enviar_relatorio_pdf", termo: termo, fBloco: fBloco, fApto: fApto, fStatus: fStatus }), 
                 headers: { "Content-Type": "text/plain;charset=utf-8" } 
             });
-            alert("🚀 Relatório em PDF gerado e enviado com sucesso!");
-        } catch (error) { alert("Erro ao enviar e-mail: " + error.message); } 
-        finally { btnEmail.innerText = "✉️ Enviar para meu E-mail"; btnEmail.disabled = false; }
+            
+            alert("✅ Relatório Analítico enviado com sucesso para o e-mail da gerência!");
+            
+            // Pergunta integrada se deseja acionar o WhatsApp do Administrador (Item 7)
+            if(confirm("Deseja enviar uma notificação de confirmação desse relatório para o WhatsApp do Administrador?")) {
+                const dataHoraMensagem = new Date().toLocaleString('pt-BR');
+                const resumoZap = `📊 *EXPRESS SUNCITY - RELATÓRIO PROCESSADO* 📊\n\nOlá Administrador,\nInformamos que o Relatório Analítico de Encomendas foi consolidado e disparado com sucesso para sua caixa de e-mail.\n\n📅 *Data de Emissão:* ${dataHoraMensagem}\n📂 *Nome do Arquivo:* Relatorio_Express_Suncity_...\n\nO sistema de e-mails já processou o anexo perfeitamente. ☀️`;
+                
+                const urlDisparoRelatorio = `whatsapp://send?phone=${SEU_WHATSAPP}&text=${encodeURIComponent(resumoZap)}`;
+                
+                if (window.innerWidth < 768) {
+                    window.location.href = urlDisparoRelatorio;
+                } else {
+                    window.open(`https://web.whatsapp.com/send?phone=${SEU_WHATSAPP}&text=${encodeURIComponent(resumoZap)}`, '_blank');
+                }
+            }
+        } catch (error) { 
+            alert("Erro ao processar relatório: " + error.message); 
+        } finally { 
+            btnEmail.innerText = "✉️ Enviar para meu E-mail"; 
+            btnEmail.disabled = false; 
+        }
     }
 
     function admCadastrarFuncionario() {
@@ -1470,54 +1513,70 @@ const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* \n\nOlá!\nInformamo
         finally { document.getElementById("loading").style.display = "none"; }
     }
 
-    // NOVA FUNÇÃO: Motor do Filtro Visual de Chamados na aba ADM
+    // MOTOR DE AUDITORIA: FILTRO DE CHAMADOS DO DIA COM TRAVA OPERACIONAL (Item 9)
     async function admFiltrarChamadosMestre() {
         const statusAlvo = document.getElementById("admFiltroStatusChamado").value;
         const listaDiv = document.getElementById("admListaChamadosFiltrados");
         
         let iniStr = document.getElementById("admChamadoDataInicio").value;
         let fimStr = document.getElementById("admChamadoDataFim").value;
+        
         let dataInicio = iniStr ? new Date(iniStr + "T00:00:00") : null;
         let dataFim = fimStr ? new Date(fimStr + "T23:59:59") : null;
         
-        listaDiv.innerHTML = "Carregando chamados... ⏳";
+        listaDiv.innerHTML = "Sincronizando Chamados... ⏳";
         listaDiv.style.display = "block";
         
         try {
             const res = await fetch(API_URL + "?acao=get_chamados_filtro");
             const chamados = await res.json();
             
+            // Pega a data de hoje no formato comercial idêntico ao do Apps Script
+            const hojeDataComercial = new Date().toLocaleDateString('pt-BR');
+            
+            // Variável de controle para checar se o usuário usou os campos de datas ou não
+            const temFiltroDataAtivo = (dataInicio !== null && dataFim !== null);
+            
             const filtrados = chamados.filter(c => {
                 const matchStatus = (statusAlvo === "" || c.status === statusAlvo);
                 
                 let matchData = true;
-                if (dataInicio && dataFim && c.data) {
+                if (temFiltroDataAtivo && c.data) {
                     let p = c.data.split(' ')[0].split('/');
                     if (p.length === 3) {
                         let dtAlvo = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]), 12, 0, 0);
                         matchData = (dtAlvo >= dataInicio && dtAlvo <= dataFim);
                     }
+                } else if (!temFiltroDataAtivo && c.data) {
+                    // SE NÃO TIVER FILTRO ATIVO: Mostra exclusivamente os criados na data de hoje
+                    matchData = c.data.includes(hojeDataComercial);
                 }
                 return matchStatus && matchData;
             });
             
             if(filtrados.length === 0) {
-                listaDiv.innerHTML = "<span style='color:#64748b;'>Nenhum chamado encontrado com esses filtros.</span>";
+                if (!temFiltroDataAtivo) {
+                    // Mensagem padrão estipulada se não houver abertura diária (Item 9)
+                    listaDiv.innerHTML = "<div style='padding:12px; font-weight:bold; color:#e63946; text-align:center; font-size:13px; line-height:1.4;'>sem chamados abertos hoje. Para chamados anteriores, use o filtro de período.</div>";
+                } else {
+                    listaDiv.innerHTML = "<div style='padding:12px; color:#64748b; text-align:center;'>Nenhum chamado localizado neste intervalo de tempo.</div>";
+                }
                 return;
             }
             
             listaDiv.innerHTML = "";
             filtrados.reverse().forEach(c => {
                 const item = document.createElement("div");
-                item.style.padding = "6px";
-                item.style.borderBottom = "1px dashed #e2e8f0";
-                item.innerHTML = `<strong>Nº ${c.id} [${c.status}]</strong> - Bl ${c.bloco} Ap ${c.apto} (${c.morador})<br>` +
-                                 `⚠️ <strong>Motivo:</strong> ${c.justificativa}<br>` +
-                                 `<small style='color:#64748b;'>Abertura: ${c.data}</small>`;
+                item.style.padding = "8px";
+                item.style.borderBottom = "1px dashed #cbd5e1";
+                item.style.marginBottom = "5px";
+                item.innerHTML = `<strong>Nº ${c.id} [${c.status}]</strong> - Bl ${c.bloco} Ap ${String(c.apto).padStart(3, '0')} (${c.morador})<br>` +
+                                 `📝 <strong>Motivo:</strong> ${c.justificativa}<br>` +
+                                 `<small style='color:#64748b; font-weight:bold;'>Data Registro: ${c.data}</small>`;
                 listaDiv.appendChild(item);
             });
         } catch(e) {
-            listaDiv.innerHTML = "<span style='color:red;'>Erro ao ler chamados da planilha.</span>";
+            listaDiv.innerHTML = "<span style='color:red; font-weight:bold;'>Erro de comunicação ao extrair os chamados.</span>";
         }
     }
 
