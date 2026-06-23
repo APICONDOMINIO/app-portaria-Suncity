@@ -969,7 +969,7 @@
     }
     // FUNÇÃO DE LIMPEZA REAL SEM RECARREGAR A TELA (Item 2)
     function limparArquivoMorto() {
-        // 1. Limpa os seletores visuais da tela
+        // 1. Limpa os seletores visuais da busca avançada
         document.getElementById("arqBloco").value = "";
         document.getElementById("arqApto").innerHTML = '<option value="">Todos os Aptos</option>';
         document.getElementById("arqNome").value = "";
@@ -978,10 +978,8 @@
         const botoesAntigos = document.getElementById("listaRelatorio").querySelectorAll("button.btn-danger");
         botoesAntigos.forEach(b => b.remove());
 
-        // 3. Reseta os filtros visuais da tabela e volta a exibir o histórico local original
-        aplicarFiltro(); 
-        aplicarFiltroHistorico(); 
-        renderizarRelatorio();
+        // 3. Força uma nova busca limpa no servidor para recuperar as encomendas operacionais reais
+        buscarPendentes();
     }
 
     function aplicarFiltro() {
