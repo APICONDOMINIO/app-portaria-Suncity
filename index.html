@@ -51,14 +51,16 @@
 
         #areaImpressao { display: none; }
         @media print {
-            body { background: white; margin: 0; padding: 0; }
-            .container, #modalAssinatura { display: none !important; }
+            body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+            .container, #modalAssinatura, .nav-bottom, .user-bar { display: none !important; }
             #areaImpressao { display: block !important; width: 100%; }
-            @page { size: landscape; margin: 10mm; }
-            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-top: 15px;}
-            .tabela-pdf th, .tabela-pdf td { border: 1px solid #444; padding: 5px; text-align: left; }
-            .tabela-pdf th { background: #f2f2f2; }
-            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 5px; }
+            @page { size: A4 landscape; margin: 8mm; }
+            .tabela-pdf { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; margin-top: 15px; page-break-inside: auto; }
+            .tabela-pdf tr { page-break-inside: avoid; page-break-after: auto; }
+            .tabela-pdf th, .tabela-pdf td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
+            .tabela-pdf th { background: #457b9d !important; color: white !important; font-weight: bold; }
+            h2.print-title { text-align: center; color: #1d3557; margin-bottom: 3px; font-size: 18px; }
+            .print-sub { font-size: 13px; color: #1d3557; margin-top: 15px; margin-bottom: 5px; border-bottom: 2px solid #1d3557; padding-bottom: 2px; }
         }
         .encomenda-item.envelhecido-medio { border-left-color: #e9c46a; background: #fffbeb; border: 1px solid #fef3c7; border-left-width: 6px; }
         .encomenda-item.envelhecido-critico { border-left-color: #e63946; background: #fef2f2; border: 1px solid #fee2e2; border-left-width: 6px; animation: alert-piscante 2s infinite; }
@@ -242,7 +244,7 @@
             <div style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:15px; border: 1px solid #cbd5e1;">
                 <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1d3557;">🔍 Pesquisar em Histórico Antigo (Arquivo Morto):</p>
                 <div class="row">
-                    <select id="arqBloco" onchange="atualizarAptosArq()"><option value="">Bloco...</option></select>
+                    <select id="arqBloco" onchange="atualizarAptosArq()"><option value="">Todos os Blocos</option></select>
                     <select id="arqApto"><option value="">Apto...</option></select>
                 </div>
                 <div class="row">
@@ -298,8 +300,8 @@
                 <input type="text" id="admNovoLogin" placeholder="Usuário para Login">
                 <input type="text" id="admNovaSenha" placeholder="Senha de Acesso">
                 <select id="admNovoNivel">
-                    <option value="Porteiro">Nível: Porteiro</option>
-                    <option value="Administrador">Nível: Administrator / Zelador</option>
+                    <option value="Porteiro">Porteiro</option>
+                    <option value="Administrador">Administrador</option>
                 </select>
                 <button class="btn-primary" style="background:#457b9d;" onclick="admCadastrarFuncionario()">Cadastrar Funcionário</button>
             </div>
@@ -645,7 +647,7 @@
             
             s.innerHTML = '<option value="">Bloco...</option>';
             relBloco.innerHTML = '<option value="">Todos Blocos</option>';
-            if(arqBloco) arqBloco.innerHTML = '<option value="">Bloco...</option>'; 
+            if(arqBloco) arqBloco.innerHTML = '<option value="">Todos os Blocos</option>'; 
             if(pendB) pendB.innerHTML = '<option value="">Todos os Blocos</option>';
             if(histB) histB.innerHTML = '<option value="">Todos os Blocos</option>';
             if(admOrigB) admOrigB.innerHTML = '<option value="">Bloco Atual...</option>';
@@ -913,7 +915,15 @@
             } else {
                 todasAsEncomendasDB = dadosArquivo; 
                 renderizarRelatorio();
-                alert(`Exibindo ${dadosArquivo.length} registros do Arquivo Morto. Recarregue (F5) para voltar.`);
+                alert(`Exibindo ${dadosArquivo.length} registros encontrados.`);
+                // Cria e exibe um botão flutuante de limpeza para redefinir o app sem precisar dar F5 manualmente
+                const divFiltro = document.getElementById("listaRelatorio");
+                const btnLimparf5 = document.createElement("button");
+                btnLimparf5.className = "btn-danger";
+                btnLimparf5.style.cssText = "margin-bottom: 15px; background: #e63946; font-weight: bold;";
+                btnLimparf5.innerText = "🔄 Limpar Filtros e Voltar Histórico Real";
+                btnLimparf5.onclick = () => { window.location.reload(); };
+                divFiltro.insertBefore(btnLimparf5, divFiltro.firstChild);
             }
         } catch(e) { alert("Erro ao buscar no arquivo."); }
         finally { document.getElementById("loading").style.display = "none"; }
