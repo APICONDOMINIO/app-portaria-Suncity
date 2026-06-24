@@ -596,20 +596,21 @@
         const area = document.getElementById("areaCamera");
         const btnFechar = document.getElementById("btnFecharCamera");
         
-        // Mantém a aba Receber ativa porque a estrutura física da câmera mora nela
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        // Força a aba Receber a ficar ativa em background para a div existir de verdade
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.remove('active');
+            el.style.display = 'none';
+        });
         document.getElementById("tabReceber").classList.add("active");
+        document.getElementById("tabReceber").style.display = 'block';
         
         area.style.display = "block";
         btnFechar.style.display = "block";
 
-        // Mata qualquer instância órfã rodando presa em background
         if (leitorCamera) {
             try { await leitorCamera.stop(); } catch(e){}
             leitorCamera = null;
         }
-
-        area.innerHTML = ""; // Limpa lixo de renderização visual anterior
 
         leitorCamera = new Html5Qrcode("areaCamera");
         leitorCamera.start(
@@ -621,7 +622,7 @@
                     document.getElementById("btnFecharCamera").style.display = "none";
                 }).catch(e => console.log(e));
 
-                // Após a leitura do QR Code, redireciona o porteiro direto para os Pendentes
+                // Volta o foco e o visual para a aba de Pendentes
                 document.querySelectorAll('.tab-content').forEach(el => {
                     el.classList.remove('active');
                     el.style.display = 'none';
@@ -630,7 +631,8 @@
                 document.getElementById("tabPendentes").style.display = 'block';
                 
                 document.querySelectorAll('.nav-bottom .nav-item').forEach(el => el.classList.remove('active'));
-                document.getElementById("menuChamado").parentNode.querySelector("button[onclick*='tabPendentes']").classList.add('active');
+                const btnPend = document.querySelector("button[onclick*='tabPendentes']");
+                if(btnPend) btnPend.classList.add('active');
                 
                 let codigoLimpo = String(idLido).trim();
                 const encontrada = pendentesDB.find(enc => {
