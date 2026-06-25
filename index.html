@@ -907,12 +907,19 @@
             const data = JSON.parse(textoBruto);
             
             if (data.status === "Sucesso" || data.status === "ok") {
+                // 1. Limpa os campos imediatamente para salvar o estado estável do app
                 document.getElementById("descInput").value = "";
                 document.getElementById("codigoRastreio").value = "";
+                
+                // 2. Atualiza o banco local antes do redirecionamento de tela
                 await buscarPendentes(); 
-                if(confirm("Entrada Registrada no Sistema!\n\nDeseja enviar aviso por WhatsApp agora?")) {
-                    enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl, dados.id);
-                }
+                
+                // 3. Dispara o confirm isolado no fim da execução
+                setTimeout(() => {
+                    if(confirm("Entrada Registrada no Sistema!\n\nDeseja enviar aviso por WhatsApp agora?")) {
+                        enviarWhatsApp(morador.telefone, morador.nome, desc, bloco, apto, data.qrCodeUrl, dados.id);
+                    }
+                }, 100);
             } else {
                 alert("Erro no servidor: " + (data.erro || "Tente novamente."));
             }
@@ -1758,11 +1765,9 @@ const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* \n\nOlá!\nInformamo
                 }
             }
             
-            // CORREÇÃO OPERACIONAL: Limpa os campos de busca e o bíp para evitar dados fantasmas na tela
+            // Reseta completamente os filtros visuais usando a função nativa do app
+            limparFiltro();
             if(document.getElementById("pistolaBipeRetirada")) document.getElementById("pistolaBipeRetirada").value = "";
-            if(document.getElementById("buscaGeral")) document.getElementById("buscaGeral").value = "";
-            if(document.getElementById("pendBloco")) document.getElementById("pendBloco").value = "";
-            if(document.getElementById("pendApto")) document.getElementById("pendApto").innerHTML = '<option value="">Todos os Aptos</option>';
             
             await buscarPendentes(); 
         } catch (error) { alert("Erro da rede: " + error.message); } 
