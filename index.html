@@ -1757,6 +1757,13 @@ const msgZapConclusao = `✅ *CHAMADO CONCLUÍDO - SUNCITY* \n\nOlá!\nInformamo
                     alert("Recibo enviado!\nO aplicativo do WhatsApp instalado no computador foi chamado para enviar a mensagem.");
                 }
             }
+            
+            // CORREÇÃO OPERACIONAL: Limpa os campos de busca e o bíp para evitar dados fantasmas na tela
+            if(document.getElementById("pistolaBipeRetirada")) document.getElementById("pistolaBipeRetirada").value = "";
+            if(document.getElementById("buscaGeral")) document.getElementById("buscaGeral").value = "";
+            if(document.getElementById("pendBloco")) document.getElementById("pendBloco").value = "";
+            if(document.getElementById("pendApto")) document.getElementById("pendApto").innerHTML = '<option value="">Todos os Aptos</option>';
+            
             await buscarPendentes(); 
         } catch (error) { alert("Erro da rede: " + error.message); } 
         finally { btn.innerText = "✅ Confirmar Entrega"; btn.disabled = false; }
